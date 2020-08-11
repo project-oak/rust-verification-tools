@@ -1,0 +1,674 @@
+#!/usr/bin/env python3
+
+# Copyright 2020 The Rust verification tool Authors
+#
+# Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+# http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+# <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+# option. This file may not be copied, modified, or distributed
+# except according to those terms.
+
+import argparse
+import concurrent.futures
+import glob
+import json
+import multiprocessing
+import os
+import re
+import shutil
+import subprocess
+import sys
+import threading
+import toml
+
+from termcolor import colored
+
+################################################################
+# Return codes from this program
+################################################################
+
+status_timeout   = "TIMEOUT"
+status_verified  = "VERIFIED"
+status_error     = "ERROR"
+status_overflow  = "OVERFLOW"
+status_reachable = "REACHABLE"
+status_unknown   = "UNKNOWN"
+
+################################################################
+# Rustc and Cargo utility functions
+################################################################
+
+# Read metadata from manifest
+def read_metadata(crate, features):
+  rustflags = os.environ.get("RUSTFLAGS", "")
+  rustflags = rustflags +" --cfg=verify"
+
+  process = subprocess.Popen(['/usr/bin/env',
+                              'cargo', 'metadata', '--format-version=1'] + features,
+                             env = { "RUSTFLAGS": rustflags
+                                   , "PATH": os.environ["PATH"]
+                                   },
+                             cwd=crate,
+                             stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
+  stdout, stderr = process.communicate()
+  if process.returncode != 0:
+    print("Unable to read crate metadata")
+    print(stderr.decode("utf-8"))
+    print(stdout.decode("utf-8"))
+    sys.exit(1)
+  else:
+    return json.loads(stdout)
+
+# Find the name of the crate
+def get_packagename(crate):
+  manifest = toml.load(f"{crate}/Cargo.toml")
+  label = manifest["package"]["name"]
+  label = label.replace("-", "_")
+  return label
+
+# Get name of default_host
+# This is passed to cargo using "--target=..." and will be the name of
+# the directory within the target directory
+def get_default_host():
+  process = subprocess.Popen(['rustup', 'show'],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+  stdout, stderr = process.communicate()
+  for l in stdout.splitlines():
+      l = l.decode('ascii').split(':')
+      if len(l) == 2 and l[0] == 'Default host':
+          return l[1].strip()
+
+  raise "Unable to determine default host"
+
+# Split mangled rust name into its component parts
+def demangle_name(l):
+  bits = []
+  while True:
+    m = re.match('(\d+)', l)
+    if not m: break
+    n = int(m.group(1))
+    bits.append(l[m.start(1):m.end(1)+n])
+    l = l[m.end(1)+n:]
+  return (bits, l)
+
+# Count how many functions in fs are present in bitcode file
+def count_symbols(bcfile, fs, verbose):
+  if verbose > 3: print(f"    Counting symbols {fs} in {bcfile}")
+  process = subprocess.Popen(['/usr/bin/env', 'llvm-nm', '--defined-only', bcfile],
+                             stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
+  stdout, stderr = process.communicate()
+  count = 0
+  for l in stdout.splitlines():
+    l = l.split()
+    if len(l) == 3 and l[1] == b'T' and l[2].decode("ascii") in fs:
+      count = count + 1
+  if verbose > 3: print(f"    Found {count} functions")
+  return count
+
+
+# Find a function defined in LLVM bitcode file
+#
+# This amounts to mangling the function names but is
+# more complicated because we don't have the hash value in our hand
+def mangle_functions(bcfile, paths, verbose):
+  if verbose > 3: print(f"    Looking up {paths} in {bcfile}")
+  # apply rustc-style name mangling
+  paths = { "".join([ str(len(n)) + n for n in path]): "::".join(path) for path in paths }
+
+  process = subprocess.Popen(['/usr/bin/env', 'llvm-nm', '--defined-only', bcfile],
+                             stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
+  stdout, stderr = process.communicate()
+  if process.returncode != 0:
+    print("Couldn't run llvm-nm")
+    print(process.args)
+    if verbose:
+        print(stdout.decode("utf-8"))
+        print(stderr.decode("utf-8"))
+    return None
+
+  rs = []
+  for l in stdout.splitlines():
+    l = l.split()
+    if (len(l) == 3 and l[1] in [b't', b'T']
+            and (l[2].startswith(b'__ZN') or l[2].startswith(b'_ZN'))):
+      mangled = l[2].decode('utf-8')
+      if l[2].startswith(b'__ZN'):
+        # on OSX, llvm-nm shows a double underscore prefix
+        prefix = mangled[1:4]
+        suffix = mangled[4:]
+      else:
+        prefix = mangled[0:3]
+        suffix = mangled[3:]
+      (name, rest) = demangle_name(suffix)
+      key = "".join(name[1:-1])
+      if rest == "E" and key in paths:
+        t = paths[key]
+        f = prefix + "".join(name) + rest
+        rs.append((t, f))
+  if verbose > 3: print(f"      Found {rs}")
+  missing = set(paths) - paths.keys()
+  if len(missing) > 0:
+    raise Exception(f"Unable to find tests {list(missing)} in bytecode file")
+  return rs
+
+# Compile a crate for verification and return a bcfile
+# for the entire (linked) crate.
+#
+# Todo: as more backends are supported, this function is likely
+# to need some modification.
+def compile(label, crate, runtests, verbose, rustflags, features, target):
+  metadata = read_metadata(crate, features)
+
+  # Find the target directory
+  # (This may not be inside the crate if using workspaces)
+  targetdir = metadata["target_directory"]
+
+  flags = features
+  if verbose: flags.append("-v")
+  if runtests: flags.append("--tests")
+
+  # The following line is not present because we care about the target
+  # It is there to allow us to use -Clto to build crates whose dependencies
+  # invoke proc_macros.
+  flags.append(f"--target=={target}")
+
+  rustflags = ' '.join(rustflags)
+  if "RUSTFLAGS" in os.environ:
+    rustflags = os.environ["RUSTFLAGS"] +' '+ rustflags
+  rustflags = rustflags +" --cfg=verify"
+
+  process = subprocess.Popen(['/usr/bin/env', 'cargo', 'build'] + flags,
+                             cwd=crate,
+                             env = { "RUSTFLAGS": rustflags
+                                   , "PATH": os.environ["PATH"]
+                                   },
+                             stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
+  if verbose > 3:
+    print(f"Compiling {crate} with command {' '.join(process.args)}")
+    print(f"RUSTFLAGS=\"{rustflags}\"")
+  stdout, stderr = process.communicate()
+  if process.returncode != 0:
+    print(colored("FAILED: Couldn't compile", 'red'))
+    if verbose:
+      print(f"RUSTFLAGS=\"{rustflags}\" {' '.join(process.args)}")
+      print(stdout.decode("utf-8"))
+      print(stderr.decode("utf-8"))
+    return None
+
+  pattern = f"{targetdir}/{target}/debug/deps/{label}*.bc"
+  bcfiles = glob.glob(pattern)
+  return bcfiles
+
+
+# Generate a list of tests in the crate
+# by parsing the output of "cargo test -- --list"
+def list_tests(crate, verbose, features):
+
+  rustflags = os.environ.get("RUSTFLAGS", "")
+  rustflags = rustflags +" --cfg=verify"
+
+  process = subprocess.Popen(['cargo', 'test']+features+['--', '--list'],
+                             #'--exclude-should-panic' ],
+                             env = { "RUSTFLAGS": rustflags
+                                   , "PATH": os.environ["PATH"]
+                                   },
+                             cwd=crate,
+                             stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
+  stdout, stderr = process.communicate()
+  if False and process.returncode != 0:
+    print("Couldn't get list of tests")
+    print(process.args)
+    if verbose:
+        print(stdout.decode("utf-8"))
+        print(stderr.decode("utf-8"))
+    raise Exception("failure")
+  else:
+    tests = []
+    for l in stdout.decode("utf-8").splitlines():
+      # print(l)
+      m = re.match("(\S+):\s+test\s*$", l)
+      if m:
+        tests.append(m.group(1))
+    return tests
+
+
+################################################################
+# Proptest backend
+################################################################
+
+# Invoke proptest to compile and fuzz proptest targets
+def run_proptest(crate, runtests, tests, verbose, replay, features):
+  flags = features;
+  if verbose: flags.append("-v")
+
+  if runtests or tests:
+      cmd = 'test'
+  else:
+      cmd = 'run'
+  if runtests: flags.append("--tests")
+  for t in tests: flags.append(f"--test={t}")
+
+  if replay: flags.extend(['--', '--nocapture'])
+
+  process = subprocess.Popen(['/usr/bin/env', 'cargo', 'test'] + flags,
+                             cwd=crate,
+                             stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
+  stdout, stderr = process.communicate()
+  if process.returncode != 0:
+    if verbose: print(stderr.decode("utf-8"))
+    if verbose: print(stdout.decode("utf-8"))
+    for l in stderr.splitlines():
+      if b"with overflow" in l:
+        return status_overflow
+    return status_error
+  else:
+    return status_verified
+
+################################################################
+# KLEE backend
+################################################################
+
+# Run KLEE on a bitcode file and return a suitable
+# status value by grepping KLEE stderr output
+def klee_run(bcfile, name, entry, crate, kleeout, stats, klee_flags, verbosity):
+  process = subprocess.Popen(['klee',
+                              '--entry-point='+entry,
+                              # '--exit-on-error',
+                              # '--posix-runtime',
+                              # '--libcxx',
+                              '--libc=klee',
+                              '--silent-klee-assume',
+                              f'--output-dir={kleeout}',
+
+                              '--disable-verify', # workaround https://github.com/klee/klee/issues/937
+                              ]
+                             +klee_flags
+                             +[bcfile],
+                             cwd=crate,
+                             stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
+  stdout, stderr = process.communicate()
+
+  # KLEE is old-school
+  stdout = stdout.decode("iso-8859-1").splitlines()
+  stderr = stderr.decode("iso-8859-1").splitlines()
+
+  # We scan stderr for:
+  # 1. Indications of the expected output (eg from #[should_panic])
+  # 2. Indications of success/failure
+  # 3. Information relevant at the current level of verbosity
+  # 4. Statistics
+
+  # Scan for expectation message
+  expect = None
+  for l in stderr:
+    if l == 'VERIFIER_EXPECT: should_panic':
+      expect = ""
+    elif l.startswith('VERIFIER_EXPECT: should_panic(expected = "') and l.endswith('")'):
+      expect = l[42:-2]
+      if verbosity > 3: print(f"Expecting '{expect}'")
+
+  # Scan for first message that indicates result
+  status = None
+  for l in stderr:
+    if l.startswith("KLEE: HaltTimer invoked"):
+      status = status_timeout
+    elif l.startswith("KLEE: halting execution, dumping remaining states"):
+      status = status_timeout
+    elif l.startswith("KLEE: ERROR: Could not link"):
+      status = status_unknown
+    elif l.startswith("KLEE: ERROR:") and "unreachable" in l:
+      status = status_reachable
+    elif l.startswith("KLEE: ERROR:") and "overflow" in l:
+      status = status_overflow
+    elif l.startswith("KLEE: ERROR:"):
+      status = status_error
+    elif l.startswith("VERIFIER_EXPECT:"): # don't confuse this line with an error!
+      continue
+    elif expect is not None and is_expected_panic(l, expect, name, verbosity):
+      status = status_verified
+    elif "assertion failed" in l:
+      status = status_error
+    elif "verification failed" in l:
+      status = status_error
+    elif "with overflow" in l:
+      status = status_overflow
+    elif "note: run with `RUST_BACKTRACE=1`" in l:
+      status = status_error
+    elif "KLEE: done:" in l:
+      status = status_verified if expect is None else status_error
+    else:
+      continue
+    # if we get here, it means that we detected an error message
+    # so exit the loop
+    break
+  if verbosity > 3: print(f"Status: '{status}' expected: '{expect}'")
+  if status is None:
+      if verbosity > 3: print(f"Unable to determine status of {name}")
+      status = status_unknown
+
+  # Scan for statistics
+  for l in stderr:
+    if l.startswith("KLEE: done:"):
+      m = re.match('KLEE: done:\s+(.*)= (\d+)', l)
+      if m:
+         key = m[1].strip()
+         value = int(m[2])
+         stats[key] = value
+
+  if verbosity > 2:
+    for l in stdout:
+      print(f"STDOUT: {l}")
+
+  for l in stderr:
+    if klee_importance(l, expect) < verbosity: print(l)
+
+  return status
+
+# Detect lines that match #[should_panic(expected = ...)] string
+def is_expected_panic(l, expect, name, verbose):
+  m = re.search(" panicked at '([^']*)',\s+(.*)", l)
+  if m:
+    message = m[1]
+    srcloc  = m[2]
+    if expect in message:
+      if verbose:
+        print(f"     {name}: Detected expected failure '{message}' at {srcloc}")
+        if verbose > 1: print("     Error message: "+l)
+      return True
+  return False
+
+# Return an int indicating importance of a line from KLEE's output
+# Low numbers are most important, high numbers least important
+#
+# -1: script error (always shown)
+# 1: brief description of error
+# 2: long details about an error
+# 3: warnings
+# 4: non-KLEE output
+# 5: any other KLEE output
+def klee_importance(l, expect):
+    if l.startswith("VERIFIER_EXPECT:"):
+      return 4
+
+    elif expect and is_expected_panic(l, expect, None, 0):
+      # low priority because we report it directly
+      return 5
+
+    elif "assertion failed" in l:
+      return 1
+    elif "verification failed" in l:
+      return 1
+    elif "with overflow" in l:
+      return 1
+
+    elif l.startswith("KLEE: ERROR: Could not link"):
+      return -1
+    elif l.startswith("KLEE: ERROR:"):
+      return 2
+
+    elif l.startswith("warning: Linking two modules of different data layouts"):
+      return 4
+    elif "KLEE: WARNING:" in l:
+      return 4
+    elif "KLEE: WARNING ONCE:" in l:
+      return 4
+
+    if l.startswith("KLEE: output directory"):
+      return 5
+    elif l.startswith("KLEE: Using"):
+      return 5
+    elif l.startswith("KLEE: NOTE: Using POSIX model"):
+      return 5
+    elif l.startswith("KLEE: done:"):
+      return 5
+    elif l.startswith("KLEE: HaltTimer invoked"):
+      return 5
+    elif l.startswith("KLEE: halting execution, dumping remaining states"):
+      return 5
+    elif l.startswith("KLEE: NOTE: now ignoring this error at this location"):
+      return 5
+
+    elif l.startswith("KLEE:"):
+      return 0 # Really high priority to force me to categorize it
+
+    else:
+      # Remaining output is probably output from the application, stack dumps, etc.
+      return 3
+
+
+# Replay a KLEE "ktest" file
+def replay_klee(ktest, name, crate, features, runtests):
+  cmd = []
+  if runtests:
+    cmd.extend(["cargo", "test"])
+    cmd.extend(features)
+    cmd.append(name)
+    cmd.append('--')
+    cmd.append('--nocapture')
+  else:
+    cmd.extend(["cargo", "run"])
+    cmd.extend(features)
+
+  rustflags = os.environ.get("RUSTFLAGS", "")
+  rustflags = rustflags +" --cfg=verify"
+
+  process = subprocess.Popen(cmd,
+                             env = { "KTEST_FILE": ktest
+                                   , "RUSTFLAGS": rustflags
+                                   , "PATH": os.environ["PATH"]
+                                   },
+                             cwd=crate,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+  stdout, stderr = process.communicate()
+  if process.returncode != 0:
+    for l in stderr.splitlines(): print("      " + l.decode("utf-8"))
+  for l in stdout.splitlines(): print("      " + l.decode("utf-8"))
+
+# Run KLEE and optionally replay all the paths to display the concrete
+# values that will trigger that path.
+def klee_verify(bcfile, name, test, crate, runtests, features, flags, verbose, replay):
+  kleeout = os.path.abspath(f"{crate}/kleeout-{name}")
+  shutil.rmtree(kleeout, ignore_errors=True)
+  if os.path.exists(kleeout):
+    print(f"Unable to create file {kleeout}")
+    return status_unknown
+  if verbose > 1: print(f"     Running KLEE to verify {name}")
+  if verbose > 2:
+    print(f"      file: {bcfile}")
+    print(f"      entry: {test}")
+    print(f"      results: {kleeout}")
+  stats = {}
+  status = klee_run(bcfile, name, test, crate, kleeout, stats, flags, verbose)
+  if stats:
+    if verbose > 1:
+      stats = ", ".join([k +": "+ str(v) for (k, v) in stats.items()])
+      print(f"     {name}: {stats}")
+    elif verbose:
+      stats = f"{stats['completed paths']} paths"
+      print(f"     {name}: {stats}")
+
+  if replay:
+    for ktest in sorted(glob.glob(f"{kleeout}/test*.ktest")):
+      print(f"    Test input {ktest}")
+      replay_klee(ktest, name, crate, features, runtests)
+  return status
+
+
+################################################################
+# Verifier
+#
+# This code is (hopefully) independent of which particular
+# LLVM-based verifier we are using
+################################################################
+
+# Invoke one of the supported verification backends on
+# entrypoint 'entry' (with pretty name 'name')
+# in bitcodefile 'bcfile'
+def verifier_run(bcfile, name, entry, crate, runtests, features, flags, verbose, replay, backend):
+  if backend == "klee":
+    status = klee_verify(bcfile, name, entry, crate, runtests, features, flags, verbose, replay)
+    return status
+  else:
+    if verbose: print(f"Unsupported backend {backend}")
+    return (None, status_unknown)
+
+
+# Compile a Rust crate to generate bitcode
+# and run one of the LLVM verifier backends on the result.
+def verify(label, crate, runtests, testfilter, verifier_flags, verbose, replay, features, target, backend, jobs):
+
+  # Compile and link the patched file using LTO to generate the entire
+  # application in a single LLVM file
+  if verbose > 1: print(f"  Compiling {label}")
+  rustflags = [
+      '-Clto',                 # Generate linked bitcode for entire crate
+      '-Cembed-bitcode=yes',
+      '--emit=llvm-bc',
+
+      '-Copt-level=1',         # Avoid generating SSE instructions
+                               # Any value except 0 seems to work
+
+      '--cfg=verify',          # Select verification versions of libraries
+
+      # '-Ccodegen-units=1',     # Optimize a bit more?
+
+      '-Zpanic_abort_tests',   # Panic abort is simpler
+      '-Cpanic=abort',
+
+      '-Warithmetic-overflow', # Detecting errors is good!
+      '-Coverflow-checks=yes',
+
+      '-Cno-vectorize-loops',  # KLEE does not support vector intrinisics
+      '-Cno-vectorize-slp',
+      '-Ctarget-feature=-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2',
+  ]
+
+  bcfiles = compile(label, crate, runtests, verbose, rustflags, features, target)
+  if bcfiles is None: return status_unknown
+
+  bcs = [ bc for bc in bcfiles if count_symbols(bc, ['main', '_main'], verbose) > 0 ]
+
+  if len(bcs) == 0 and not runtests:
+    print(colored(f"  FAILED: Use --tests with library crates", 'red'))
+    return status_unknown
+  elif len(bcs) != 1:
+    print(colored(f"  FAILED: Test {label} compilation error", 'red'))
+    if verbose:
+      if len(bcfiles) > 0:
+        for bc in bcfiles:
+          print(f"    Ambiguous bitcode file {bc}")
+    return status_unknown
+
+  bcfile = bcs[0]
+
+  # If using the --tests flag, generate a list of tests and their mangled names
+  if runtests:
+    # get a list of the tests
+    if verbose > 2: print(f"  Getting list of tests in {label}")
+    tests = list_tests(crate, verbose, features)
+    if testfilter:
+      tests = [ t for t in tests if any([ t.startswith(f) for f in testfilter ]) ]
+    if not tests:
+      print("No tests found")
+      return status_unknown
+    if verbose > 0: print(f"  Checking {' '.join(tests)}")
+    # then look up their mangled names in the bcfile
+    tests = mangle_functions(bcfile, [ t.split('::') for t in tests ], verbose)
+    if verbose > 3: print(f"  Mangled: {tests}")
+  else:
+    tests = [("main", "main")]
+
+  # For each test function, we run KLEE and sift through the KLEE
+  # output to generate an appropriate status string
+  print(f"Running {len(tests)} test(s)")
+  passes = 0
+  fails = 0
+  failure = None
+  with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
+    jobs = { executor.submit(verifier_run,
+                             bcfile, name, entry, crate, runtests, features,
+                             verifier_flags, verbose, replay, backend
+                             ): name
+             for (name, entry) in tests
+           }
+    for future in concurrent.futures.as_completed(jobs):
+      name = jobs[future]
+      status = future.result()
+
+      print(f"test {name} ... ", end="")
+      if status == status_verified:
+        print(colored("ok", 'green'))
+      else:
+        print(colored(status, 'red'))
+
+      if status == status_verified:
+        passes = passes + 1
+      else:
+        fails = fails + 1
+        failure = status
+
+  if fails > 0:
+    status = failure # randomly pick one failing message
+    msg = colored(status, 'red')
+  else:
+    status = status_verified
+    msg = colored("ok", 'green')
+
+  print(f"\ntest result: {msg}. {passes} passed; {fails} failed")
+
+  return status
+
+
+################################################################
+# Main
+################################################################
+
+# Invoke a checker (verifier or fuzzer) on a crate
+def main():
+  parser = argparse.ArgumentParser(description='Verify a Rust crate')
+  parser.add_argument('--backend', metavar='b',
+                      choices=['klee', 'proptest'],
+                      default="klee",
+                      help='select backend')
+  parser.add_argument('--verbose', '-v', action='count', default=0)
+  parser.add_argument('--tests', action='store_true', default=False,
+                      help='run #[test]s instead of main')
+  parser.add_argument('--test', nargs="*", default=[], help='select tests to run')
+  parser.add_argument('crate', help='crate to verify')
+  parser.add_argument('--jobs', '-j', metavar='N', type=int, default=multiprocessing.cpu_count(),
+                      help='Number of parallel jobs, defaults to # of CPUs')
+  parser.add_argument('--klee_flags', nargs="*", default=[], help='extra verification flags')
+  parser.add_argument('--replay', '-r', action='store_true', default=False,
+                      help='replay to display concrete input values')
+  args = parser.parse_args()
+
+  features = []
+  if args.backend == "klee": features.extend(['--features', 'verifier-klee'])
+
+  label = get_packagename(args.crate)
+  if args.verbose: print(f"Checking {colored(label, 'white', attrs=['bold'])}")
+
+  if args.backend == "proptest":
+    if args.verbose: print(f"  Invoking cargo run with proptest backend")
+    status = run_proptest(args.crate, args.tests, args.test, args.verbose, args.replay, features)
+  else:
+    target = get_default_host()
+    status = verify(label, args.crate, args.tests or args.test, args.test, args.klee_flags, args.verbose, args.replay, features, target, args.backend, args.jobs)
+
+  print(f"VERIFICATION_RESULT: {status}")
+
+  error_code = 0 if status == status_verified else 1
+  exit(error_code)
+
+
+if __name__=="__main__":
+  main()

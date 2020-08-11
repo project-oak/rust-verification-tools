@@ -1,0 +1,20 @@
+[package]
+name = "compatibility-test"
+version = "0.1.0"
+authors = [
+        "Alastair Reid <adreid@google.com>",
+        "Shaked Flur <sflur@google.com>"
+        ]
+edition = "2018"
+description = "Tests for both the propverify and the proptest crates - to check compatibility."
+
+[dependencies]
+
+[target.'cfg(verify)'.dependencies]
+propverify = { path="../propverify" }
+
+[target.'cfg(not(verify))'.dependencies]
+proptest = { version = "*" }
+
+[features]
+verifier-klee = ["propverify/verifier-klee"]

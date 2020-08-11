@@ -1,0 +1,22 @@
+[package]
+name = "propverify"
+version = "0.1.0"
+authors = [
+        "Alastair Reid <adreid@google.com>",
+        "Shaked Flur <sflur@google.com>"
+        ]
+edition = "2018"
+description = "Library for building verification test harnesses that implements the proptest API"
+categories = ["development-tools::testing"]
+keywords = ["klee", "proptest", "property", "verification", "testing", "quickcheck", "fuzz", "hypothesis"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+
+[features]
+
+default = ["verifier-klee"]
+
+verifier-klee = [ "verification-annotations/verifier-klee" ]
+
+[dependencies]
+verification-annotations = { path = "../verification-annotations" }
