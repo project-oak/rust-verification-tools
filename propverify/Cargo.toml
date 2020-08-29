@@ -16,7 +16,11 @@ readme = "README.md"
 
 default = ["verifier-klee"]
 
-verifier-klee = [ "verification-annotations/verifier-klee" ]
+# support for floating point
+float = []
+
+verifier-crux = [ "verification-annotations/verifier-crux" ]
+verifier-klee = [ "verification-annotations/verifier-klee", "float" ]
 
 [dependencies]
 verification-annotations = { path = "../verification-annotations" }

@@ -522,6 +522,7 @@ numeric_api! {
     isize;
 }
 
+#[cfg(feature = "float")]
 numeric_api! {
     f32;
     f64;

@@ -6,6 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#[cfg(feature = "verifier-crux")]
+mod crux;
+#[cfg(feature = "verifier-crux")]
+pub use crate::crux::*;
+
 #[cfg(feature = "verifier-klee")]
 mod klee;
 #[cfg(feature = "verifier-klee")]

@@ -17,4 +17,5 @@ propverify = { path="../propverify" }
 proptest = { version = "*" }
 
 [features]
+verifier-crux = ["propverify/verifier-crux"]
 verifier-klee = ["propverify/verifier-klee"]
