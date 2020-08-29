@@ -51,7 +51,7 @@ sudo apt-get install build-essential curl libcap-dev git cmake \
 # On OSX, do this (not tested as thoroughly)
 brew install curl git cmake python unzip gperftools sqlite3 doxygen bash
 
-pip3 install tabulate wllvm lit
+pip3 install tabulate wllvm lit toml colored termcolor
 
 # Download the Rust source code
 git clone https://github.com/rust-lang/rust.git
@@ -110,8 +110,7 @@ compiler.
 
 ```
 rustup toolchain link stage1 build/x86*/stage1
-rustup toolchain link stage2 build/x86*/stage2
-rustup default stage2
+rustup default stage1
 ```
 
 We're now done building Rust so let's add the LLVM compiler inside Rust to our
@@ -129,61 +128,11 @@ cd ..
 
 
 
-
 [Rust language]:                   https://www.rust-lang.org
 [Rust book]:                       https://doc.rust-lang.org/book/
 [Cargo tool]:                      https://doc.rust-lang.org/cargo/
 [Rustonomicon]:                    https://doc.rust-lang.org/nomicon/
 [Rust fuzzing]:                    https://github.com/rust-fuzz
-[Sealed Rust]:                     https://ferrous-systems.com/blog/sealed-rust-the-pitch/
-[Rust verification working group]: https://rust-lang-nursery.github.io/wg-verification/
-[Rust verification workshop]:      https://sites.google.com/view/rustverify2020
 
 [Project Oak]:                     https://github.com/project-oak/oak/blob/main/README.md
-[Haskell]:                         https://haskell.org/
-[nofib benchmark suite]:           https://link.springer.com/chapter/10.1007/978-1-4471-3215-8_17
-
-[CBMC]:                            https://github.com/diffblue/cbmc/pull/4894
-[Crust]:                           https://github.com/uwplse/crust
-[Crux-mir]:                        https://github.com/GaloisInc/mir-verifier
-[Electrolysis]:                    https://github.com/Kha/electrolysis
-[Haybale]:                         https://github.com/PLSysSec/haybale
-[Cargo-KLEE]:                      https://gitlab.henriktjader.com/pln/cargo-klee
-[KLEE Rust]:                       https://github.com/jawline/klee-rust
 [KLEE]:                            https://klee.github.io
-[LibHoare]:                        https://github.com/nrc/libhoare
-[MIRAI]:                           https://github.com/facebookexperimental/MIRAI
-[Miri]:                            https://github.com/rust-lang/miri
-[PRUSTI]:                          https://github.com/viperproject/prusti-dev
-[RustBelt]:                        https://plv.mpi-sws.org/rustbelt/
-[RustFuzz]:                        https://github.com/rust-fuzz
-[RustHorn]:                        https://github.com/hopv/rust-horn
-[SeaHorn]:                         https://seahorn.github.io
-[Seer]:                            https://github.com/dwrensha/seer
-[SMACK]:                           https://github.com/smackers/smack
-
-[contracts crate]:                 https://gitlab.com/karroffel/contracts
-[Viper rust-contracts]:            https://github.com/viperproject/rust-contracts
-[arbitrary crate]:                 https://github.com/rust-fuzz/arbitrary
-
-[librarification]:                 http://smallcultfollowing.com/babysteps/blog/2020/04/09/libraryification/
-[verifier crate]:                  https://crates.io/crates/verifier
-[verifier benchmarks]:             https://github.com/soarlab/rust-benchmarks
-
-[astrauskas:oopsla:2019]:          https://alastairreid.github.io/RelatedWork/papers/astrauskas:oopsla:2019/
-[baranowski:atva:2018]:            https://alastairreid.github.io/RelatedWork/papers/baranowski:atva:2018/
-[jung:popl:2017]:                  https://alastairreid.github.io/RelatedWork/papers/jung:popl:2017/
-[jung:popl:2020]:                  https://alastairreid.github.io/RelatedWork/papers/jung:popl:2020/
-[lindner:indin:2018]:              https://alastairreid.github.io/RelatedWork/papers/lindner:indin:2018/
-[lindner:indin:2019]:              https://alastairreid.github.io/RelatedWork/papers/lindner:indin:2019/
-[matsushita:esop:2020]:            https://alastairreid.github.io/RelatedWork/papers/matsushita:esop:2020/
-[toman:ase:2015]:                  https://alastairreid.github.io/RelatedWork/papers/toman:ase:2015/
-[Overify]:                         https://alastairreid.github.io/RelatedWork/papers/wagner:hotos:2013
-
-[Rust verification papers]:        https://alastairreid.github.io/RelatedWork/notes/rust-language/
-[Lean]:                            https://alastairreid.github.io/RelatedWork/notes/lean-theorem-prover/
-[SV-COMP]:                         https://alastairreid.github.io/RelatedWork/notes/sv-competition/
-
-[verification competitions]:       https://alastairreid.github.io/verification-competitions/
-[Rust verification tools]:         https://alastairreid.github.io/rust-verification-tools/
-[joining Oak post]:                https://alastairreid.github.io/joining-google/
