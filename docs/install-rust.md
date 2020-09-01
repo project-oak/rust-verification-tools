@@ -45,7 +45,7 @@ mkdir $HOME/rust && cd $HOME/rust
 
 # On Linux, do this
 sudo apt-get install build-essential curl libcap-dev git cmake \
-  libncurses5-dev python-minimal python-pip unzip libtcmalloc-minimal4 \
+  libncurses5-dev python-minimal python3-pip unzip libtcmalloc-minimal4 \
   libgoogle-perftools-dev libsqlite3-dev doxygen
 
 # On OSX, do this (not tested as thoroughly)
@@ -65,6 +65,12 @@ time building versions that you don't need.
 
 ```
 cd rust
+
+# Select a version
+# (The version must be somewhat recent - significant changes
+# were being made in April/May 2020.)
+git checkout 1.46.0
+
 cp config.toml.example config.toml
 
 # It is a good idea to edit config.toml to change this line 

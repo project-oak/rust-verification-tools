@@ -121,7 +121,8 @@ regex strategies for this library.)
 
 ## Known limitations
 
-This is an early release of a research project
+This is not an officially supported Google product;
+this is an early release of a research project
 to enable experiments, feedback and contributions.
 It is probably not useful to use on real projects at this stage
 and it may change significantly in the future.

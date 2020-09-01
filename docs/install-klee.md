@@ -56,7 +56,7 @@ using `apt-get` and `pip3` on Linux
 # Optional: consider running 'sudo apt-get update; sudo apt-get upgrade' first?
 sudo apt-get install  cmake bison flex libboost-all-dev python perl minisat
 sudo apt-get install  build-essential curl libcap-dev git cmake libncurses5-dev
-sudo apt-get install  python-minimal python-pip unzip libtcmalloc-minimal4 libgoogle-perftools-dev
+sudo apt-get install  python-minimal python3-pip unzip libtcmalloc-minimal4 libgoogle-perftools-dev
 sudo apt-get install  libsqlite3-dev doxygen
 
 pip3 install tabulate wllvm lit toml colored
@@ -170,7 +170,7 @@ cd klee
 git remote add reid   https://github.com/alastairreid/klee.git
 git remote add nowack https://github.com/MartinNowack/klee.git
 git fetch --all
-git merge nowack/handle_global_variables reid/lazy_intrinsic_rejection reid/cxa_thread_atexit_impl
+git merge nowack/handle_global_variables reid/lazy_intrinsic_rejection
 
 mkdir build
 cd build

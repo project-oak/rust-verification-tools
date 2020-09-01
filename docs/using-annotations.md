@@ -260,7 +260,7 @@ We can get a slighly better understanding of this low-level API by modifying
 the example a little.
 
 
-## Emulating `#[should_panic]`
+### Emulating `#[should_panic]`
 
 As a first variation, let's restore the original error and add a call to
 `expect`:
@@ -298,7 +298,7 @@ VERIFICATION_RESULT: VERIFIED
 ```
 
 
-### Creating overflow
+### Triggering overflow
 
 Another interesting variation is to relax the constraints on the input values.
 
