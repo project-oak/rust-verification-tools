@@ -1,14 +1,14 @@
 # Documentation
 
 
-- [Installation](docs/installation.md)
-  - [Rust](docs/install-rust.md)
-  - [KLEE](docs/install-klee.md)
+- [Installation](installation.md)
+  - [Rust](install-rust.md)
+  - [KLEE](install-klee.md)
 
 - Usage
-  - [propverify](docs/using-propverify.md): a simple example to test
+  - [propverify](using-propverify.md): a simple example to test
     `propverify` with.
-  - [verification-annotations](docs/using-annotations.md): only interesting if
+  - [verification-annotations](using-annotations.md): only interesting if
     you want to know how `propverify` works.
 
 We also recommend reading
