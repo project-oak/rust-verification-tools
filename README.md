@@ -70,7 +70,7 @@ TL;DR
 
    No tests should fail.
 
-4. Read [the propverify intro](docs/propverify.md) for an example
+4. Read [the propverify intro](docs/using-propverify.md) for an example
    of fuzzing with `proptest` and verifying with `propverify`.
 
 5. Read [the proptest book](https://altsysrq.github.io/proptest-book/intro.html)
@@ -80,6 +80,7 @@ TL;DR
    (Many of these examples are taken from or based on examples in
    [the proptest book](https://altsysrq.github.io/proptest-book/intro.html).)
 
+There is also [some limited documentation](docs/README.md) of how this works.
 
 
 ## Installation
