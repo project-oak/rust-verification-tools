@@ -294,6 +294,8 @@ def klee_run(bcfile, name, entry, crate, kleeout, stats, klee_flags, verbosity):
                              cwd=crate,
                              stdout=subprocess.PIPE, 
                              stderr=subprocess.PIPE)
+  if verbosity > 3:
+    print(f"Running KLEE on {crate} with command {' '.join(process.args)}")
   stdout, stderr = process.communicate()
 
   # KLEE is old-school
