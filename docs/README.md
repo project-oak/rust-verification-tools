@@ -10,6 +10,8 @@
     `propverify` with.
   - [verification-annotations](using-annotations.md): only interesting if
     you want to know how `propverify` works.
+  - [using KLEE](using-klee.md): only interesting if
+    you want to know how `cargo-verify` works.
 
 We also recommend reading
 [the proptest book](https://altsysrq.github.io/proptest-book/intro.html)
