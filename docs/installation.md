@@ -10,4 +10,4 @@ Follow the following steps in order
 
 - [Installing the Rust compiler]
 - [Installing KLEE's and its dependencies](klee-annotations/docs/installation.md)
-
+- [Installing crux and its dependencies](install-crux.md)
