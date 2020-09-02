@@ -6,12 +6,16 @@
   - [KLEE](install-klee.md)
 
 - Usage
+
   - [propverify](using-propverify.md): a simple example to test
     `propverify` with.
-  - [verification-annotations](using-annotations.md): only interesting if
-    you want to know how `propverify` works.
-  - [using KLEE](using-klee.md): only interesting if
-    you want to know how `cargo-verify` works.
+
+  - [verification-annotations](using-annotations.md): how to use the
+    `verification-annotations` crate directly.
+    Only interesting if you want to know how `propverify` works.
+
+  - [using KLEE](using-klee.md): how to use KLEE directly.
+    Only interesting if you want to know how `cargo-verify` works.
 
 We also recommend reading
 [the proptest book](https://altsysrq.github.io/proptest-book/intro.html)

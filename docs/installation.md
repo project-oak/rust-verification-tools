@@ -8,6 +8,6 @@ have some errors and omissions (corrections welcome!)
 
 Follow the following steps in order
 
-- [Installing the Rust compiler]
-- [Installing KLEE's and its dependencies](klee-annotations/docs/installation.md)
+- [Installing the Rust compiler](install-rust.md)
+- [Installing KLEE's and its dependencies](install-klee.md)
 
