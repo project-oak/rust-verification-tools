@@ -16,9 +16,9 @@
 
 #![allow(unused_imports)]
 
-#[cfg(not(verify))]
+#[cfg(not(feature = "verify"))]
 use proptest::prelude::*;
-#[cfg(verify)]
+#[cfg(feature = "verify")]
 use propverify::prelude::*;
 
 mod collections;
@@ -28,6 +28,7 @@ mod enumeration;
 
 // A simple test of the propverify/proptest library
 proptest! {
+    #[test]
     fn main(
         a in 4..8u32,
         b in 5..9u32)

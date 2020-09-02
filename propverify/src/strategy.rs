@@ -153,28 +153,54 @@ pub fn prop_is_replay() -> bool {
     verifier::is_replay()
 }
 
+#[cfg(feature = "meta")]
 #[macro_export]
 macro_rules! proptest {
     (
-      $(#[$meta:meta])*
-      fn $test_name:ident($($parm:tt in $strategy:expr),+ $(,)?) $body:block
+        #[test]
+        $(#[$meta:meta])*
+        fn $test_name:ident($($parm:tt in $strategy:expr),+ $(,)?) $body:block
     ) => {
-      $(#[$meta])*
-      fn $test_name() {
-          $(
-              let str = stringify!($meta);
-              if str.starts_with("should_panic") {
-                  verifier::expect_raw(str);
-              }
-          )*
-          $(let $parm = $crate::prelude::Strategy::value(&$strategy);)*
-          if prop_is_replay() {
-              $(println!("  Value {} = {:?}", std::stringify!($parm), $parm);)*
-          }
-          $body
-      }
-  };
+        #[cfg_attr(not(crux),test)]
+        #[cfg_attr(crux,crux_test)]
+        // $(#[$meta])*
+        fn $test_name() {
+            $(
+                let str = stringify!($meta);
+                if str.starts_with("should_panic") {
+                    verifier::expect_raw(str);
+                }
+            )*
+            eprintln!("____META END____");
+        }
+    };
 }
+
+#[cfg(feature = "verify")]
+#[macro_export]
+macro_rules! proptest {
+    (
+        #[test]
+        $(#[$meta:meta])*
+        fn $test_name:ident($($parm:tt in $strategy:expr),+ $(,)?) $body:block
+    ) => {
+        #[cfg_attr(not(crux),test)]
+        #[cfg_attr(crux,crux_test)]
+        $(#[$meta])*
+        fn $test_name() {
+            $(let $parm = $crate::prelude::Strategy::value(&$strategy);)*
+            if prop_is_replay() {
+                $(println!("  Value {} = {:?}", std::stringify!($parm), $parm);)*
+            }
+            $body
+        }
+    };
+}
+
+
+
+
+
 
 // Combine multiple strategies into a single strategy
 #[macro_export]

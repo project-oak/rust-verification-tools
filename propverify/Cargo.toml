@@ -13,14 +13,16 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 
 [features]
-
-default = ["verifier-klee"]
+# These features are mutually exclusive
+meta   = ["verification-annotations/verifier-std"] # running to extract meta data
+verify = [] # running a verifier
 
 # support for floating point
 float = []
 
-verifier-crux = [ "verification-annotations/verifier-crux" ]
-verifier-klee = [ "verification-annotations/verifier-klee", "float" ]
+verifier-crux = [ "verify", "verification-annotations/verifier-crux" ]
+verifier-klee = [ "verify", "verification-annotations/verifier-klee", "float" ]
+verifier-std  = [ "verify", "verification-annotations/verifier-std", "float" ]
 
 [dependencies]
 verification-annotations = { path = "../verification-annotations" }

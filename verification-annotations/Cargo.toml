@@ -12,8 +12,8 @@ keywords = ["klee", "crux", "mir", "verification", "testing"]
 license = "MIT OR Apache-2.0"
 
 [features]
-
 verifier-crux = []
 verifier-klee = []
+verifier-std  = []
 
 [dependencies]

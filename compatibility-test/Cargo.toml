@@ -8,14 +8,9 @@ authors = [
 edition = "2018"
 description = "Tests for both the propverify and the proptest crates - to check compatibility."
 
-[dependencies]
-
-[target.'cfg(verify)'.dependencies]
-propverify = { path="../propverify" }
-
-[target.'cfg(not(verify))'.dependencies]
-proptest = { version = "*" }
-
 [features]
-verifier-crux = ["propverify/verifier-crux"]
-verifier-klee = ["propverify/verifier-klee"]
+verify = [ "propverify" ]
+
+[dependencies]
+propverify = { path="../propverify", optional=true }
+proptest = { version = "*", optional=true }

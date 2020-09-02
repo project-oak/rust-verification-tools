@@ -11,9 +11,9 @@
 // Proptest-based tests exploring how to use prop_compose
 ////////////////////////////////////////////////////////////////
 
-#[cfg(not(verify))]
+#[cfg(not(feature = "verify"))]
 use proptest::prelude::*;
-#[cfg(verify)]
+#[cfg(feature = "verify")]
 use propverify::prelude::*;
 
 #[cfg(test)]

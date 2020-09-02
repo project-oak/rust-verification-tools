@@ -11,9 +11,9 @@
 // Proptest-based tests to check collection support
 ////////////////////////////////////////////////////////////////
 
-#[cfg(not(verify))]
+#[cfg(not(feature = "verify"))]
 use proptest::prelude::*;
-#[cfg(verify)]
+#[cfg(feature = "verify")]
 use propverify::prelude::*;
 
 
