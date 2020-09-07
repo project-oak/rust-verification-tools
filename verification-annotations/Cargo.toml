@@ -8,11 +8,11 @@ authors = [
 edition = "2018"
 description = "verification annotation library"
 categories = ["development-tools::testing"]
-keywords = ["klee", "mir", "verification", "testing"]
+keywords = ["klee", "crux", "mir", "verification", "testing"]
 license = "MIT OR Apache-2.0"
 
 [features]
-
+verifier-crux = []
 verifier-klee = []
 
 [dependencies]
