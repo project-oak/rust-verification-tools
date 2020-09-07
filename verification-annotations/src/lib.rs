@@ -11,6 +11,11 @@ mod klee;
 #[cfg(feature = "verifier-klee")]
 pub use crate::klee::*;
 
+#[cfg(feature = "verifier-crux")]
+mod crux;
+#[cfg(feature = "verifier-crux")]
+pub use crate::crux::*;
+
 // At the moment, the cargo-verify script does not support
 // use of a separate test directory so, for now, we put
 // the tests here.

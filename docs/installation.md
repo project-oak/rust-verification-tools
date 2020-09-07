@@ -9,5 +9,5 @@ have some errors and omissions (corrections welcome!)
 Follow the following steps in order
 
 - [Installing the Rust compiler](install-rust.md)
-- [Installing KLEE's and its dependencies](install-klee.md)
-
+- [Installing KLEE and its dependencies](install-klee.md)
+- [Installing crux and its dependencies](install-crux.md)

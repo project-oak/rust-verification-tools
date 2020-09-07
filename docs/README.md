@@ -4,6 +4,7 @@
 - [Installation](installation.md)
   - [Rust](install-rust.md)
   - [KLEE](install-klee.md)
+  - [crux](install-crux.md)
 
 - Usage
 

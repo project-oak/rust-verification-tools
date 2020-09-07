@@ -5,20 +5,33 @@
 #[cfg(feature = "verifier-klee")]
 use crate::klee as verifier;
 
-#[test]
+#[cfg(feature = "verifier-crux")]
+use crate::crux as verifier;
+#[cfg(feature = "verifier-crux")]
+use crate::assert;
+#[cfg(feature = "verifier-crux")]
+use crate::assert_eq;
+#[cfg(feature = "verifier-crux")]
+use crate::assert_ne;
+
+
+#[cfg_attr(not(feature = "verifier-crux"), test)]
+#[cfg_attr(feature = "verifier-crux", crux_test)]
 fn t0() {
     let a = crate::abstract_value::<u32>();
     let b = verifier::abstract_value::<u32>();
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
+
+    #[cfg(not(feature = "verifier-crux"))]
     if verifier::is_replay() { eprintln!("Test values: a = {}, b = {}", a, b) }
 
     let r = a*b;
     assert!(20 <= r && r <= 56);
 }
 
-#[cfg(test)]
-#[test]
+#[cfg_attr(not(feature = "verifier-crux"), test)]
+#[cfg_attr(feature = "verifier-crux", crux_test)]
 fn t1() {
     let a = verifier::abstract_value::<u32>();
     let b = verifier::abstract_value::<u32>();
@@ -28,11 +41,12 @@ fn t1() {
     assert!(20 <= r && r <= 56);
 }
 
-
-#[cfg(test)]
-#[test]
+#[cfg_attr(not(feature = "verifier-crux"), test)]
+#[cfg_attr(feature = "verifier-crux", crux_test)]
 fn t2() {
+    #[cfg(not(feature = "verifier-crux"))]
     verifier::expect(Some("multiply with overflow"));
+
     let a = verifier::abstract_value::<u32>();
     let b = verifier::abstract_value::<u32>();
     let r = a*b;
@@ -41,10 +55,12 @@ fn t2() {
     assert!(20 <= r && r <= 56);
 }
 
-#[cfg(test)]
-#[test]
+#[cfg_attr(not(feature = "verifier-crux"), test)]
+#[cfg_attr(feature = "verifier-crux", crux_test)]
 fn t3() {
+    #[cfg(not(feature = "verifier-crux"))]
     verifier::expect(Some("assertion failed"));
+
     let a = verifier::abstract_value::<u32>();
     let b = verifier::abstract_value::<u32>();
     verifier::assume(4 <= a && a <= 7);
@@ -53,10 +69,12 @@ fn t3() {
     assert!(20 <= r && r < 56);
 }
 
-#[cfg(test)]
-#[test]
+#[cfg_attr(not(feature = "verifier-crux"), test)]
+#[cfg_attr(feature = "verifier-crux", crux_test)]
 fn t4() {
+    #[cfg(not(feature = "verifier-crux"))]
     verifier::expect(None);
+
     let a = verifier::abstract_value::<u32>();
     let b = verifier::abstract_value::<u32>();
     verifier::assume(4 <= a && a <= 7);
