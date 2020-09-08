@@ -57,7 +57,7 @@ using `apt-get` and `pip3` on Linux
 sudo apt-get install  cmake bison flex libboost-all-dev python perl
 sudo apt-get install  build-essential curl libcap-dev git cmake libncurses5-dev
 sudo apt-get install  python-minimal python3-pip unzip libtcmalloc-minimal4 libgoogle-perftools-dev
-sudo apt-get install  libsqlite3-dev doxygen
+sudo apt-get install  libsqlite3-dev doxygen clang
 
 pip3 install tabulate wllvm lit toml colored
 ```
