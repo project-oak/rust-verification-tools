@@ -159,18 +159,25 @@ macro_rules! proptest {
       $(#[$meta:meta])*
       fn $test_name:ident($($parm:tt in $strategy:expr),+ $(,)?) $body:block
     ) => {
-      $(#[$meta])*
+      #[cfg_attr(crux, crux_test)]
+      $(#[cfg_attr(not(crux), $meta)])*
       fn $test_name() {
           $(
-              let str = stringify!($meta);
-              if str.starts_with("should_panic") {
-                  verifier::expect_raw(str);
+              #[cfg(not(crux))]
+              {
+                  let str = stringify!($meta);
+                  if str.starts_with("should_panic") {
+                      verifier::expect_raw(str);
+                  }
               }
           )*
           $(let $parm = $crate::prelude::Strategy::value(&$strategy);)*
+
+          #[cfg(not(crux))]
           if prop_is_replay() {
               $(println!("  Value {} = {:?}", std::stringify!($parm), $parm);)*
           }
+
           $body
       }
   };
@@ -522,6 +529,7 @@ numeric_api! {
     isize;
 }
 
+#[cfg(feature = "float")]
 numeric_api! {
     f32;
     f64;
