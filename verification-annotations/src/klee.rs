@@ -100,6 +100,33 @@ pub fn expect(msg: Option<&str>) {
     }
 }
 
+
+#[macro_export]
+macro_rules! assert {
+    ($cond:expr) => {
+        if ! $cond {
+            eprintln!("VERIFIER: assertion failed: {}", stringify!($cond));
+            abort();
+        }
+    };
+    // ($cond:expr,) => { ... };
+    // ($cond:expr, $($arg:tt)+) => { ... };
+}
+
+#[macro_export]
+macro_rules! assert_eq {
+    ($left:expr, $right:expr) => { $crate::assert!(($left) == ($right)); };
+    // ($left:expr, $right:expr,) => { ... };
+    // ($left:expr, $right:expr, $($arg:tt)+) => { ... };
+}
+
+#[macro_export]
+macro_rules! assert_ne {
+    ($left:expr, $right:expr) => { $crate::assert!(($left) != ($right)); };
+    // ($left:expr, $right:expr,) => { ... };
+    // ($left:expr, $right:expr, $($arg:tt)+) => { ... };
+}
+
 /////////////////////////////////////////////////////////////////
 // End
 /////////////////////////////////////////////////////////////////
