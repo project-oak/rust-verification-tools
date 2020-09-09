@@ -326,6 +326,8 @@ def klee_run(bcfile, name, entry, crate, kleeout, stats, klee_flags, verbosity):
       status = status_timeout
     elif l.startswith("KLEE: ERROR: Could not link"):
       status = status_unknown
+    elif l.startswith("KLEE: ERROR: Unable to load symbol"):
+      status = status_unknown
     elif l.startswith("KLEE: ERROR:") and "unreachable" in l:
       status = status_reachable
     elif l.startswith("KLEE: ERROR:") and "overflow" in l:
@@ -412,6 +414,8 @@ def klee_importance(l, expect):
       return 1
 
     elif l.startswith("KLEE: ERROR: Could not link"):
+      return -1
+    elif l.startswith("KLEE: ERROR: Unable to load symbol"):
       return -1
     elif l.startswith("KLEE: ERROR:"):
       return 2
