@@ -2,23 +2,16 @@
 // Several variations on a theme to test failing variants
 ////////////////////////////////////////////////////////////////
 
-#[cfg(feature = "verifier-klee")]
-use crate::klee as verifier;
+use crate as verifier;
 
-#[cfg(feature = "verifier-crux")]
-use crate::crux as verifier;
-#[cfg(feature = "verifier-crux")]
 use crate::assert;
-#[cfg(feature = "verifier-crux")]
 use crate::assert_eq;
-#[cfg(feature = "verifier-crux")]
 use crate::assert_ne;
-
 
 #[cfg_attr(not(feature = "verifier-crux"), test)]
 #[cfg_attr(feature = "verifier-crux", crux_test)]
 fn t0() {
-    let a = crate::abstract_value::<u32>();
+    let a = verifier::abstract_value::<u32>();
     let b = verifier::abstract_value::<u32>();
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
