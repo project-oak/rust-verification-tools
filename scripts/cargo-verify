@@ -638,6 +638,12 @@ def verify(label, crate, runtests, testfilter, verifier_flags, verbose, replay, 
 
 # Invoke a checker (verifier or fuzzer) on a crate
 def main():
+  if len(sys.argv) >= 2 and sys.argv[1] == "verify":
+    # looks like you put this script on your PATH and are
+    # invoking it using "cargo verify ..." - we have to remove
+    # the second argument
+    del sys.argv[1]
+
   parser = argparse.ArgumentParser(description='Verify a Rust crate')
   parser.add_argument('--backend', metavar='b',
                       choices=['klee', 'proptest'],
