@@ -10,12 +10,6 @@
 // FFI wrapper for Crux-mir static simulator tool
 /////////////////////////////////////////////////////////////////
 
-// This module should be use with crux (e.g. 'cargo crux-test')
-#[cfg(not(crux))]
-compiler_error!("Expected 'crux'");
-
-extern crate crucible;
-
 // Create an abstract value of type <T>
 //
 // This should only be used on types that occupy contiguous memory
@@ -79,21 +73,23 @@ pub fn expect(msg: Option<&str>) {
 // TODO: call crucible_assert! to preserve line number info.
 #[macro_export]
 macro_rules! assert {
-    ($cond:expr) => { $crate::verify($cond) };
+    ($cond:expr) => {
+        $crate::crucible::crucible_assert!($cond, "VERIFIER: assertion failed: {}", stringify!($cond));
+    };
     // ($cond:expr,) => { ... };
     // ($cond:expr, $($arg:tt)+) => { ... };
 }
 
 #[macro_export]
 macro_rules! assert_eq {
-    ($left:expr, $right:expr) => { $crate::verify($left == $right) };
+    ($left:expr, $right:expr) => { $crate::assert!(($left) == ($right)); };
     // ($left:expr, $right:expr,) => { ... };
     // ($left:expr, $right:expr, $($arg:tt)+) => { ... };
 }
 
 #[macro_export]
 macro_rules! assert_ne {
-    ($left:expr, $right:expr) => { $crate::verify($left != $right) };
+    ($left:expr, $right:expr) => { $crate::assert!(($left) != ($right)); };
     // ($left:expr, $right:expr,) => { ... };
     // ($left:expr, $right:expr, $($arg:tt)+) => { ... };
 }

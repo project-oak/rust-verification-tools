@@ -12,6 +12,8 @@ mod klee;
 pub use crate::klee::*;
 
 #[cfg(feature = "verifier-crux")]
+extern crate crucible;
+#[cfg(feature = "verifier-crux")]
 mod crux;
 #[cfg(feature = "verifier-crux")]
 pub use crate::crux::*;
