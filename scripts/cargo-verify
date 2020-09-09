@@ -155,6 +155,36 @@ def mangle_functions(bcfile, paths, verbose):
     raise Exception(f"Unable to find tests {list(missing)} in bytecode file")
   return rs
 
+# Patch LLVM file to enable verification
+#
+# While this varies a bit according to the backend, some of the patching
+# performed includes
+#
+# - arranging for initializers to be executed
+#   (this makes std::env::args() work)
+# - redirecting panic! to invoke backend-specific intrinsic functions
+#   for reporting errors
+def patch_llvm(bcfile, new_bcfile, backend, verbose):
+  config = []
+  if backend == 'klee':
+    config.append('--initializers')
+
+  process = subprocess.Popen(['/usr/bin/env', 'rvt-patch-llvm', bcfile, '-o', new_bcfile]
+                             + config,
+                             stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE)
+  stdout, stderr = process.communicate()
+  if process.returncode != 0:
+    print("FAILED: Couldn't run rvt-patch-llvm")
+    print(process.args)
+    if verbose:
+        print(stdout.decode("utf-8"))
+        print(stderr.decode("utf-8"))
+    return False
+
+  return True
+
+
 # Compile a crate for verification and return a bcfile
 # for the entire (linked) crate.
 #
@@ -279,7 +309,7 @@ def list_tests(crate, verbose, features):
 ################################################################
 
 # Invoke proptest to compile and fuzz proptest targets
-def run_proptest(crate, runtests, tests, verbose, replay, features):
+def run_proptest(crate, runtests, tests, program_args, verbose, replay, features):
   flags = features;
   if verbose: flags.append("-v")
 
@@ -290,7 +320,13 @@ def run_proptest(crate, runtests, tests, verbose, replay, features):
   if runtests: flags.append("--tests")
   for t in tests: flags.append(f"--test={t}")
 
-  if replay: flags.extend(['--', '--nocapture'])
+  if replay:
+    flags.extend(['--', '--nocapture'])
+    if program_args:
+      print("Unsupported arguments {program_args}")
+      return status_unknown
+  else:
+    if program_args: flags.extend(['--'] + program_args)
 
   process = subprocess.Popen(['/usr/bin/env', 'cargo', 'test'] + flags,
                              cwd=crate,
@@ -313,7 +349,7 @@ def run_proptest(crate, runtests, tests, verbose, replay, features):
 
 # Run KLEE on a bitcode file and return a suitable
 # status value by grepping KLEE stderr output
-def klee_run(bcfile, name, entry, crate, kleeout, stats, klee_flags, verbosity):
+def klee_run(bcfile, name, entry, crate, kleeout, stats, klee_flags, program_args, verbosity):
   process = subprocess.Popen(['klee',
                               '--entry-point='+entry,
                               '--exit-on-error',
@@ -326,7 +362,8 @@ def klee_run(bcfile, name, entry, crate, kleeout, stats, klee_flags, verbosity):
                               '--disable-verify', # workaround https://github.com/klee/klee/issues/937
                               ]
                              +klee_flags
-                             +[bcfile],
+                             +[bcfile]
+                             +program_args,
                              cwd=crate,
                              stdout=subprocess.PIPE, 
                              stderr=subprocess.PIPE)
@@ -487,7 +524,7 @@ def klee_importance(l, expect):
 
 
 # Replay a KLEE "ktest" file
-def replay_klee(ktest, name, crate, features, runtests):
+def replay_klee(ktest, name, crate, program_args, features, runtests):
   cmd = []
   if runtests:
     cmd.extend(["cargo", "test"])
@@ -498,6 +535,9 @@ def replay_klee(ktest, name, crate, features, runtests):
   else:
     cmd.extend(["cargo", "run"])
     cmd.extend(features)
+    if program_args:
+        cmd.append('--')
+        cmd.extend(program_args)
 
   rustflags = os.environ.get("RUSTFLAGS", "")
   rustflags = rustflags +" --cfg=verify"
@@ -517,7 +557,7 @@ def replay_klee(ktest, name, crate, features, runtests):
 
 # Run KLEE and optionally replay all the paths to display the concrete
 # values that will trigger that path.
-def klee_verify(bcfile, name, test, crate, runtests, features, flags, verbose, replay):
+def klee_verify(bcfile, name, test, crate, runtests, features, flags, program_args, verbose, replay):
   kleeout = os.path.abspath(f"{crate}/kleeout-{name}")
   shutil.rmtree(kleeout, ignore_errors=True)
   if os.path.exists(kleeout):
@@ -529,7 +569,7 @@ def klee_verify(bcfile, name, test, crate, runtests, features, flags, verbose, r
     print(f"      entry: {test}")
     print(f"      results: {kleeout}")
   stats = {}
-  status = klee_run(bcfile, name, test, crate, kleeout, stats, flags, verbose)
+  status = klee_run(bcfile, name, test, crate, kleeout, stats, flags, program_args, verbose)
   if stats:
     if verbose > 1:
       stats = ", ".join([k +": "+ str(v) for (k, v) in stats.items()])
@@ -556,7 +596,7 @@ def klee_verify(bcfile, name, test, crate, runtests, features, flags, verbose, r
 
     for ktest in ktests:
       print(f"    Test input {ktest}")
-      replay_klee(ktest, name, crate, features, runtests)
+      replay_klee(ktest, name, crate, program_args, features, runtests)
   return status
 
 
@@ -570,9 +610,9 @@ def klee_verify(bcfile, name, test, crate, runtests, features, flags, verbose, r
 # Invoke one of the supported verification backends on
 # entrypoint 'entry' (with pretty name 'name')
 # in bitcodefile 'bcfile'
-def verifier_run(bcfile, name, entry, crate, runtests, features, flags, verbose, replay, backend):
+def verifier_run(bcfile, name, entry, crate, runtests, features, flags, program_args, verbose, replay, backend):
   if backend == "klee":
-    status = klee_verify(bcfile, name, entry, crate, runtests, features, flags, verbose, replay)
+    status = klee_verify(bcfile, name, entry, crate, runtests, features, flags, program_args, verbose, replay)
     return status
   else:
     if verbose: print(f"Unsupported backend {backend}")
@@ -581,7 +621,7 @@ def verifier_run(bcfile, name, entry, crate, runtests, features, flags, verbose,
 
 # Compile a Rust crate to generate bitcode
 # and run one of the LLVM verifier backends on the result.
-def verify(label, crate, runtests, testfilter, verifier_flags, verbose, replay, features, target, backend, jobs):
+def verify(label, crate, runtests, testfilter, verifier_flags, program_args, verbose, replay, features, target, backend, jobs):
 
   # Compile and link the patched file using LTO to generate the entire
   # application in a single LLVM file
@@ -653,6 +693,13 @@ def verify(label, crate, runtests, testfilter, verifier_flags, verbose, replay, 
   else:
     tests = [("main", "main")]
 
+  if program_args:
+    if verbose > 2: print(f"  Patching LLVM file for initializers")
+    new_bcfile = f"linked.bc"
+    if not patch_llvm(bcfile, new_bcfile, backend, verbose):
+      return status_unknown
+    bcfile = new_bcfile
+
   # For each test function, we run KLEE and sift through the KLEE
   # output to generate an appropriate status string
   print(f"Running {len(tests)} test(s)")
@@ -662,7 +709,7 @@ def verify(label, crate, runtests, testfilter, verifier_flags, verbose, replay, 
   with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
     jobs = { executor.submit(verifier_run,
                              bcfile, name, entry, crate, runtests, features,
-                             verifier_flags, verbose, replay, backend
+                             verifier_flags, program_args, verbose, replay, backend
                              ): name
              for (name, entry) in tests
            }
@@ -718,6 +765,7 @@ def main():
                       help='run #[test]s instead of main')
   parser.add_argument('--test', nargs="*", default=[], help='select tests to run')
   parser.add_argument('crate', help='crate to verify')
+  parser.add_argument('arg', nargs="*", default=[], help='arguments to pass to program under test')
   parser.add_argument('--jobs', '-j', metavar='N', type=int, default=multiprocessing.cpu_count(),
                       help='Number of parallel jobs, defaults to # of CPUs')
   parser.add_argument('--klee_flags', nargs="*", default=[], help='extra verification flags')
@@ -735,10 +783,10 @@ def main():
 
   if args.backend == "proptest":
     if args.verbose: print(f"  Invoking cargo run with proptest backend")
-    status = run_proptest(args.crate, args.tests, args.test, args.verbose, args.replay, features)
+    status = run_proptest(args.crate, args.tests, args.test, args.arg, args.verbose, args.replay, features)
   else:
     target = get_default_host()
-    status = verify(label, args.crate, args.tests or args.test, args.test, args.klee_flags, args.verbose, args.replay, features, target, args.backend, args.jobs)
+    status = verify(label, args.crate, args.tests or args.test, args.test, args.klee_flags, args.arg, args.verbose, args.replay, features, target, args.backend, args.jobs)
 
   print(f"VERIFICATION_RESULT: {status}")
 

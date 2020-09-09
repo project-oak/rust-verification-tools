@@ -8,3 +8,4 @@ readonly FLAGS="--backend=klee --verbose --clean"
 cargo-verify ${FLAGS} --tests verification-annotations
 cargo-verify ${FLAGS} --tests compatibility-test
 cargo-verify ${FLAGS} --tests demos/simple/ffi
+cargo-verify ${FLAGS} -v -v -v demos/simple/argv foo foo
