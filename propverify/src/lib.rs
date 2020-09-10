@@ -50,4 +50,8 @@ pub mod prelude {
     }
 
     pub use crate::strategy::verifier;
+
+    pub use verifier::assert as prop_assert;
+    pub use verifier::assert_eq as prop_assert_eq;
+    pub use verifier::assert_ne as prop_assert_ne;
 }
