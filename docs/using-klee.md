@@ -263,7 +263,9 @@ you will likely get a linking error
 error: cannot prefer dynamic linking when performing LTO
 ```
 
-The ([incredibly obscure](https://github.com/rust-lang/cargo/issues/7539))
+The
+([incredibly](https://github.com/rust-lang/cargo/issues/6375#issuecomment-444900324)
+[obscure](https://github.com/rust-lang/cargo/issues/7539))
 workaround for this is to specify a target explicitly.
 (I have no idea why this helps!)
 
