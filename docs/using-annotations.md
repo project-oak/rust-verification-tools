@@ -58,8 +58,17 @@ Our interface looks like this (but we should maybe change it to be
 more like the original SMACK interface?):
 
 ```
-/// create a non-deterministic value
-fn abstract_value<T>() -> T;
+pub trait AbstractValue : Sized {
+    /// Create an abstract value of type `Self`
+    fn abstract_value() -> Self;
+
+    /// Create an abstract value satisfying a predicate `F`
+    fn abstract_where<F: FnOnce(&Self) -> bool>(f: F) -> Self {
+        let x = Self::abstract_value();
+        assume(f(&x));
+        x
+    }
+}
 
 /// add an assumption
 fn assume(c: bool);
@@ -99,7 +108,7 @@ values of `a` are not legal. For example, you might create a unicode character
 like this:
 
 ```
-let a = verifier::abstract_value::<u32>();
+let a : u32 = verifier::AbstractValue::abstract_value();
 let b = match std::char::from_u32(a) {
     Some(r) => r,
     None => verifier::reject(),
@@ -135,10 +144,11 @@ or if you prefer to use the more conventional verifier interface.
 use verification_annotations as verifier;
 
 fn main() {
-    let a = verifier::abstract_value::<u32>();
-    let b = verifier::abstract_value::<u32>();
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    let b : u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(1 <= a && a <= 1000);
     verifier::assume(1 <= b && b <= 1000);
+    #[cfg(not(crux))]
     if verifier::is_replay() {
         eprintln!("Test values: a = {}, b = {}", a, b);
     }
@@ -183,9 +193,11 @@ EOF
 cat > src/main.rs  << "EOF"
 use verification_annotations as verifier;
 
+#[cfg_attr(feature="verifier-crux", crux_test)]
+#[cfg_attr(not(feature="verifier-crux"), test)]
 fn main() {
-    let a = verifier::abstract_value::<u32>();
-    let b = verifier::abstract_value::<u32>();
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    let b : u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(1 <= a && a <= 1000);
     verifier::assume(1 <= b && b <= 1000);
     if verifier::is_replay() {
@@ -240,7 +252,7 @@ found values `a = 1000` and `b = 1000` and it fails the test that `a*b < 1000000
 Seeing these examples, it is obvious that the assertion should be changed to
 
 ```
-    assert!(1 <= r && r <= 1000000);
+    verifier::assert!(1 <= r && r <= 1000000);
 ```
 
 With that fix, we can rerun KLEE and see that the test passes
@@ -273,8 +285,8 @@ use verification_annotations as verifier;
 
 #[cfg_attr(crux, crux_test)]
 fn main() {
-    let a = verifier::abstract_value::<u32>();
-    let b = verifier::abstract_value::<u32>();
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    let b : u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(1 <= a && a <= 1000);
     verifier::assume(1 <= b && b <= 1000);
     #[cfg(not(crux))]
@@ -321,15 +333,15 @@ use verification_annotations as verifier;
 
 fn main() {
     verifier::expect(Some("assertion failed"));
-    let a = verifier::abstract_value::<u32>();
-    let b = verifier::abstract_value::<u32>();
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    let b : u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(1 <= a && a <= 1000);
     verifier::assume(1 <= b && b <= 1000);
     if verifier::is_replay() {
         eprintln!("Test values: a = {}, b = {}", a, b);
     }
     let r = a*b;
-    assert!(1 <= r && r < 1000000);
+    verifier::assert!(1 <= r && r < 1000000);
 }
 ```
 
@@ -361,15 +373,15 @@ use verification_annotations as verifier;
 
 fn main() {
     // verifier::expect(Some("overflow"));
-    let a = verifier::abstract_value::<u32>();
-    let b = verifier::abstract_value::<u32>();
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    let b : u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(1 <= a && a <= 1000000);
     verifier::assume(1 <= b && b <= 1000000);
     if verifier::is_replay() {
         eprintln!("Test values: a = {}, b = {}", a, b);
     }
     let r = a*b;
-    assert!(1 <= r);
+    verifier::assert!(1 <= r);
 }
 ```
 

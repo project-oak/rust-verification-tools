@@ -284,7 +284,7 @@ pub mod bool {
     impl Strategy for Any {
         type Value = bool;
         fn value(&self) -> Self::Value {
-            let c = verifier::abstract_value::<u8>();
+            let c : u8 = verifier::AbstractValue::abstract_value();
             verifier::assume(c == 0 || c == 1);
             c == 1
         }
@@ -298,7 +298,7 @@ pub mod char {
     impl Strategy for Any {
         type Value = char;
         fn value(&self) -> Self::Value {
-            let c = verifier::abstract_value::<u32>();
+            let c : u32 = verifier::AbstractValue::abstract_value();
             match std::char::from_u32(c) {
                 Some(r) => r,
                 None => verifier::reject(),
@@ -412,7 +412,7 @@ pub struct Union<S: Strategy> {
 impl<S: Strategy> Strategy for Union<S> {
     type Value = S::Value;
     fn value(&self) -> Self::Value {
-        if verifier::abstract_value::<u8>() == 0 {
+        if verifier::AbstractValue::abstract_value() {
             self.x.value()
         } else {
             self.y.value()
@@ -457,7 +457,7 @@ macro_rules! numeric_api {
                 impl Strategy for Any {
                     type Value = $typ;
                     fn value(&self) -> Self::Value {
-                        let r = verifier::abstract_value::<$typ>();
+                        let r : $typ = verifier::AbstractValue::abstract_value();
                         r
                     }
                 }
@@ -466,7 +466,7 @@ macro_rules! numeric_api {
             impl Strategy for ::core::ops::Range<$typ> {
                 type Value = $typ;
                 fn value(&self) -> Self::Value {
-                    let r = verifier::abstract_value::<$typ>();
+                    let r : $typ = verifier::AbstractValue::abstract_value();
                     verifier::assume(self.start <= r);
                     verifier::assume(r < self.end);
                     r
@@ -476,7 +476,7 @@ macro_rules! numeric_api {
             impl Strategy for ::core::ops::RangeInclusive<$typ> {
                 type Value = $typ;
                 fn value(&self) -> Self::Value {
-                    let r = verifier::abstract_value::<$typ>();
+                    let r : $typ = verifier::AbstractValue::abstract_value();
                     verifier::assume(*self.start() <= r);
                     verifier::assume(r <= *self.end());
                     r
@@ -486,7 +486,7 @@ macro_rules! numeric_api {
             impl Strategy for ::core::ops::RangeFrom<$typ> {
                 type Value = $typ;
                 fn value(&self) -> Self::Value {
-                    let r = verifier::abstract_value::<$typ>();
+                    let r : $typ = verifier::AbstractValue::abstract_value();
                     verifier::assume(self.start <= r);
                     r
                 }
@@ -495,7 +495,7 @@ macro_rules! numeric_api {
             impl Strategy for ::core::ops::RangeTo<$typ> {
                 type Value = $typ;
                 fn value(&self) -> Self::Value {
-                    let r = verifier::abstract_value::<$typ>();
+                    let r : $typ = verifier::AbstractValue::abstract_value();
                     verifier::assume(r < self.end);
                     r
                 }
@@ -504,7 +504,7 @@ macro_rules! numeric_api {
             impl Strategy for ::core::ops::RangeToInclusive<$typ> {
                 type Value = $typ;
                 fn value(&self) -> Self::Value {
-                    let r = verifier::abstract_value::<$typ>();
+                    let r : $typ = verifier::AbstractValue::abstract_value();
                     verifier::assume(r <= self.end);
                     r
                 }
