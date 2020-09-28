@@ -80,40 +80,42 @@ impl <T: VerifierNonDet + Default> Symbolic for T {
     }
 }
 
-// Add an assumption
+/// Assume that condition `cond` is true
+///
+/// Any paths found must satisfy this assumption.
 pub fn assume(cond: bool) {
     unsafe { klee_assume(if cond { 1 } else { 0 }) }
 }
 
-// Reject the current execution with a verification failure.
-//
-// In almost all circumstances, report_error should
-// be used instead because it generates an error message.
+/// Reject the current execution with a verification failure.
+///
+/// In almost all circumstances, `report_error` should
+/// be used instead because it generates an error message.
 pub fn abort() -> ! {
     unsafe { klee_abort() }
 }
 
-// Reject the current execution path with a verification success.
-// This is equivalent to assume(false)
-// and the opposite of report_error.
-//
-// Typical usage is in generating symbolic values when the value
-// does not meet some criteria.
+/// Reject the current execution path with a verification success.
+/// This is equivalent to `assume(false)`
+/// and the opposite of `report_error(...)`.
+///
+/// Typical usage is in generating symbolic values when the value
+/// does not meet some criteria.
 pub fn reject() -> ! {
     unsafe { klee_silent_exit(0) }
 }
 
-// Detect whether the program is being run symbolically in KLEE
-// or being replayed using the kleeRuntest runtime.
-//
-// This is used to decide whether to display the values of
-// variables that may be either symbolic or concrete.
+/// Detect whether the program is being run symbolically in KLEE
+/// or being replayed using the kleeRuntest runtime.
+///
+/// This is used to decide whether to display the values of
+/// variables that may be either symbolic or concrete.
 pub fn is_replay() -> bool {
     unsafe { klee_is_replay() != 0 }
 }
 
-// Reject the current execution with a verification failure
-// and an error message.
+/// Reject the current execution with a verification failure
+/// and an error message.
 pub fn report_error(message: &str) -> ! {
     // Mimic the format of klee_report_error
     // (We don't use klee_report_error because it is not
@@ -122,12 +124,12 @@ pub fn report_error(message: &str) -> ! {
     abort();
 }
 
-// Declare that failure is the expected behaviour
+/// Declare that failure is the expected behaviour
 pub fn expect_raw(msg: &str) {
     eprintln!("VERIFIER_EXPECT: {}", msg)
 }
 
-// Declare that failure is the expected behaviour
+/// Declare that failure is the expected behaviour
 pub fn expect(msg: Option<&str>) {
     match msg {
         None => eprintln!("VERIFIER_EXPECT: should_panic"),

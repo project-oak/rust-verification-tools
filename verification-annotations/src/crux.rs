@@ -35,45 +35,53 @@ impl <T: crucible::Symbolic + Default> Symbolic for T {
 }
 
 
-// Add an assumption
+/// Assume that condition `cond` is true
+///
+/// Any paths found must satisfy this assumption.
 pub fn assume(cond: bool) {
     crucible::crucible_assume!(cond)
 }
 
-// Reject the current execution with a verification failure.
-//
-// In almost all circumstances, report_error should
-// be used instead because it generates an error message.
+/// Reject the current execution with a verification failure.
+///
+/// In almost all circumstances, `report_error` should
+/// be used instead because it generates an error message.
 pub fn abort() {
     crucible::crucible_assert!(false)
 }
 
-// Reject the current execution path with a verification success.
-// This is equivalent to assume(false)
-// and the opposite of report_error.
-//
-// Typical usage is in generating symbolic values when the value
-// does not meet some criteria.
+/// Reject the current execution path with a verification success.
+/// This is equivalent to `assume(false)`
+/// and the opposite of `report_error(...)`.
+///
+/// Typical usage is in generating symbolic values when the value
+/// does not meet some criteria.
 pub fn reject() -> ! {
     crucible::crucible_assume!(false);
     panic!("should have been rejected!");
 }
 
+/// Detect whether the program is being run symbolically in KLEE
+/// or being replayed using the kleeRuntest runtime.
+///
+/// This is used to decide whether to display the values of
+/// variables that may be either symbolic or concrete.
 pub fn is_replay() -> bool {
     panic!("crux doesn't support replay")
 }
 
-// Reject the current execution with a verification failure
-// and an error message.
+/// Reject the current execution with a verification failure
+/// and an error message.
 pub fn report_error(message: &str) {
     crucible::crucible_assert!(false, "VERIFIER: ERROR: {}", message);
 }
 
+/// Declare that failure is the expected behaviour
 pub fn expect_raw(_msg: &str) {
     panic!("not implemented")
 }
 
-// Declare that failure is the expected behaviour
+/// Declare that failure is the expected behaviour
 pub fn expect(_msg: Option<&str>) {
     panic!("not implemented")
 }
