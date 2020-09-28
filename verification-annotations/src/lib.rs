@@ -6,6 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+// Traits for creating symbolic/abstract values
+mod traits;
+pub use crate::traits::*;
+
 #[cfg(feature = "verifier-klee")]
 mod klee;
 #[cfg(feature = "verifier-klee")]

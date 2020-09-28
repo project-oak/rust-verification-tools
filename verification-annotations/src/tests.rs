@@ -9,8 +9,8 @@ use crate::assert;
 #[cfg_attr(not(feature = "verifier-crux"), test)]
 #[cfg_attr(feature = "verifier-crux", crux_test)]
 fn t0() {
-    let a = verifier::abstract_value::<u32>();
-    let b = verifier::abstract_value::<u32>();
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    let b : u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
 
@@ -24,8 +24,8 @@ fn t0() {
 #[cfg_attr(not(feature = "verifier-crux"), test)]
 #[cfg_attr(feature = "verifier-crux", crux_test)]
 fn t1() {
-    let a = verifier::abstract_value::<u32>();
-    let b = verifier::abstract_value::<u32>();
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    let b : u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
     let r = a*b;
@@ -38,8 +38,8 @@ fn t2() {
     #[cfg(not(feature = "verifier-crux"))]
     verifier::expect(Some("multiply with overflow"));
 
-    let a = verifier::abstract_value::<u32>();
-    let b = verifier::abstract_value::<u32>();
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    let b : u32 = verifier::AbstractValue::abstract_value();
     let r = a*b;
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
@@ -52,8 +52,8 @@ fn t3() {
     #[cfg(not(feature = "verifier-crux"))]
     verifier::expect(Some("assertion failed"));
 
-    let a = verifier::abstract_value::<u32>();
-    let b = verifier::abstract_value::<u32>();
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    let b : u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
     let r = a*b;
@@ -66,8 +66,8 @@ fn t4() {
     #[cfg(not(feature = "verifier-crux"))]
     verifier::expect(None);
 
-    let a = verifier::abstract_value::<u32>();
-    let b = verifier::abstract_value::<u32>();
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    let b : u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
     let r = a*b;

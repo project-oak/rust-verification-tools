@@ -10,6 +10,8 @@
 // FFI wrapper for KLEE symbolic execution tool
 /////////////////////////////////////////////////////////////////
 
+pub use crate::traits::*;
+
 use std::default::Default;
 use std::os::raw;
 
@@ -22,20 +24,60 @@ extern "C" {
     fn klee_is_replay() -> i32;
 }
 
-// Create an abstract value of type <T>
-//
-// This should only be used on types that occupy contiguous memory
-// and where all possible bit-patterns are legal.
-// e.g., u8/i8, ... u128/i128, f32/f64
-pub fn abstract_value<T: Default>() -> T {
-    let mut r = T::default();
-    unsafe {
-        let data = std::mem::transmute(&mut r);
-        let length = std::mem::size_of::<T>();
-        let null = 0 as *const i8;
-        klee_make_symbolic(data, length, null)
+/// Create instance for any type consisting of contiguous memory
+/// where all bit-patterns are legal values of the type.
+macro_rules! make_verifier_nondet {
+    ($typ:ident) => {
+        impl VerifierNonDet for $typ {
+            fn verifier_nondet(self) -> Self {
+                let mut r = self;
+                unsafe {
+                    let data = std::mem::transmute(&mut r);
+                    let length = std::mem::size_of::<$typ>();
+                    let null = 0 as *const i8;
+                    klee_make_symbolic(data, length, null)
+                }
+                return r;
+            }
+        }
+    };
+}
+
+make_verifier_nondet!(u8);
+make_verifier_nondet!(u16);
+make_verifier_nondet!(u32);
+make_verifier_nondet!(u64);
+make_verifier_nondet!(u128);
+make_verifier_nondet!(usize);
+
+make_verifier_nondet!(i8);
+make_verifier_nondet!(i16);
+make_verifier_nondet!(i32);
+make_verifier_nondet!(i64);
+make_verifier_nondet!(i128);
+make_verifier_nondet!(isize);
+
+make_verifier_nondet!(f32);
+make_verifier_nondet!(f64);
+
+impl VerifierNonDet for bool {
+    fn verifier_nondet(self) -> Self {
+        let c = VerifierNonDet::verifier_nondet(0u8);
+        assume(c == 0 || c == 1);
+        c == 1
     }
-    return r;
+}
+
+impl <T: VerifierNonDet + Default> AbstractValue for T {
+    fn abstract_value() -> Self {
+        Self::verifier_nondet(Self::default())
+    }
+}
+
+impl <T: VerifierNonDet + Default> Symbolic for T {
+    fn symbolic(_desc: &'static str) -> Self {
+        Self::verifier_nondet(Self::default())
+    }
 }
 
 // Add an assumption

@@ -10,16 +10,30 @@
 // FFI wrapper for Crux-mir static simulator tool
 /////////////////////////////////////////////////////////////////
 
-// Create an abstract value of type <T>
-//
-// This should only be used on types that occupy contiguous memory
-// and where all possible bit-patterns are legal.
-// e.g., u8/i8, ... u128/i128, f32/f64
-pub fn abstract_value<T: crucible::Symbolic>() -> T {
-    // We assume the string argument is just for reporting to the user, and
-    // doesn't affect the results.
-    T::symbolic("")
+use crate::traits::*;
+
+impl <T: AbstractValue> VerifierNonDet for T {
+    fn verifier_nondet(self) -> Self {
+        T::abstract_value()
+    }
 }
+
+impl <T: crucible::Symbolic> AbstractValue for T {
+    fn abstract_value() -> Self {
+        // We assume the string argument is just for reporting to the user, and
+        // doesn't affect the results.
+        let r : T = crucible::Symbolic::symbolic("");
+        r
+    }
+}
+
+impl <T: crucible::Symbolic + Default> Symbolic for T {
+    fn symbolic(desc: &'static str) -> Self {
+        let r : T = crucible::Symbolic::symbolic(desc);
+        r
+    }
+}
+
 
 // Add an assumption
 pub fn assume(cond: bool) {
@@ -60,12 +74,12 @@ pub fn verify(cond: bool) {
     crucible::crucible_assert!(cond, "VERIFIER: verification failed");
 }
 
-pub fn expect_raw(msg: &str) {
+pub fn expect_raw(_msg: &str) {
     panic!("not implemented")
 }
 
 // Declare that failure is the expected behaviour
-pub fn expect(msg: Option<&str>) {
+pub fn expect(_msg: Option<&str>) {
     panic!("not implemented")
 }
 
