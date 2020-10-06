@@ -168,10 +168,9 @@ git clone https://github.com/klee/klee.git
 cd klee
 
 # Merge in pending pull requests: welcome to the bleeding edge!
-git remote add reid   https://github.com/alastairreid/klee.git
 git remote add nowack https://github.com/MartinNowack/klee.git
 git fetch --all
-git merge nowack/handle_global_variables reid/lazy_intrinsic_rejection
+git merge nowack/handle_global_variables
 
 mkdir build
 cd build
