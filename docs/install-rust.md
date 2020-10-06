@@ -45,7 +45,7 @@ mkdir $HOME/rust && cd $HOME/rust
 
 # On Linux, do this
 sudo apt-get install build-essential curl libcap-dev git cmake \
-  libncurses5-dev python-minimal python3-pip unzip libtcmalloc-minimal4 \
+  libncurses5-dev python3-minimal python3-pip unzip libtcmalloc-minimal4 \
   libgoogle-perftools-dev libsqlite3-dev doxygen
 
 # On OSX, do this (not tested as thoroughly)
