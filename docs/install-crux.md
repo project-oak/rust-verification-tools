@@ -18,6 +18,7 @@ Everything else is installed under `$HOME`.
 ``` shell
 sudo apt install cabal-install ghc
 cabal new-update
+cabal user-config update
 ```
 
 Make sure `PATH` includes `$HOME/.cabal/bin`.
