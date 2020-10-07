@@ -24,8 +24,9 @@ This program
 In this note, we shall do the following to check this code
 
 1. create a test crate
-2. fuzz the crate using proptest
-3. verify the crate using propverify and the cargo-verify script
+1. fuzz the crate using proptest
+1. verify the crate using propverify and KLEE, and the cargo-verify script
+1. verify the crate using propverify and Crux-mir
 
 ### Workaround for `compilation error`
 
@@ -53,6 +54,7 @@ proptest = { version = "*" }
 
 [features]
 verifier-klee = ["propverify/verifier-klee"]
+verifier-crux = ["propverify/verifier-crux"]
 EOF
 
 cat > src/main.rs  << "EOF"
@@ -93,7 +95,7 @@ We have deliberately chosen ranges that are large enough that
 the current version of proptest is unlikely to find the bug.)
 
 
-## Verifying with `propverify`
+## Verifying with `propverify` using KLEE
 
 To verify the program using propverify, we use the `cargo-verify` script to
 compile the program and verify the program using KLEE
@@ -181,6 +183,54 @@ test multiply ... ok
 
 test result: ok. 1 passed; 0 failed
 VERIFICATION_RESULT: VERIFIED
+```
+
+## Verifying with `propverify` using Crux-mir
+
+(if you fixed the assertion as discussed above, revert the fix)
+
+To verify the program using propverify and Crux-mir
+
+```
+cargo clean
+RUSTFLAGS='--cfg verify' cargo crux-test --features verifier-crux
+```
+
+The program above has a deliberate error and Crux-mir reports the error
+
+```
+test try_propverify/17clqo26::multiply[0]: FAILED
+
+failures:
+
+---- try_propverify/17clqo26::multiply[0] counterexamples ----
+Failure for panicking::begin_panic, called from try_propverify/17clqo26::multiply[0]
+in try_propverify/17clqo26::multiply[0] at internal
+```
+
+As the test uses Rust's `std::assert` macro which invokes `panic!` the failure
+Crux-mir detects is the call to panic.
+To get a more descriptive failure we can replace `assert!` in src/main.rs with
+`verifier::assert!`, and run the verifier again
+
+```
+RUSTFLAGS='--cfg verify' cargo crux-test --features verifier-crux
+
+```
+
+This time we get the following report which shows the assertion that failed and
+its line number
+
+
+```
+test try_propverify/17clqo26::multiply[0]: FAILED
+
+failures:
+
+---- try_propverify/17clqo26::multiply[0] counterexamples ----
+Failure for MIR assertion at src/main.rs:10:9:
+        VERIFIER: assertion failed: 1 <= r && r < 1000000
+in try_propverify/17clqo26::multiply[0] at ./lib/crucible/lib.rs:50:17
 ```
 
 ## Which is better: fuzzing or verification?
