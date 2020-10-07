@@ -5,8 +5,6 @@
 use crate as verifier;
 
 use crate::assert;
-use crate::assert_eq;
-use crate::assert_ne;
 
 #[cfg_attr(not(feature = "verifier-crux"), test)]
 #[cfg_attr(feature = "verifier-crux", crux_test)]
