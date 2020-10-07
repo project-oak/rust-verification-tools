@@ -143,7 +143,7 @@ fn main() {
         eprintln!("Test values: a = {}, b = {}", a, b);
     }
     let r = a*b;
-    assert!(1 <= r && r < 1000000);
+    verifier::assert!(1 <= r && r < 1000000);
 }
 ```
 
@@ -177,6 +177,7 @@ verification-annotations = { path="../verification-annotations" }
 
 [features]
 verifier-klee = ["verification-annotations/verifier-klee"]
+verifier-crux = ["verification-annotations/verifier-crux"]
 EOF
 
 cat > src/main.rs  << "EOF"
@@ -191,7 +192,7 @@ fn main() {
         eprintln!("Test values: a = {}, b = {}", a, b);
     }
     let r = a*b;
-    assert!(1 <= r && r < 1000000);
+    verifier::assert!(1 <= r && r < 1000000);
 }
 EOF
 ```
@@ -253,6 +254,56 @@ test result: ok. 1 passed; 0 failed
 VERIFICATION_RESULT: VERIFIED
 ```
 
+
+## Verifying with Crux-mir
+
+(if you fixed the assertion as discussed above, revert the fix)
+
+The Crux-mir verifier verifies functions with the `#[crux_test]` attribute.
+When using propverify this attribute is added by the `propverify!` macro, here
+we will have to add it by hand.
+Edit the file `src/main.rs` and add `#[cfg_attr(crux, crux_test)]` just above the `fn main() {`
+line.
+In addition, Crux-mir does not support replay at the moment, so add 
+`#[cfg(not(crux))]` just above the `if verifier::is_replay() {` line.
+The file `src/main.rs` should look like this now:
+
+```
+use verification_annotations as verifier;
+
+#[cfg_attr(crux, crux_test)]
+fn main() {
+    let a = verifier::abstract_value::<u32>();
+    let b = verifier::abstract_value::<u32>();
+    verifier::assume(1 <= a && a <= 1000);
+    verifier::assume(1 <= b && b <= 1000);
+    #[cfg(not(crux))]
+    if verifier::is_replay() {
+        eprintln!("Test values: a = {}, b = {}", a, b);
+    }
+    let r = a*b;
+    verifier::assert!(1 <= r && r < 1000000);
+}
+```
+
+Verify the program with Crux-mir
+
+```
+cargo crux-test --features verifier-crux
+```
+
+The program above has a deliberate error and Crux-mir reports the error
+
+```
+test try_verifier/1cqgh0ha::main[0]: FAILED
+
+failures:
+
+---- try_verifier/1cqgh0ha::main[0] counterexamples ----
+Failure for MIR assertion at src/main.rs:14:5:
+        VERIFIER: assertion failed: 1 <= r && r < 1000000
+in try_verifier/1cqgh0ha::main[0] at ./lib/crucible/lib.rs:50:17
+```
 
 ## Variations on a theme
 
