@@ -106,7 +106,7 @@ macro_rules! assert {
     ($cond:expr) => {
         if ! $cond {
             eprintln!("VERIFIER: assertion failed: {}", stringify!($cond));
-            abort();
+            $crate::abort();
         }
     };
     // ($cond:expr,) => { ... };
