@@ -22,6 +22,17 @@ mod crux;
 #[cfg(feature = "verifier-crux")]
 pub use crate::crux::*;
 
+#[macro_export]
+macro_rules! verifier_assert {
+    ($cond:expr) => { $crate::assert!($cond); };
+}
+
+#[macro_export]
+macro_rules! verifier_assume {
+    ($cond:expr) => { $crate::assume!($cond); };
+}
+
+
 // At the moment, the cargo-verify script does not support
 // use of a separate test directory so, for now, we put
 // the tests here.

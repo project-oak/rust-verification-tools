@@ -69,11 +69,6 @@ pub fn report_error(message: &str) {
     crucible::crucible_assert!(false, "VERIFIER: ERROR: {}", message);
 }
 
-// Check an assertion
-pub fn verify(cond: bool) {
-    crucible::crucible_assert!(cond, "VERIFIER: verification failed");
-}
-
 pub fn expect_raw(_msg: &str) {
     panic!("not implemented")
 }
@@ -84,7 +79,6 @@ pub fn expect(_msg: Option<&str>) {
 }
 
 
-// TODO: call crucible_assert! to preserve line number info.
 #[macro_export]
 macro_rules! assert {
     ($cond:expr) => {
