@@ -74,6 +74,17 @@ fn t4() {
     assert!(20 <= r && r < 56);
 }
 
+#[cfg_attr(not(feature = "verifier-crux"), test)]
+#[cfg_attr(feature = "verifier-crux", crux_test)]
+fn t5() {
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    let b : u32 = verifier::AbstractValue::abstract_value();
+    verifier::assume(a <= 1000000); // avoid overflow
+    verifier::assume(b <= 1000000);
+    verifier::assert_eq!(a + b, b + a);
+    verifier::assert_ne!(a, a+1);
+}
+
 ////////////////////////////////////////////////////////////////
 // End
 ////////////////////////////////////////////////////////////////

@@ -145,28 +145,65 @@ pub fn expect(msg: Option<&str>) {
 
 #[macro_export]
 macro_rules! assert {
-    ($cond:expr) => {
+    ($cond:expr,) => { $crate::assert!($cond) };
+    ($cond:expr) => { $crate::assert!($cond, "assertion failed: {}", stringify!($cond)) };
+    ($cond:expr, $($arg:tt)+) => {{
         if ! $cond {
-            eprintln!("VERIFIER: panicked at 'assertion failed: {}', {}:{}:{}", stringify!($cond), std::file!(), std::line!(), std::column!());
+            let message = format!($($arg)+);
+            eprintln!("VERIFIER: panicked at '{}', {}:{}:{}",
+                      message,
+                      std::file!(), std::line!(), std::column!());
             $crate::abort();
         }
-    };
-    // ($cond:expr,) => { ... };
-    // ($cond:expr, $($arg:tt)+) => { ... };
+    }}
 }
 
 #[macro_export]
 macro_rules! assert_eq {
-    ($left:expr, $right:expr) => { $crate::assert!(($left) == ($right)); };
-    // ($left:expr, $right:expr,) => { ... };
-    // ($left:expr, $right:expr, $($arg:tt)+) => { ... };
+    ($left:expr, $right:expr) => {{
+        let left = $left;
+        let right = $right;
+        $crate::assert!(
+            left == right,
+            "assertion failed: `(left == right)` \
+             \n  left: `{:?}`,\n right: `{:?}`",
+            left,
+            right)
+    }};
+    ($left:expr, $right:expr, $fmt:tt $($arg:tt)*) => {{
+        let left = $left;
+        let right = $right;
+        $crate::assert!(
+            left == right,
+            concat!(
+                "assertion failed: `(left == right)` \
+                 \n  left: `{:?}`, \n right: `{:?}`: ", $fmt),
+            left, right $($arg)*);
+    }};
 }
 
 #[macro_export]
 macro_rules! assert_ne {
-    ($left:expr, $right:expr) => { $crate::assert!(($left) != ($right)); };
-    // ($left:expr, $right:expr,) => { ... };
-    // ($left:expr, $right:expr, $($arg:tt)+) => { ... };
+    ($left:expr, $right:expr) => {{
+        let left = $left;
+        let right = $right;
+        $crate::assert!(
+            left != right,
+            "assertion failed: `(left != right)` \
+             \n  left: `{:?}`,\n right: `{:?}`",
+            left,
+            right)
+    }};
+    ($left:expr, $right:expr, $fmt:tt $($arg:tt)*) => {{
+        let left = $left;
+        let right = $right;
+        $crate::assert!(
+            left != right,
+            concat!(
+                "assertion failed: `(left != right)` \
+                 \n  left: `{:?}`, \n right: `{:?}`: ", $fmt),
+            left, right $($arg)*);
+    }};
 }
 
 /////////////////////////////////////////////////////////////////
