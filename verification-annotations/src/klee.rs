@@ -122,13 +122,6 @@ pub fn report_error(message: &str) -> ! {
     abort();
 }
 
-// Check an assertion
-pub fn verify(cond: bool) {
-    if !cond {
-        report_error("verification failed");
-    }
-}
-
 // Declare that failure is the expected behaviour
 pub fn expect_raw(msg: &str) {
     eprintln!("VERIFIER_EXPECT: {}", msg)
