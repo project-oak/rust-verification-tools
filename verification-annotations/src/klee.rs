@@ -105,7 +105,7 @@ pub fn expect(msg: Option<&str>) {
 macro_rules! assert {
     ($cond:expr) => {
         if ! $cond {
-            eprintln!("VERIFIER: assertion failed: {}", stringify!($cond));
+            eprintln!("VERIFIER: panicked at 'assertion failed: {}', {}:{}:{}", stringify!($cond), std::file!(), std::line!(), std::column!());
             $crate::abort();
         }
     };
