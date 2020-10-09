@@ -141,7 +141,7 @@ export RUSTFLAGS="-L$HOME/homebrew/lib -C link-args=-Wl,-rpath,$HOME/homebrew/li
 ```
 
 
-### Campiling large programs
+### Compiling large programs
 
 Finally, on larger, more complex projects than this example, we have seen
 problems with the Rust compiler generating SSE instructions that KLEE does not
@@ -165,23 +165,25 @@ Having built a bitcode file containing the program and all the libraries that
 it depends on, we can now run KLEE like this:
 
 ```
-klee --output-dir=kleeout --warnings-only-to-file target/debug/deps/try_klee*.bc
+klee --libc=klee --silent-klee-assume --output-dir=kleeout --warnings-only-to-file target/debug/deps/try_klee*.bc
 ```
 
-This command will produce about output like this
+This command will produce output like this
 
 ```
 KLEE: output directory is "try-klee/kleeout"
 KLEE: Using STP solver backend
-KLEE: done: total instructions = 6995
-KLEE: done: completed paths = 1
+... (possibly warnings about different target triples - probably benign)
+KLEE: done: total instructions = 10153
+KLEE: done: completed paths = 3
 KLEE: done: generated tests = 1
 ```
 
-(It may also crash and produce a stack dump _after_ producing that output?)
+(On OSX, it may also crash and produce a stack dump _after_ producing that output?)
 
-This shows that KLEE explored one path through the above code and generated
-one file containing inputs that can trigger that path.
+This shows that KLEE explored three paths through the above code,
+found one path that failed and generated
+one file containing inputs that can trigger that failing path.
 To find those input values, we look in the directory `kleeout`
 for files with names like `test000001.ktest`.
 These are binary files that can be examined using KLEE's `ktest-tool`
@@ -300,12 +302,6 @@ Some additional flags that are worth using for larger examples are
 
 - `--exit-on-error` causes KLEE to exit as soon as it finds a problem.
   (KLEE's default mode is to keep searching for more problems.)
-
-- `--libc=klee` get's KLEE to use a simple, cut-down C library when analyzing
-  the program
-
-- `--silent-klee-assume` avoids KLEE reporting errors as a result of the way
-  that we use the `verifier::reject()` and `verifier::assume()` functions.
 
 - `--disable-verify` works around a problem in KLEE 
   caused by [an interaction between debug information and inlining](https://github.com/klee/klee/issues/937).
