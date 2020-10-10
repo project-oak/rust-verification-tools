@@ -1,0 +1,3 @@
+#!/bin/bash
+curl -OL https://github.com/google/googletest/archive/release-1.7.0.zip
+unzip release-1.7.0.zip

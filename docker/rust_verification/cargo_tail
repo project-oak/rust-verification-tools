@@ -1,0 +1,4 @@
+verification-annotations = { path="../verification-annotations" }
+
+[features]
+verifier-klee = ["verification-annotations/verifier-klee"]

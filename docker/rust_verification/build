@@ -1,0 +1,3 @@
+#!/bin/bash
+VERSION="v3.0"
+docker image build -t rust_verification:${VERSION} -f Dockerfile .

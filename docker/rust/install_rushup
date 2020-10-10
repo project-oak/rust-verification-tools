@@ -1,0 +1,5 @@
+#!/usr/bin/expect
+spawn ./rustup.sh
+expect ">"
+send "1\n"
+expect off

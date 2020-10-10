@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd rust && ./build_rust && cd ..
+cd klee && ./build && cd ..
+cd rust_verification && ./build && cd ..
