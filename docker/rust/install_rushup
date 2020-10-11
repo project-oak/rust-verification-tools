@@ -1,4 +1,5 @@
 #!/usr/bin/expect
+set timeout 600
 spawn ./rustup.sh
 expect ">"
 send "1\n"
