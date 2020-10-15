@@ -53,18 +53,38 @@ ARG USER_GID=${USER_UID}
 RUN (groupadd --gid=${USER_GID} ${USERNAME} || true) \
   && (useradd --shell=/bin/bash --uid=${USER_UID} --gid=${USER_GID} --create-home ${USERNAME} || true)
 
+# Set the default user as the newly created one, so that any operations performed from within the
+# Docker container will appear as if performed by the outside user, instead of root.
+USER ${USER_UID}
+ENV HOME=/home/${USERNAME}
+WORKDIR ${HOME}
 
-#install rushup
-RUN curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf > $HOME/rustup.sh
-COPY install_rushup /root/install_rushup
-RUN cd $HOME && chmod +x install_rushup && chmod +x rustup.sh && ./install_rushup
-#install rustc
-RUN cd $HOME && git clone https://github.com/rust-lang/rust.git
-RUN cd $HOME/rust && git checkout 1.46.0 && cp config.toml.example config.toml && sed -i 's/AArch64;ARM;Hexagon;MSP430;Mips;NVPTX;PowerPC;RISCV;Sparc;SystemZ;WebAssembly;X86/X86/g' config.toml && RUSTFLAGS_STAGE_NOT_0="-Cembed-bitcode=yes" && ./x.py build
-#install cargo
-RUN apt install libssl-dev pkg-config -y
-RUN cd $HOME/rust && RUSTFLAGS_STAGE_NOT_0="-Cembed-bitcode=yes" && ./x.py build src/tools/cargo
-#set path variable
-RUN echo "export PATH="\$PATH:\$HOME/rust/build/x86_64-unknown-linux-gnu/stage2-tools-bin"" >> $HOME/.bashrc
-RUN echo "export PATH="\$PATH:\$HOME/.cargo/bin"" >> $HOME/.bashrc
-RUN export PATH="$PATH:$HOME/rust/build/x86_64-unknown-linux-gnu/stage2-tools-bin:$HOME/.cargo/bin" && cd $HOME/rust && rustup toolchain link stage2 build/x86*/stage2 && rustup default stage2
+# Install rustup and set default toolchain to the toolchain we built
+ENV PATH="${HOME}/.cargo/bin:${PATH}"
+RUN curl --location https://sh.rustup.rs > /tmp/rustup \
+  && sh /tmp/rustup -y --default-toolchain=none \
+  && rustup --version \
+  && rm /tmp/rustup
+
+# Install rustc and cargo
+ENV RUSTC_DIR=${HOME}/rust
+ARG RUSTFLAGS_STAGE_NOT_0="-Cembed-bitcode=yes"
+RUN git clone https://github.com/rust-lang/rust.git
+RUN cd ${RUSTC_DIR} \
+  && git checkout 1.46.0
+
+# optionally, fetch the submodules first so that they get into the Docker cache
+# RUN git submodule update --init --recursive
+
+RUN cd ${RUSTC_DIR} \
+  && cp config.toml.example config.toml \
+  && sed -i 's/^#targets.*/targets = "X86"/' config.toml \
+  && grep targets config.toml \
+  && python3 ./x.py build --stage 1 \
+  && python3 ./x.py build --stage 1 src/tools/cargo
+
+# Set our rustc as default compiler and put tools on path
+RUN rustup toolchain link stage1 ${RUSTC_DIR}/build/x86*/stage1 \
+  && rustup default stage1
+ENV PATH="${RUSTC_DIR}/build/x86_64-unknown-linux-gnu/stage1-tools-bin:${PATH}"
+ENV PATH="${RUSTC_DIR}/build/x86_64-unknown-linux-gnu/llvm/bin:${PATH}"

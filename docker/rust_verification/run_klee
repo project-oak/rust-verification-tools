@@ -1,2 +1,0 @@
-rm -rf kleeout
-klee --libc=klee --silent-klee-assume --output-dir=kleeout --warnings-only-to-file target/debug/deps/try_klee*.bc

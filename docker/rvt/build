@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-readonly DOCKER_IMAGE_NAME=rust_compiler_dev
+readonly DOCKER_IMAGE_NAME=rvt
 
 # The default user for a Docker container has uid 0 (root). To avoid creating
 # root-owned files in the build directory we tell Docker to use the current user
@@ -12,9 +12,11 @@ readonly DOCKER_GID="$(id -g)"
 readonly DOCKER_USER="${USER:-root}"
 
 sudo docker build \
+  --file=docker/rvt/Dockerfile \
   --cache-from="$DOCKER_IMAGE_NAME:latest" \
   --tag="$DOCKER_IMAGE_NAME:latest" \
   --build-arg=USERNAME="$DOCKER_USER" \
   --build-arg=USER_UID="$DOCKER_UID" \
   --build-arg=USER_GID="$DOCKER_GID" \
   . 1>&2
+
