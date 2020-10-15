@@ -1,4 +1,4 @@
-FROM rust_compiler_dev:v3.0
+FROM rust_compiler_dev:latest
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get --yes update \

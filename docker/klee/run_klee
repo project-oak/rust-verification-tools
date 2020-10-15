@@ -1,3 +1,3 @@
 #!/bin/bash
-VERSION="v3.0"
-docker run --rm -it rust_klee:${VERSION}
+
+docker run --rm -it rust_klee:latest

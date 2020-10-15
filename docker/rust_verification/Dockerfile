@@ -1,4 +1,4 @@
-FROM rust_klee:v3.0
+FROM rust_klee:latest
 
 RUN cd $HOME && git clone https://github.com/project-oak/rust-verification-tools.git
 RUN cd $HOME/rust-verification-tools && export PATH="$PATH:$HOME/rust/build/x86_64-unknown-linux-gnu/stage2-tools-bin" && cargo new try_klee
