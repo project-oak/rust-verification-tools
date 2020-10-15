@@ -1,5 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-cd rust && ./build_rust && cd ..
-cd klee && ./build && cd ..
-cd rust_verification && ./build && cd ..
+set -e
+
+docker/rust/build
+docker/klee/build
+docker/rvt/build
