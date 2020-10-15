@@ -29,6 +29,21 @@ RUN apt-get --yes update \
     toml \
     wllvm
 
+
+# Placeholder args that are expected to be passed in at image build time.
+# See https://code.visualstudio.com/docs/remote/containers-advanced#_creating-a-nonroot-user
+ARG USERNAME=user-name-goes-here
+ARG USER_UID=1000
+ARG USER_GID=${USER_UID}
+
+# Create the specified user and group.
+#
+# Ignore errors if the user or group already exist (it should only happen if the image is being
+# built as root, which happens on GCB).
+RUN (groupadd --gid=${USER_GID} ${USERNAME} || true) \
+  && (useradd --shell=/bin/bash --uid=${USER_UID} --gid=${USER_GID} --create-home ${USERNAME} || true)
+
+
 #install rushup
 RUN curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf > $HOME/rustup.sh
 COPY install_rushup /root/install_rushup
