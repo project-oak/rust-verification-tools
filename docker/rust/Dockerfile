@@ -1,20 +1,29 @@
 FROM ubuntu:18.04
 
+# Install Debian and Python dependencies
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get --yes update \
   && apt-get install --no-install-recommends --yes \
+  bison \
   build-essential \
+  clang \
   cmake \
   curl \
   doxygen \
   expect \
+  flex \
   git \
+  libboost-all-dev \
   libcap-dev \
   libgoogle-perftools-dev \
   libncurses5-dev \
   libsqlite3-dev \
+  libssl-dev \
   libtcmalloc-minimal4 \
-  python-minimal \
+  perl \
+  pkg-config \
+  python3 \
+  python3-minimal \
   python3-pip \
   unzip \
   # Cleanup
@@ -22,6 +31,7 @@ RUN apt-get --yes update \
   # Install Python packages
   && pip3 install --no-cache-dir setuptools \
   && pip3 install --no-cache-dir \
+    argparse \
     colored \
     lit \
     tabulate \

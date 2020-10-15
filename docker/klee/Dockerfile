@@ -18,8 +18,8 @@ RUN apt-get --yes update \
   libsqlite3-dev \
   libtcmalloc-minimal4 \
   perl \
-  python \
-  python-minimal \
+  python3 \
+  python3-minimal \
   python3-pip \
   unzip \
   # Cleanup
@@ -27,6 +27,7 @@ RUN apt-get --yes update \
   # Install Python packages
   && pip3 install --no-cache-dir setuptools \
   && pip3 install --no-cache-dir \
+    argparse \
     colored \
     lit \
     tabulate \
