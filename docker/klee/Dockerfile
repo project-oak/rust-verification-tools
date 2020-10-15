@@ -1,10 +1,39 @@
 FROM rust_compiler_dev:v3.0
 
-RUN apt-get install -y cmake bison flex libboost-all-dev python perl
-RUN apt-get install -y build-essential curl libcap-dev git cmake libncurses5-dev
-RUN apt-get install -y python-minimal python3-pip unzip libtcmalloc-minimal4 libgoogle-perftools-dev
-RUN apt-get install -y libsqlite3-dev doxygen clang
-RUN pip3 install tabulate wllvm lit toml colored
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get --yes update \
+  && apt-get install --no-install-recommends --yes \
+  bison \
+  build-essential \
+  clang \
+  cmake \
+  curl \
+  doxygen \
+  flex \
+  git \
+  libboost-all-dev \
+  libcap-dev \
+  libgoogle-perftools-dev \
+  libncurses5-dev \
+  libsqlite3-dev \
+  libtcmalloc-minimal4 \
+  perl \
+  python \
+  python-minimal \
+  python3-pip \
+  unzip \
+  # Cleanup
+  && apt-get clean \
+  # Install Python packages
+  && pip3 install --no-cache-dir setuptools \
+  && pip3 install --no-cache-dir \
+    colored \
+    lit \
+    tabulate \
+    termcolor \
+    toml \
+    wllvm
+
 RUN mkdir $HOME/klee
 COPY build_minisat /root/klee/
 RUN cd $HOME/klee && chmod +x build_minisat && ./build_minisat
