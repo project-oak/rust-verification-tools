@@ -1,9 +1,34 @@
 FROM ubuntu:18.04
 
-RUN apt-get update && apt-get upgrade
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get install build-essential libcap-dev git cmake curl libncurses5-dev python-minimal python3-pip unzip libtcmalloc-minimal4 libgoogle-perftools-dev libsqlite3-dev doxygen expect -y
-RUN pip3 install tabulate wllvm lit toml colored termcolor
+RUN apt-get --yes update \
+  && apt-get install --no-install-recommends --yes \
+  build-essential \
+  cmake \
+  curl \
+  doxygen \
+  expect \
+  git \
+  libcap-dev \
+  libgoogle-perftools-dev \
+  libncurses5-dev \
+  libsqlite3-dev \
+  libtcmalloc-minimal4 \
+  python-minimal \
+  python3-pip \
+  unzip \
+  # Cleanup
+  && apt-get clean \
+  # Install Python packages
+  && pip3 install --no-cache-dir setuptools \
+  && pip3 install --no-cache-dir \
+    colored \
+    lit \
+    tabulate \
+    termcolor \
+    toml \
+    wllvm
+
 #install rushup
 RUN curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf > $HOME/rustup.sh
 COPY install_rushup /root/install_rushup
