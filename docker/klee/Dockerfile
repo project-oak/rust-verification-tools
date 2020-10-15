@@ -34,6 +34,15 @@ RUN apt-get --yes update \
     toml \
     wllvm
 
+
+# Placeholder args that are expected to be passed in at image build time.
+# See https://code.visualstudio.com/docs/remote/containers-advanced#_creating-a-nonroot-user
+ARG USERNAME=user-name-goes-here
+ARG USER_UID=1000
+ARG USER_GID=${USER_UID}
+ARG HOME=/home/${USERNAME}
+
+
 RUN mkdir $HOME/klee
 COPY build_minisat /root/klee/
 RUN cd $HOME/klee && chmod +x build_minisat && ./build_minisat
