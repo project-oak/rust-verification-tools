@@ -40,6 +40,23 @@ Hopefully we'll make cargo-verify more robust soon.
 
 ## Creating a test crate
 
+The Rust compiler and KLEE are in the Dockerfile (see
+[installation](installation.md)) so start the Docker image
+by running
+
+``` shell
+../docker/run
+```
+
+All remaining commands in this file will be run in this docker
+image.
+
+(It is usually easiest to run this in one terminal while using
+a separate editor to edit the files in another terminal.)
+
+To try the above example, we will create a crate in which to experiment with this
+code.
+
 ```
 cargo new try-propverify
 cd try-propverify
@@ -47,7 +64,7 @@ cd try-propverify
 cat >> Cargo.toml  << "EOF"
 
 [target.'cfg(verify)'.dependencies]
-propverify = { path="../propverify" }
+propverify = { path="/home/rust-verification-tools/propverify" }
 
 [target.'cfg(not(verify))'.dependencies]
 proptest = { version = "*" }
@@ -102,7 +119,7 @@ compile the program and verify the program using KLEE
 
 ```
 cargo clean
-../scripts/cargo-verify . --tests --verbose
+cargo-verify . --tests --verbose
 ```
 
 The program above has a deliberate error and KLEE reports the error
@@ -126,7 +143,7 @@ a time.)
 
 
 ```
-../scripts/cargo-verify . --test=multiply --replay
+cargo-verify . --test=multiply --replay
 ```
 
 This produces additional output that shows that KLEE
@@ -135,7 +152,7 @@ explored two paths through the program: one that passes and one that fails.
 The first path has value `a = 1` and `b = 1` and it passes the test.
 
 ```
-    Test input try-it-out/kleeout-multiply/test000001.ktest
+    Test input try-propverify/kleeout-multiply/test000001.ktest
 
       running 1 test
         Value a = 1
@@ -148,12 +165,12 @@ The first path has value `a = 1` and `b = 1` and it passes the test.
 The second path has value `a = 1000` and `b = 1000` and it fails the test that `a*b < 1000000`.
 
 ```
-    Test input try-it-out/kleeout-multiply/test000002.ktest
+    Test input try-propverify/kleeout-multiply/test000002.ktest
           Finished test [unoptimized + debuginfo] target(s) in 0.02s
-           Running target/x86_64-apple-darwin/debug/deps/try_it_out-bb37abd6d1dc60ef
+           Running target/x86_64-apple-darwin/debug/deps/try_propverify-bb37abd6d1dc60ef
       thread 'multiply' panicked at 'assertion failed: 1 <= r && r < 1000000', src/main.rs:10:9
       note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
-      error: test failed, to rerun pass '--bin try-it-out'
+      error: test failed, to rerun pass '--bin try-propverify'
 
       running 1 test
         Value a = 1000
@@ -177,7 +194,7 @@ Seeing this failing example, it is obvious that the comparision '<' should be ch
 With that fix, we can rerun KLEE and see that the test passes
 
 ```
-../scripts/cargo-verify . --tests --replay
+cargo-verify . --tests --replay
 Running 1 test(s)
 test multiply ... ok
 
@@ -186,6 +203,8 @@ VERIFICATION_RESULT: VERIFIED
 ```
 
 ## Verifying with `propverify` using Crux-mir
+
+[The following does not run in docker at present]
 
 (if you fixed the assertion as discussed above, revert the fix)
 

@@ -5,6 +5,6 @@ git checkout tags/2.3.3
 mkdir build
 cd build
 cmake ..
-make -j2
+make -j
 make install
 cd ../..

@@ -46,16 +46,30 @@ fn main() {
 }
 ```
 
-and we will create a crate in which to experiment with this
-code
+The Rust compiler and KLEE are in the Dockerfile (see
+[installation](installation.md)) so start the Docker image
+by running
 
+``` shell
+../docker/run
 ```
+
+All remaining commands in this file will be run in this docker
+image.
+
+(It is usually easiest to run this in one terminal while using
+a separate editor to edit the files in another terminal.)
+
+To try the above example, we will create a crate in which to experiment with this
+code.
+
+``` shell
 cargo new try-klee
 cd try-klee
 
 cat >> Cargo.toml  << "EOF"
 
-verification-annotations = { path="../verification-annotations" }
+verification-annotations = { path="/home/rust-verification-tools/verification-annotations" }
 
 [features]
 verifier-klee = ["verification-annotations/verifier-klee"]
@@ -77,6 +91,7 @@ fn main() {
 }
 EOF
 ```
+
 
 
 ## Compiling Rust for verification
