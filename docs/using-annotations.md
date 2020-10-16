@@ -143,7 +143,7 @@ or if you prefer to use the more conventional verifier interface.
 ```
 use verification_annotations as verifier;
 
-fn main() {
+fn t1() {
     let a : u32 = verifier::AbstractValue::abstract_value();
     let b : u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(1 <= a && a <= 1000);
@@ -177,13 +177,30 @@ to invoke KLEE.
 
 ## Creating a test crate
 
+The Rust compiler and KLEE are in the Dockerfile (see
+[installation](installation.md)) so start the Docker image
+by running
+
+``` shell
+../docker/run
+```
+
+All remaining commands in this file will be run in this docker
+image.
+
+(It is usually easiest to run this in one terminal while using
+a separate editor to edit the files in another terminal.)
+
+To try the above example, we will create a crate in which to experiment with this
+code.
+
 ```
 cargo new try-verifier
 cd try-verifier
 
 cat >> Cargo.toml  << "EOF"
 
-verification-annotations = { path="../verification-annotations" }
+verification-annotations = { path="/home/rust-verification-tools/verification-annotations" }
 
 [features]
 verifier-klee = ["verification-annotations/verifier-klee"]
@@ -195,7 +212,7 @@ use verification_annotations as verifier;
 
 #[cfg_attr(feature="verifier-crux", crux_test)]
 #[cfg_attr(not(feature="verifier-crux"), test)]
-fn main() {
+fn t1() {
     let a : u32 = verifier::AbstractValue::abstract_value();
     let b : u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(1 <= a && a <= 1000);
@@ -216,14 +233,14 @@ compile the program and verify the program using KLEE
 
 ```
 cargo clean
-../scripts/cargo-verify . --tests --verbose
+cargo-verify . --tests --verbose
 ```
 
 The program above has a deliberate error and KLEE reports the error
 
 ```
 Running 1 test(s)
-test main ... ERROR
+test t1 ... ERROR
 
 test result: ERROR. 0 passed; 1 failed
 VERIFICATION_RESULT: ERROR
@@ -233,15 +250,15 @@ To see what values of `a` and `b` cause the problem, we can replay
 the program using concrete data values.
 
 ```
-../scripts/cargo-verify . --replay
+cargo-verify . --tests --replay
 ```
 
 This produces the following additional output that shows that KLEE
 found values `a = 1000` and `b = 1000` and it fails the test that `a*b < 1000000`.
 
 ```
-    Test input try-verifier/kleeout-main/test000001.ktest
-    Test input try-verifier/kleeout-main/test000002.ktest
+    Test input try-verifier/kleeout-t1/test000001.ktest
+    Test input try-verifier/kleeout-t1/test000002.ktest
           Finished dev [unoptimized + debuginfo] target(s) in 0.00s
            Running `target/x86_64-apple-darwin/debug/try-verifier`
       Test values: a = 1000, b = 1000
@@ -258,45 +275,18 @@ Seeing these examples, it is obvious that the assertion should be changed to
 With that fix, we can rerun KLEE and see that the test passes
 
 ```
-../scripts/cargo-verify test-annotations
-Running 1 test(s)
-test main ... ok
+cargo-verify . --tests
+  Running 1 test(s)
+  test t1 ... ok
 
-test result: ok. 1 passed; 0 failed
-VERIFICATION_RESULT: VERIFIED
+  test result: ok. 1 passed; 0 failed
+  VERIFICATION_RESULT: VERIFIED
 ```
 
 
 ## Verifying with Crux-mir
 
 (if you fixed the assertion as discussed above, revert the fix)
-
-The Crux-mir verifier verifies functions with the `#[crux_test]` attribute.
-When using propverify this attribute is added by the `propverify!` macro, here
-we will have to add it by hand.
-Edit the file `src/main.rs` and add `#[cfg_attr(crux, crux_test)]` just above the `fn main() {`
-line.
-In addition, Crux-mir does not support replay at the moment, so add 
-`#[cfg(not(crux))]` just above the `if verifier::is_replay() {` line.
-The file `src/main.rs` should look like this now:
-
-```
-use verification_annotations as verifier;
-
-#[cfg_attr(crux, crux_test)]
-fn main() {
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
-    verifier::assume(1 <= a && a <= 1000);
-    verifier::assume(1 <= b && b <= 1000);
-    #[cfg(not(crux))]
-    if verifier::is_replay() {
-        eprintln!("Test values: a = {}, b = {}", a, b);
-    }
-    let r = a*b;
-    verifier::assert!(1 <= r && r < 1000000);
-}
-```
 
 Verify the program with Crux-mir
 
@@ -331,6 +321,7 @@ As a first variation, let's restore the original error and add a call to
 ```
 use verification_annotations as verifier;
 
+#[test]
 fn main() {
     verifier::expect(Some("assertion failed"));
     let a : u32 = verifier::AbstractValue::abstract_value();
@@ -352,9 +343,9 @@ expected behavior.
 ../scripts/cargo-verify . -v
 Checking try_verifier
 Running 1 test(s)
-     main: Detected expected failure 'assertion failed: 1 <= r && r < 1000000' at src/main.rs:13:5
-     main: 2 paths
-test main ... ok
+     t1: Detected expected failure 'assertion failed: 1 <= r && r < 1000000' at src/main.rs:13:5
+     t1: 2 paths
+test t1 ... ok
 
 test result: ok. 1 passed; 0 failed
 VERIFICATION_RESULT: VERIFIED
@@ -371,7 +362,8 @@ just delete the assumptions.
 ```
 use verification_annotations as verifier;
 
-fn main() {
+#[test]
+fn t1() {
     // verifier::expect(Some("overflow"));
     let a : u32 = verifier::AbstractValue::abstract_value();
     let b : u32 = verifier::AbstractValue::abstract_value();
@@ -390,9 +382,9 @@ Verifying this program detects the overflow behaviour.
 ```
 ../scripts/cargo-verify . -v --replay
 Running 1 test(s)
-     main: 2 paths
-    Test input try-verifier/kleeout-main/test000001.ktest
-    Test input try-verifier/kleeout-main/test000002.ktest
+     t1: 2 paths
+    Test input try-verifier/kleeout-t1/test000001.ktest
+    Test input try-verifier/kleeout-t1/test000002.ktest
              Fresh verification-annotations v0.1.0 (verification-annotations)
              Fresh try-verifier v0.1.0 (try-verifier)
           Finished dev [unoptimized + debuginfo] target(s) in 0.00s
@@ -400,7 +392,7 @@ Running 1 test(s)
       Test values: a = 16384, b = 524288
       thread 'main' panicked at 'attempt to multiply with overflow', src/main.rs:12:13
       note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
-test main ... OVERFLOW
+test t1 ... OVERFLOW
 
 test result: OVERFLOW. 0 passed; 1 failed
 VERIFICATION_RESULT: OVERFLOW

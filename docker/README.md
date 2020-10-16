@@ -13,13 +13,16 @@ It is not clear whether there is any value in avoiding the use of sudo.
 
 The script `docker/build` builds the following images
 
-- `rust_compiler_dev:latest` contains the Rust compiler
-- `rust_klee:latest` adds KLEE and its dependencies
-- `rvt:latest` adds a snapshot of the Rust verification tools
+- `rvt_base:latest` contains Ubuntu and standard Ubuntu packages
+- `rvt_rustc:latest` adds the Rust compiler
+- `rvt_minisat:latest` adds the MiniSat solver
+- `rvt_stp:latest` adds the STP solver
+- `rvt_klee:latest` adds the KLEE symbolic execution engine
+- `rvt:latest` adds a snapshot of the Rust verification tools repo
 
 In practice, the only image that is useful is `rvt`.
 The other images exist only to make it faster to rebuild rvt
-It takes several hours to build the `rust_compiler_dev` image.
+It takes several hours to build the `rvt_rustc` image.
 
 The `docker/build` script should be invoked in the top directory of `rust-verification-tools`.
 The script will invoke `sudo` so you may be asked for your password.
@@ -27,7 +30,7 @@ The script will invoke `sudo` so you may be asked for your password.
 Building the images creates an unprivileged user with the same username, uid and gid as the user that
 ran `docker/build`.
 
-No attempt has been made to reduce the size of the images – they are each around 10GB.
+No attempt has been made to reduce the size of the images – they total around 13GB.
 
 
 ## Using docker images
