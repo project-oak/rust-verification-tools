@@ -1,4 +1,4 @@
-FROM rvt_klee:latest
+FROM rvt_seahorn:latest
 
 # Placeholder args that are expected to be passed in at image build time.
 # See https://code.visualstudio.com/docs/remote/containers-advanced#_creating-a-nonroot-user
@@ -6,17 +6,14 @@ ARG USERNAME=user-name-goes-here
 ARG USER_UID=1000
 ARG USER_GID=${USER_UID}
 
-# Directory we copy RVT repo into
+# Directory we mount RVT repo in
 ENV RVT_DIR=/home/rust-verification-tools
-
-# Copy the rust-verification-tools repo into this image.
-# (An alternative would be to mount the directory when running the image.)
-USER root
 
 # The following replicates code in base_Dockerfile and
 # can be deleted next time I do a full rebuild of the images
-RUN echo '${USERNAME}  ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+USER root
 RUN apt install sudo
+RUN echo '${USERNAME}  ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
 # Switch to USERNAME and install tools / set environment
 USER ${USERNAME}
