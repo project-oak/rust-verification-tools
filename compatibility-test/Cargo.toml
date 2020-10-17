@@ -11,7 +11,7 @@ description = "Tests for both the propverify and the proptest crates - to check 
 [dependencies]
 
 [target.'cfg(verify)'.dependencies]
-propverify = { path="../propverify" }
+propverify = { path="/home/rust-verification-tools/propverify" }
 
 [target.'cfg(not(verify))'.dependencies]
 proptest = { version = "*" }

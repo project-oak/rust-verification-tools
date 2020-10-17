@@ -10,7 +10,8 @@ cd build
 cmake \
   -DCMAKE_INSTALL_PREFIX=/usr \
   -DENABLE_SOLVER_STP=ON \
-  -DLLVMCC=`which clang` \
+  -DLLVMCC=`which clang-10` \
+  -DLLVMCXX=`which clang++-10` \
   -DENABLE_KLEE_UCLIBC=OFF \
   -DLLVM_CONFIG_BINARY=`ls ${RUSTC_DIR}/build/x86_*/llvm/bin/llvm-config` \
   -DENABLE_UNIT_TESTS=ON \

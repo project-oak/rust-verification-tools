@@ -6,7 +6,8 @@ RUN apt-get --yes update \
   && apt-get install --no-install-recommends --yes \
   bison \
   build-essential \
-  clang \
+  clang-10 \
+  clang-tools-10 \
   cmake \
   curl \
   doxygen \
@@ -20,6 +21,9 @@ RUN apt-get --yes update \
   libsqlite3-dev \
   libssl-dev \
   libtcmalloc-minimal4 \
+  lld-10 \
+  llvm-10 \
+  ninja-build \
   perl \
   pkg-config \
   python3 \
