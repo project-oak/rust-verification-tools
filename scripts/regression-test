@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+set -e
+
+readonly FLAGS="--backend=klee --verbose --clean"
+cargo-verify ${FLAGS} --tests verification-annotations
+cargo-verify ${FLAGS} --tests compatibility-test
+
+
