@@ -12,9 +12,6 @@ ENV RVT_DIR=/home/rust-verification-tools
 # Copy the rust-verification-tools repo into this image.
 # (An alternative would be to mount the directory when running the image.)
 USER root
-RUN mkdir ${RVT_DIR} \
-  && chown ${USER_UID}:${USER_GID} ${RVT_DIR}
-COPY --chown=${USER_UID}:${USER_GID} . ${RVT_DIR}
 
 # The following replicates code in base_Dockerfile and
 # can be deleted next time I do a full rebuild of the images

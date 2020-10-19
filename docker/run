@@ -1,3 +1,9 @@
 #!/usr/bin/env bash
 
-sudo docker run --rm --mount type=bind,source=${PWD},target=${PWD} --workdir ${PWD} -it rvt:latest $*
+readonly RVT_SRC=$(dirname $(realpath -s "$0"))/..
+readonly RVT_DST=/home/rust-verification-tools
+
+readonly MOUNT_PWD="type=bind,source=${PWD},target=${PWD}"
+readonly MOUNT_RVT="type=bind,source=${RVT_SRC},target=${RVT_DST},readonly"
+
+sudo docker run --rm --mount ${MOUNT_RVT} --mount ${MOUNT_PWD} --workdir ${PWD} -it rvt:latest $*
