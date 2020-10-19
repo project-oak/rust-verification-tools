@@ -652,6 +652,8 @@ def main():
                       default="klee",
                       help='select backend')
   parser.add_argument('--verbose', '-v', action='count', default=0)
+  parser.add_argument('--clean', action='store_true', default=False,
+                      help="run 'cargo clean' first")
   parser.add_argument('--tests', action='store_true', default=False,
                       help='run #[test]s instead of main')
   parser.add_argument('--test', nargs="*", default=[], help='select tests to run')
@@ -665,6 +667,8 @@ def main():
 
   features = []
   if args.backend == "klee": features.extend(['--features', 'verifier-klee'])
+
+  if args.clean: os.system(f"cd {args.crate}; cargo clean")
 
   label = get_packagename(args.crate)
   if args.verbose: print(f"Checking {colored(label, 'white', attrs=['bold'])}")
