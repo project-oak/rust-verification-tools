@@ -10,26 +10,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Docker support.
-
-  This is now the preferred way of setting up your system.
-  Older installation instructions have been deleted.
-
-  Thanks to Steven Jiang for this.
 
 ### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-- Many minor documentation errors
-- cargo-verify verbosity control produces more useful output for debugging
-  cargo-verify with.
-
-
 
 [0.0.2]: https://github.com/project-oak/rust-verification-tools/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/project-oak/rust-verification-tools/releases/tag/v0.0.1

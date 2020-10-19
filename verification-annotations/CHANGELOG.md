@@ -10,8 +10,18 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Change assert! to better match standard Rust
+- Added traits NonDet (SMACK) and Symbolic (Crux) to improve compatibility with
+  other verifiers.
+- Added Crux-MIR support.
 
 ### Changed
 
-[0.0.2]: https://github.com/alastairreid/klee-annotations/compare/v0.0.1...v0.0.2
-[0.0.1]: https://github.com/alastairreid/klee-annotations/releases/tag/v0.0.1
+### Deprecated
+
+### Removed
+
+### Fixed
+
+[0.0.2]: https://github.com/project-oak/rust-verification-tools/compare/v0.0.1...v0.0.2
+[0.0.1]: https://github.com/project-oak/rust-verification-tools/releases/tag/v0.0.1
