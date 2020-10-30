@@ -197,6 +197,18 @@ macro_rules! proptest {
   };
 }
 
+/// Assume that condition `cond` is true
+#[macro_export]
+macro_rules! prop_assume {
+    ($expr:expr) => {
+        verifier::assume($expr)
+    };
+
+    ($expr:expr, $fmt:tt $(, $fmt_arg:expr),*) => {
+        verifier::assume($expr)
+    };
+}
+
 // Combine multiple strategies into a single strategy
 #[macro_export]
 macro_rules! prop_oneof {

@@ -11,6 +11,7 @@ mod strategy;
 
 pub mod prelude {
     // Macros
+    pub use crate::prop_assume;
     pub use crate::prop_compose;
     pub use crate::prop_oneof;
     pub use crate::proptest;
