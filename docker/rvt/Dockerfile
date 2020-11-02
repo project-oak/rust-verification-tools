@@ -13,7 +13,7 @@ ENV RVT_DIR=/home/rust-verification-tools
 # can be deleted next time I do a full rebuild of the images
 USER root
 RUN apt install sudo
-RUN echo '${USERNAME}  ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+RUN echo "${USERNAME}  ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Switch to USERNAME and install tools / set environment
 USER ${USERNAME}
