@@ -280,7 +280,7 @@ def run_proptest(crate, runtests, tests, verbose, replay, features):
 def klee_run(bcfile, name, entry, crate, kleeout, stats, klee_flags, verbosity):
   process = subprocess.Popen(['klee',
                               '--entry-point='+entry,
-                              # '--exit-on-error',
+                              '--exit-on-error',
                               # '--posix-runtime',
                               # '--libcxx',
                               '--libc=klee',
@@ -502,8 +502,23 @@ def klee_verify(bcfile, name, test, crate, runtests, features, flags, verbose, r
       stats = f"{stats['completed paths']} paths"
       print(f"     {name}: {stats}")
 
+  failures = sorted(glob.glob(f"{kleeout}/test*.err"))
+  if verbose > 0 and failures:
+    for f in failures:
+      print(f"      Failing test: {f}")
+
   if replay:
-    for ktest in sorted(glob.glob(f"{kleeout}/test*.ktest")):
+    # use -r -r to see all tests, not just failing tests
+    if replay > 1:
+      ktests = sorted(glob.glob(f"{kleeout}/test*.ktest"))
+    else:
+      ktests = [ (f
+                 .replace(".abort.err", ".ktest")
+                 .replace(".ptr.err", ".ktest")
+                 )
+               for f in failures ]
+
+    for ktest in ktests:
       print(f"    Test input {ktest}")
       replay_klee(ktest, name, crate, features, runtests)
   return status
@@ -661,7 +676,7 @@ def main():
   parser.add_argument('--jobs', '-j', metavar='N', type=int, default=multiprocessing.cpu_count(),
                       help='Number of parallel jobs, defaults to # of CPUs')
   parser.add_argument('--klee_flags', nargs="*", default=[], help='extra verification flags')
-  parser.add_argument('--replay', '-r', action='store_true', default=False,
+  parser.add_argument('--replay', '-r', action='count', default=0,
                       help='replay to display concrete input values')
   args = parser.parse_args()
 
