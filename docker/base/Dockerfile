@@ -59,5 +59,5 @@ ENV USER_HOME=/home/${USERNAME}
 # built as root, which happens on GCB).
 RUN (groupadd --gid=${USER_GID} ${USERNAME} || true) \
   && (useradd --shell=/bin/bash --uid=${USER_UID} --gid=${USER_GID} --create-home ${USERNAME} || true) \
-  && echo '${USERNAME}  ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+  && echo "${USERNAME}  ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
