@@ -2,6 +2,17 @@
 
 set -e
 
+readonly LLVMCC=`which clang-10`
+readonly LLVMCXX=`which clang++-10`
+readonly LLVM_CONFIG=`ls ${RUSTC_DIR}/build/x86_*/llvm/bin/llvm-config`
+
+git clone https://github.com/klee/klee-uclibc.git
+cd klee-uclibc
+readonly UCLIBC_DIR=`pwd`
+./configure --make-llvm-lib --with-cc="${LLVMCC}" --with-llvm-config="${LLVM_CONFIG}"
+make -j
+cd ..
+
 git clone https://github.com/klee/klee.git
 cd klee
 
@@ -10,10 +21,12 @@ cd build
 cmake \
   -DCMAKE_INSTALL_PREFIX=/usr \
   -DENABLE_SOLVER_STP=ON \
-  -DLLVMCC=`which clang-10` \
-  -DLLVMCXX=`which clang++-10` \
-  -DENABLE_KLEE_UCLIBC=OFF \
-  -DLLVM_CONFIG_BINARY=`ls ${RUSTC_DIR}/build/x86_*/llvm/bin/llvm-config` \
+  -DENABLE_KLEE_UCLIBC=ON \
+  -DENABLE_POSIX_RUNTIME=ON \
+  -DKLEE_UCLIBC_PATH="${UCLIBC_DIR}" \
+  -DLLVMCC="${LLVMCC}" \
+  -DLLVMCXX="${LLVMCXX}" \
+  -DLLVM_CONFIG_BINARY="${LLVM_CONFIG}" \
   -DENABLE_UNIT_TESTS=ON \
   -DGTEST_SRC_DIR=/root/klee/googletest-release-1.7.0 \
   ..
