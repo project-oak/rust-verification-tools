@@ -31,8 +31,8 @@ use std::collections::{BTreeMap, BTreeSet, BinaryHeap, LinkedList, VecDeque};
 // Strategies for composite types (tuples, vectors, etc.) typically contain
 // strategies for generating components of that type (e.g., the struct fields,
 // array/vector elements, etc.)
-pub trait Strategy {
-    type Value;
+pub trait Strategy: std::fmt::Debug {
+    type Value: std::fmt::Debug;
     fn value(&self) -> Self::Value;
 
     fn prop_map<O, F: Fn(Self::Value) -> O>(self, fun: F) -> Map<Self, F>
@@ -261,15 +261,16 @@ macro_rules! proptest_helper {
 // then implementing the Strategy trait for that type.
 
 // The most trivial strategy
+#[derive(Clone, Copy, Debug)]
 pub struct Just<T: Clone>(pub T);
-impl<T: Clone> Strategy for Just<T> {
+impl<T: Clone + std::fmt::Debug> Strategy for Just<T> {
     type Value = T;
     fn value(&self) -> Self::Value {
         self.0.clone()
     }
 }
 
-impl<T> Strategy for fn() -> T {
+impl<T: std::fmt::Debug> Strategy for fn() -> T {
     type Value = T;
 
     fn value(&self) -> Self::Value {
@@ -279,6 +280,7 @@ impl<T> Strategy for fn() -> T {
 
 pub mod bool {
     use super::*;
+    #[derive(Clone, Copy, Debug)]
     pub struct Any(());
     pub const ANY: Any = Any(());
     impl Strategy for Any {
@@ -293,6 +295,7 @@ pub mod bool {
 
 pub mod char {
     use super::*;
+    #[derive(Clone, Copy, Debug)]
     pub struct Any(());
     pub const ANY: Any = Any(());
     impl Strategy for Any {
@@ -307,11 +310,22 @@ pub mod char {
     }
 }
 
-pub struct Map<S: Strategy, F> {
+#[derive(Clone)]
+pub struct Map<S, F> {
     source: S,
     fun: Arc<F>,
 }
-impl<S: Strategy, T, F: Fn(S::Value) -> T> Strategy for Map<S, F> {
+
+impl<S: std::fmt::Debug, F> std::fmt::Debug for Map<S, F> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.debug_struct("Map")
+            .field("source", &self.source)
+            .field("fun", &"<function>")
+            .finish()
+    }
+}
+
+impl<S: Strategy, T: std::fmt::Debug, F: Fn(S::Value) -> T> Strategy for Map<S, F> {
     type Value = T;
     fn value(&self) -> Self::Value {
         let val = self.source.value();
@@ -319,11 +333,12 @@ impl<S: Strategy, T, F: Fn(S::Value) -> T> Strategy for Map<S, F> {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct MapInto<S: Strategy, T> {
     source: S,
     output: PhantomData<T>,
 }
-impl<S: Strategy, T> Strategy for MapInto<S, T>
+impl<S: Strategy, T: std::fmt::Debug> Strategy for MapInto<S, T>
 where
     S::Value: Into<T>,
 {
@@ -334,6 +349,7 @@ where
     }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct IndFlatten<S> {
     source: S,
 }
@@ -347,10 +363,21 @@ where
     }
 }
 
+#[derive(Clone)]
 pub struct IndFlattenMap<S, F> {
     source: S,
     fun: Arc<F>,
 }
+
+impl<S: std::fmt::Debug, F> std::fmt::Debug for IndFlattenMap<S, F> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.debug_struct("IndFlattenMap")
+            .field("source", &self.source)
+            .field("fun", &"<function>")
+            .finish()
+    }
+}
+
 impl<S: Strategy, T: Strategy, F: Fn(S::Value) -> T> Strategy for IndFlattenMap<S, F>
 where
     S::Value: Copy,
@@ -363,6 +390,7 @@ where
     }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct Flatten<S> {
     source: S,
 }
@@ -377,10 +405,21 @@ where
     }
 }
 
-pub struct Filter<S: Strategy, F> {
+#[derive(Clone)]
+pub struct Filter<S, F> {
     source: S,
     fun: Arc<F>,
 }
+
+impl<S: std::fmt::Debug, F> std::fmt::Debug for Filter<S, F> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.debug_struct("Filter")
+            .field("source", &self.source)
+            .field("fun", &"<function>")
+            .finish()
+    }
+}
+
 impl<S: Strategy, F: Fn(&S::Value) -> bool> Strategy for Filter<S, F> {
     type Value = S::Value;
     fn value(&self) -> Self::Value {
@@ -390,11 +429,22 @@ impl<S: Strategy, F: Fn(&S::Value) -> bool> Strategy for Filter<S, F> {
     }
 }
 
-pub struct FilterMap<S: Strategy, F> {
+#[derive(Clone)]
+pub struct FilterMap<S, F> {
     source: S,
     fun: Arc<F>,
 }
-impl<S: Strategy, F: Fn(S::Value) -> Option<T>, T> Strategy for FilterMap<S, F> {
+
+impl<S: std::fmt::Debug, F> std::fmt::Debug for FilterMap<S, F> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.debug_struct("FilterMap")
+            .field("source", &self.source)
+            .field("fun", &"<function>")
+            .finish()
+    }
+}
+
+impl<S: Strategy, F: Fn(S::Value) -> Option<T>, T: std::fmt::Debug> Strategy for FilterMap<S, F> {
     type Value = T;
     fn value(&self) -> Self::Value {
         let val = self.source.value();
@@ -405,7 +455,8 @@ impl<S: Strategy, F: Fn(S::Value) -> Option<T>, T> Strategy for FilterMap<S, F> 
     }
 }
 
-pub struct Union<S: Strategy> {
+#[derive(Clone, Copy, Debug)]
+pub struct Union<S> {
     x: S,
     y: S,
 }
@@ -437,10 +488,11 @@ proxy_strategy!(&'a mut S, 'a);
 proxy_strategy!(Rc<S>);
 proxy_strategy!(Arc<S>);
 
+#[derive(Debug)]
 pub struct BoxedStrategy<T> {
     b: Box<dyn Strategy<Value = T>>,
 }
-impl<T> Strategy for BoxedStrategy<T> {
+impl<T: Strategy> Strategy for BoxedStrategy<T> {
     type Value = T;
     fn value(&self) -> Self::Value {
         self.b.value()
@@ -452,6 +504,7 @@ macro_rules! numeric_api {
         $(
             pub mod $typ {
                 use super::*;
+                #[derive(Clone, Copy, Debug)]
                 pub struct Any(());
                 pub const ANY: Any = Any(());
                 impl Strategy for Any {
@@ -562,7 +615,8 @@ strategic_tuple! {0=>A; 1=>B; 2=>C; 3=>D; 4=>E; 5=>F; 6=>G; 7=>H; 8=>I; 9=>J; 10
 strategic_tuple! {0=>A; 1=>B; 2=>C; 3=>D; 4=>E; 5=>F; 6=>G; 7=>H; 8=>I; 9=>J; 10=>K; 11=>L;}
 
 // Array strategy where S is element strategy and T is [S::Value; n] for some n
-pub struct ArrayStrategy<S: Strategy, T> {
+#[derive(Clone, Copy, Debug)]
+pub struct ArrayStrategy<S, T> {
     s: S,
     _marker: PhantomData<T>,
 }
@@ -667,7 +721,8 @@ small_array!(32 uniform32: a0, a1, a2, a3, a4, a5, a6, a7, a8, a9,
                            a20, a21, a22, a23, a24, a25, a26, a27, a28, a29,
                            a30, a31);
 
-pub struct OptionStrategy<S: Strategy> {
+#[derive(Clone, Copy, Debug)]
+pub struct OptionStrategy<S> {
     s: S,
 }
 impl<S: Strategy> Strategy for OptionStrategy<S>
@@ -688,7 +743,8 @@ pub fn of<S: Strategy>(s: S) -> OptionStrategy<S> {
     OptionStrategy { s }
 }
 
-pub struct ResultStrategy<A: Strategy, B: Strategy> {
+#[derive(Clone, Copy, Debug)]
+pub struct ResultStrategy<A, B> {
     a: A,
     b: B,
 }
@@ -715,6 +771,7 @@ pub fn maybe_err<A: Strategy, B: Strategy>(a: A, b: B) -> ResultStrategy<A, B> {
     ResultStrategy { a, b }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct VecStrategy<S: Strategy> {
     element: S,
     size: usize, // concrete size to be more friendly to concolic/DSE
@@ -741,6 +798,7 @@ pub fn vec<S: Strategy>(element: S, size: usize) -> VecStrategy<S> {
     VecStrategy { element, size }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct VecDequeStrategy<S: Strategy> {
     element: S,
     size: usize, // concrete size to be more friendly to concolic/DSE
@@ -767,6 +825,7 @@ pub fn vec_deque<S: Strategy>(element: S, size: usize) -> VecDequeStrategy<S> {
     VecDequeStrategy { element, size }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct LinkedListStrategy<S: Strategy> {
     element: S,
     size: usize, // concrete size to be more friendly to concolic/DSE
@@ -790,6 +849,7 @@ pub fn linked_list<S: Strategy>(element: S, size: usize) -> LinkedListStrategy<S
     LinkedListStrategy { element, size }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct BTreeMapStrategy<K: Strategy, V: Strategy> {
     keys: K,
     value: V,
@@ -828,6 +888,7 @@ where
     BTreeMapStrategy { size, keys, value }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct BTreeSetStrategy<S: Strategy> {
     element: S,
     size: usize, // concrete size to be more friendly to concolic/DSE
@@ -865,6 +926,7 @@ where
     BTreeSetStrategy { element, size }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct BinaryHeapStrategy<S: Strategy> {
     element: S,
     size: usize, // concrete size to be more friendly to concolic/DSE
