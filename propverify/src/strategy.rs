@@ -145,6 +145,18 @@ pub trait Strategy: std::fmt::Debug {
     }
 }
 
+pub trait Arbitrary: Sized + std::fmt::Debug {
+    type Strategy: Strategy<Value = Self>;
+    fn arbitrary() -> Self::Strategy;
+}
+
+pub type StrategyFor<A> = <A as Arbitrary>::Strategy;
+
+pub fn any<A: Arbitrary>() -> StrategyFor<A> {
+    // ^-- We use a shorter name so that turbofish becomes more ergonomic.
+    A::arbitrary()
+}
+
 // It appears that if a macro refers to an import that has been renamed
 // using 'use X as Y;', then the macro cannot refer to 'Y::foo'
 // but it can refer to functions defined in the same crate as the macro.
@@ -291,6 +303,10 @@ pub mod bool {
             c == 1
         }
     }
+    impl Arbitrary for bool {
+        type Strategy = Any;
+        fn arbitrary() -> Self::Strategy { ANY }
+    }
 }
 
 pub mod char {
@@ -307,6 +323,10 @@ pub mod char {
                 None => verifier::reject(),
             }
         }
+    }
+    impl Arbitrary for char {
+        type Strategy = Any;
+        fn arbitrary() -> Self::Strategy { ANY }
     }
 }
 
@@ -513,6 +533,10 @@ macro_rules! numeric_api {
                         let r : $typ = verifier::AbstractValue::abstract_value();
                         r
                     }
+                }
+                impl Arbitrary for $typ {
+                    type Strategy = Any;
+                    fn arbitrary() -> Self::Strategy { ANY }
                 }
             }
 
