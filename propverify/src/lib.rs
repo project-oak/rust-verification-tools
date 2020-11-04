@@ -25,6 +25,9 @@ pub mod prelude {
     // Modules with same name as types
     pub use crate::strategy::{bool, char};
 
+    // Arbitrary trait
+    pub use crate::strategy::{Arbitrary, any};
+
     pub mod prop {
         pub use crate::strategy::prop_is_replay;
         pub use crate::strategy::{uniform0, uniform1, uniform2, uniform3, uniform4};
