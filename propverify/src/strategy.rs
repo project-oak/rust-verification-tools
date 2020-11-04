@@ -13,6 +13,7 @@ use std::boxed::Box;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::borrow::Cow;
 
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, LinkedList, VecDeque};
 // use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque};
@@ -173,7 +174,7 @@ macro_rules! proptest {
     ) => {
       #[cfg_attr(crux, crux_test)]
       $(#[cfg_attr(not(crux), $meta)])*
-      fn $test_name() {
+      fn $test_name() -> ::core::result::Result<(), $crate::prelude::TestCaseError> {
           $(
               #[cfg(not(crux))]
               {
@@ -191,6 +192,7 @@ macro_rules! proptest {
           }
 
           $body
+          ::core::result::Result::Ok(())
       }
   };
 }
@@ -266,6 +268,53 @@ macro_rules! proptest_helper {
         ($a0, $a1, $a2, $a3)
     };
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Reason(Cow<'static, str>);
+
+impl Reason {
+    pub fn message(&self) -> &str {
+        &*self.0
+    }
+}
+
+impl From<&'static str> for Reason {
+    fn from(s: &'static str) -> Self {
+        Reason(s.into())
+    }
+}
+
+impl From<String> for Reason {
+    fn from(s: String) -> Self {
+        Reason(s.into())
+    }
+}
+
+impl From<Box<str>> for Reason {
+    fn from(s: Box<str>) -> Self {
+        Reason(String::from(s).into())
+    }
+}
+
+impl std::fmt::Display for Reason {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.message(), f)
+    }
+}
+
+#[derive(Debug)]
+pub enum TestCaseError {
+}
+
+impl TestCaseError {
+    pub fn reject(_reason: impl Into<Reason>) -> ! {
+        verifier::reject()
+    }
+    pub fn fail(_reason: impl Into<Reason>) -> ! {
+        verifier::abort()
+    }
+}
+
 
 // The remainder of this file consists of implementations of the Strategy trait.
 // In most cases, this consists of defining a new struct type to represent
