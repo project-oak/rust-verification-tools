@@ -17,7 +17,6 @@ RUN apt-get --yes update \
   gcc-multilib \
   git \
   lib32stdc++-7-dev \
-  libboost-all-dev \
   libgmp-dev \
   libgmpxx4ldbl \
   libncurses5-dev \
@@ -31,10 +30,19 @@ RUN apt-get --yes update \
 
 WORKDIR /opt
 
+# It's easier to get it from apt (libboost-all-dev), but ubuntu 18.04 has an old
+# version (< 1.71.0)
+ARG BOOST_VERSION=1.71.0
+RUN curl --location "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_$(echo "${BOOST_VERSION}" | tr . _).tar.gz" > boost.tgz \
+    && tar xf boost.tgz \
+    && rm boost.tgz
+
 ARG YICES_VERSION=2.6.2
 RUN curl --location https://yices.csl.sri.com/releases/${YICES_VERSION}/yices-${YICES_VERSION}-x86_64-pc-linux-gnu-static-gmp.tar.gz > yices.tgz \
   && tar xf yices.tgz \
-  && rm yices.tgz
+  && rm yices.tgz \
+  && cd "yices-${YICES_VERSION}" \
+  && ./install-yices
 
 RUN mkdir /root/seahorn
 WORKDIR /root/seahorn
@@ -50,8 +58,9 @@ RUN mkdir seahorn/build \
      -DCMAKE_BUILD_TYPE="Release" \
      -DCMAKE_CXX_COMPILER="clang++-10" \
      -DCMAKE_C_COMPILER="clang-10" \
+     -DBOOST_ROOT="/opt/boost_$(echo "${BOOST_VERSION}" | tr . _)" \
      -DZ3_ROOT=${Z3_DIR} \
-     -DYICES2_HOME=${YICES_DIR} \
+     -DYICES2_HOME="/opt/yices-${YICES_VERSION}" \
      -DSEA_ENABLE_LLD="ON" \
      -GNinja \
      -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
@@ -61,6 +70,3 @@ RUN mkdir seahorn/build \
 RUN cd seahorn/build && cmake --build . --target extra  && cmake ..
 RUN cd seahorn/build && cmake --build . --target crab  && cmake ..
 RUN cd seahorn/build && cmake --build . --target install
-# RUN cd seahorn/build && cmake --build . --target units_z3
-# RUN cd seahorn/build && cmake --build . --target units_yices2
-# RUN cd seahorn/build && cmake --build . --target package
