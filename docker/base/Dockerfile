@@ -8,6 +8,7 @@ RUN apt-get --yes update \
   build-essential \
   clang-10 \
   clang-tools-10 \
+  gcc-multilib \
   cmake \
   curl \
   doxygen \
