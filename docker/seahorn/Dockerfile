@@ -1,54 +1,20 @@
-FROM rvt_z3:latest
+FROM rvt_yices:latest
 
 USER root
+RUN mkdir /home/seahorn
+WORKDIR /home/seahorn
 
-RUN echo ${Z3_DIR} && ls ${Z3_DIR}
+ARG VERIFY_COMMON_VERSION
+ARG SEAHORN_VERSION
+ARG YICES_VERSION
 
-# Install Debian and Python dependencies
-ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get --yes update \
-  && apt-get install --no-install-recommends --yes \
-  build-essential \
-  clang-10 \
-  clang-format-10 \
-  clang-tools-10 \
-  cmake \
-  g++-7-multilib \
-  gcc-multilib \
-  git \
-  lib32stdc++-7-dev \
-  libgmp-dev \
-  libgmpxx4ldbl \
-  libncurses5-dev \
-  lld-10 \
-  llvm-10 \
-  ncurses-doc \
-  ninja-build \
-  subversion \
-  # Cleanup
-  && apt-get clean
+RUN git clone https://github.com/yvizel/verify-c-common.git \
+  && cd verify-c-common \
+  && git checkout ${VERIFY_COMMON_VERSION}
 
-WORKDIR /opt
-
-# It's easier to get it from apt (libboost-all-dev), but ubuntu 18.04 has an old
-# version (< 1.71.0)
-ARG BOOST_VERSION=1.71.0
-RUN curl --location "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_$(echo "${BOOST_VERSION}" | tr . _).tar.gz" > boost.tgz \
-    && tar xf boost.tgz \
-    && rm boost.tgz
-
-ARG YICES_VERSION=2.6.2
-RUN curl --location https://yices.csl.sri.com/releases/${YICES_VERSION}/yices-${YICES_VERSION}-x86_64-pc-linux-gnu-static-gmp.tar.gz > yices.tgz \
-  && tar xf yices.tgz \
-  && rm yices.tgz \
-  && cd "yices-${YICES_VERSION}" \
-  && ./install-yices
-
-RUN mkdir /root/seahorn
-WORKDIR /root/seahorn
-
-RUN git clone https://github.com/yvizel/verify-c-common.git
-RUN git clone --branch=dev10 https://github.com/seahorn/seahorn.git
+RUN git clone https://github.com/seahorn/seahorn.git \
+  && cd seahorn \
+  && git checkout ${SEAHORN_VERSION}
 
 RUN mkdir seahorn/build \
   && cd seahorn/build \
@@ -58,9 +24,8 @@ RUN mkdir seahorn/build \
      -DCMAKE_BUILD_TYPE="Release" \
      -DCMAKE_CXX_COMPILER="clang++-10" \
      -DCMAKE_C_COMPILER="clang-10" \
-     -DBOOST_ROOT="/opt/boost_$(echo "${BOOST_VERSION}" | tr . _)" \
      -DZ3_ROOT=${Z3_DIR} \
-     -DYICES2_HOME="/opt/yices-${YICES_VERSION}" \
+     -DYICES2_HOME="/home/yices/yices-${YICES_VERSION}" \
      -DSEA_ENABLE_LLD="ON" \
      -GNinja \
      -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \

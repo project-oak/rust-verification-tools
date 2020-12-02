@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # Install Debian and Python dependencies
 ARG DEBIAN_FRONTEND=noninteractive
@@ -7,8 +7,10 @@ RUN apt-get --yes update \
   bison \
   build-essential \
   clang-10 \
+  clang-format-10 \
   clang-tools-10 \
   gcc-multilib \
+  g++-7-multilib \
   cmake \
   curl \
   doxygen \
@@ -22,14 +24,19 @@ RUN apt-get --yes update \
   libsqlite3-dev \
   libssl-dev \
   libtcmalloc-minimal4 \
+  lib32stdc++-7-dev \
+  libgmp-dev \
+  libgmpxx4ldbl \
   lld-10 \
   llvm-10 \
+  ncurses-doc \
   ninja-build \
   perl \
   pkg-config \
   python3 \
   python3-minimal \
   python3-pip \
+  subversion \
   sudo \
   unzip \
   wget \

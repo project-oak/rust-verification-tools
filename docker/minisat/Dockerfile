@@ -4,5 +4,14 @@ USER root
 RUN mkdir /home/minisat
 WORKDIR /home/minisat
 
-COPY build_minisat ./
-RUN sh build_minisat
+ARG MINISAT_VERSION
+RUN git clone https://github.com/stp/minisat.git \
+  && cd minisat \
+  && git checkout ${MINISAT_VERSION} \
+  && git submodule init \
+  && git submodule update \
+  && mkdir build \
+  && cd build \
+  && cmake .. \
+  && make -j4 \
+  && make install
