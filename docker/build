@@ -18,5 +18,6 @@ set -e
 (cd docker/stp     && ../mkimage rvt_stp        Dockerfile)
 (cd docker/klee    && ../mkimage rvt_klee       Dockerfile)
 (cd docker/z3      && ../mkimage rvt_z3         Dockerfile)
+(cd docker/yices   && ../mkimage rvt_yices      Dockerfile)
 (cd docker/seahorn && ../mkimage rvt_seahorn    Dockerfile)
 (cd docker/rvt     && ../mkimage rvt            Dockerfile)

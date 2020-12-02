@@ -8,7 +8,7 @@ WORKDIR /home/z3
 # (Changing this to build from source would be fine - but slow)
 #
 # The Ubuntu version is a little out of date but that doesn't seem to cause any problems
-ARG Z3_VERSION=4.8.7
+ARG Z3_VERSION
 RUN curl --location https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-ubuntu-16.04.zip > z3.zip \
   && unzip -q z3.zip \
   && rm z3.zip

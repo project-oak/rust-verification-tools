@@ -6,9 +6,10 @@ WORKDIR ${USER_HOME}
 # Fetch rustc
 ENV RUSTC_DIR=${USER_HOME}/rust
 ARG RUSTFLAGS_STAGE_NOT_0="-Cembed-bitcode=yes"
+ARG RUSTC_VERSION
 RUN git clone https://github.com/rust-lang/rust.git
 RUN cd ${RUSTC_DIR} \
-  && git checkout 1.46.0 \
+  && git checkout ${RUSTC_VERSION} \
   && git submodule update --jobs 16 --init --recursive
 
 # Configure

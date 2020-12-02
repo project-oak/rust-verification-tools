@@ -2,6 +2,6 @@
 
 set -e
 
-curl -OL https://github.com/google/googletest/archive/release-1.7.0.zip
-unzip -q release-1.7.0.zip
-rm release-1.7.0.zip
+curl -OL https://github.com/google/googletest/archive/release-${GTEST_VERSION}.zip
+unzip -q release-${GTEST_VERSION}.zip
+rm release-${GTEST_VERSION}.zip

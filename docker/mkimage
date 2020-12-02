@@ -22,4 +22,14 @@ sudo docker build \
   --build-arg=USERNAME="$DOCKER_USER" \
   --build-arg=USER_UID="$DOCKER_UID" \
   --build-arg=USER_GID="$DOCKER_GID" \
+  --build-arg=GTEST_VERSION="1.7.0" \
+  --build-arg=KLEE_VERSION="c51ffcd377097ee80ec9b0d6f07f8ea583a5aa1d" \
+  --build-arg=MINISAT_VERSION="37158a35c62d448b3feccfa83006266e12e5acb7" \
+  --build-arg=RUSTC_VERSION="1.46.0" \
+  --build-arg=STP_VERSION="2.3.3" \
+  --build-arg=SEAHORN_VERSION="2e7239d8d2d7be21e64956aa83d936a773e18e32" \
+  --build-arg=UCLIBC_VERSION="klee_uclibc_v1.2" \
+  --build-arg=VERIFY_COMMON_VERSION="8dadb385483984cde4d3a24a61629621e12f6437" \
+  --build-arg=YICES_VERSION="2.6.2" \
+  --build-arg=Z3_VERSION="4.8.7" \
   . 1>&2
