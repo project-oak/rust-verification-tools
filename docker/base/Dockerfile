@@ -1,4 +1,5 @@
-FROM ubuntu:20.04
+ARG UBUNTU_VERSION
+FROM ubuntu:${UBUNTU_VERSION}
 
 # Install Debian and Python dependencies
 ARG DEBIAN_FRONTEND=noninteractive

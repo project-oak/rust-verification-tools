@@ -7,7 +7,7 @@ WORKDIR ${USER_HOME}
 ENV RUSTC_DIR=${USER_HOME}/rust
 ARG RUSTFLAGS_STAGE_NOT_0="-Cembed-bitcode=yes"
 ARG RUSTC_VERSION
-RUN git clone https://github.com/rust-lang/rust.git
+RUN git clone --no-checkout https://github.com/rust-lang/rust.git ${RUSTC_DIR}
 RUN cd ${RUSTC_DIR} \
   && git checkout ${RUSTC_VERSION} \
   && git submodule update --jobs 16 --init --recursive

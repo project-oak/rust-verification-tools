@@ -22,6 +22,7 @@ sudo docker build \
   --build-arg=USERNAME="$DOCKER_USER" \
   --build-arg=USER_UID="$DOCKER_UID" \
   --build-arg=USER_GID="$DOCKER_GID" \
+  --build-arg=UBUNTU_VERSION="20.04" \
   --build-arg=GTEST_VERSION="1.7.0" \
   --build-arg=KLEE_VERSION="c51ffcd377097ee80ec9b0d6f07f8ea583a5aa1d" \
   --build-arg=MINISAT_VERSION="37158a35c62d448b3feccfa83006266e12e5acb7" \

@@ -5,7 +5,7 @@ RUN mkdir /home/minisat
 WORKDIR /home/minisat
 
 ARG MINISAT_VERSION
-RUN git clone https://github.com/stp/minisat.git \
+RUN git clone --no-checkout https://github.com/stp/minisat.git \
   && cd minisat \
   && git checkout ${MINISAT_VERSION} \
   && git submodule init \
