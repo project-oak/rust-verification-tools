@@ -19,7 +19,6 @@ pub mod prelude {
     // Functions and types
     pub use crate::strategy::of;
     pub use crate::strategy::prop_is_replay;
-    pub use crate::strategy::TestCaseError;
     pub use crate::strategy::Just;
     pub use crate::strategy::Strategy;
     pub use crate::strategy::{maybe_err, maybe_ok};
