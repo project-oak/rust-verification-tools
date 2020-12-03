@@ -1,5 +1,7 @@
 FROM rvt_base:latest
 
+ARG USERNAME
+
 USER ${USERNAME}
 WORKDIR ${USER_HOME}
 
