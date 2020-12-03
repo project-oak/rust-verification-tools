@@ -487,7 +487,7 @@ impl<S: Strategy, F: Fn(S::Value) -> Option<T>, T: std::fmt::Debug> Strategy for
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Union<S> {
     x: S,
     y: S,
@@ -524,7 +524,7 @@ proxy_strategy!(Arc<S>);
 pub struct BoxedStrategy<T> {
     b: Box<dyn Strategy<Value = T>>,
 }
-impl<T: Strategy> Strategy for BoxedStrategy<T> {
+impl<T: std::fmt::Debug> Strategy for BoxedStrategy<T> {
     type Value = T;
     fn value(&self) -> Self::Value {
         self.b.value()
