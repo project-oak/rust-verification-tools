@@ -5,7 +5,7 @@ RUN mkdir /home/stp
 WORKDIR /home/stp
 
 ARG STP_VERSION
-RUN git clone https://github.com/stp/stp.git \
+RUN git clone --no-checkout https://github.com/stp/stp.git \
   && cd stp \
   && git checkout tags/${STP_VERSION} \
   && mkdir build \

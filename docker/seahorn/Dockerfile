@@ -8,11 +8,11 @@ ARG VERIFY_COMMON_VERSION
 ARG SEAHORN_VERSION
 ARG YICES_VERSION
 
-RUN git clone https://github.com/yvizel/verify-c-common.git \
+RUN git clone --no-checkout https://github.com/yvizel/verify-c-common.git \
   && cd verify-c-common \
   && git checkout ${VERIFY_COMMON_VERSION}
 
-RUN git clone https://github.com/seahorn/seahorn.git \
+RUN git clone --no-checkout https://github.com/seahorn/seahorn.git \
   && cd seahorn \
   && git checkout ${SEAHORN_VERSION}
 
