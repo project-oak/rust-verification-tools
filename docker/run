@@ -4,6 +4,6 @@ readonly RVT_SRC=$(dirname $(realpath -s "$0"))/..
 readonly RVT_DST=/home/rust-verification-tools
 
 readonly MOUNT_PWD="type=bind,source=${PWD},target=${PWD}"
-readonly MOUNT_RVT="type=bind,source=${RVT_SRC},target=${RVT_DST},readonly"
+readonly MOUNT_RVT="type=bind,source=${RVT_SRC},target=${RVT_DST}"
 
 sudo docker run --rm --mount ${MOUNT_RVT} --mount ${MOUNT_PWD} --workdir ${PWD} -it rvt:latest $*
