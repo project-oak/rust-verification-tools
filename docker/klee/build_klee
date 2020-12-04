@@ -29,8 +29,8 @@ cmake \
   -DLLVMCXX="${LLVMCXX}" \
   -DLLVM_CONFIG_BINARY="${LLVM_CONFIG}" \
   -DENABLE_UNIT_TESTS=ON \
-  -DGTEST_SRC_DIR=/home/klee/googletest-release-${GTEST_VERSION} \
+  -DGTEST_SRC_DIR=${GTEST_DIR} \
   ..
 make -j 4
 make check
-make install
+sudo make install

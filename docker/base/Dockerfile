@@ -34,6 +34,7 @@ RUN apt-get --yes update \
   ninja-build \
   perl \
   pkg-config \
+  python \
   python3 \
   python3-minimal \
   python3-pip \
