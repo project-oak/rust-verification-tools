@@ -1,8 +1,8 @@
 FROM rvt_stp:latest
 
-USER root
-
+# Temporary patch until we update base
 # Install python2 - because uclibc needs it
+USER root
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get --yes update \
   && apt-get install --no-install-recommends --yes \
@@ -10,14 +10,19 @@ RUN apt-get --yes update \
   # Cleanup
   && apt-get clean
 
-USER root
-RUN mkdir /home/klee
-WORKDIR /home/klee
+ARG USERNAME
+
+WORKDIR ${USER_HOME}
+COPY build_googletest .
+COPY build_klee .
+RUN chown ${USERNAME} -R build_googletest build_klee
+
+USER ${USERNAME}
+WORKDIR ${USER_HOME}
 
 ARG GTEST_VERSION
-COPY build_googletest .
+ENV GTEST_DIR=${USER_HOME}/googletest-release-${GTEST_VERSION}
 RUN sh build_googletest
 
 ARG KLEE_VERSION
-COPY build_klee .
 RUN sh build_klee
