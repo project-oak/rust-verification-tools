@@ -597,7 +597,7 @@ def verify(label, crate, runtests, testfilter, verifier_flags, verbose, replay, 
     if verbose > 2: print(f"  Getting list of tests in {label}")
     tests = list_tests(crate, verbose, features)
     if testfilter:
-      tests = [ t for t in tests if any([ t.startswith(f) for f in testfilter ]) ]
+      tests = [ t for t in tests if any([ f in t for f in testfilter ]) ]
     if not tests:
       print("No tests found")
       return status_unknown
