@@ -17,6 +17,11 @@ either form of verification.
 
 We aim to add other backends in the near future.
 
+In addition, [we document](docs/README.md) how the tools we wrote work
+in case you are porting a verification tool for use with Rust.
+(In particular, we describe how to generate LLVM bitcode files that can
+be used with LLVM-based verification tools.)
+
 
 ## Tools and libraries
 
