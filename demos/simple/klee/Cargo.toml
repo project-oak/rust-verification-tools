@@ -1,0 +1,11 @@
+[package]
+name = "try-klee"
+version = "0.1.0"
+authors = [""]
+edition = "2018"
+
+[dependencies]
+verification-annotations = { path="/home/rust-verification-tools/verification-annotations" }
+
+[features]
+verifier-klee = ["verification-annotations/verifier-klee"]

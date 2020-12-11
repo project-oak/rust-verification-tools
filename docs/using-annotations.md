@@ -139,6 +139,8 @@ the same simple example we
 This might be useful if you wonder how propverify is implemented
 or if you prefer to use the more conventional verifier interface.
 
+This code is in `demos/simple/klee` and the shell commands in this
+file are in `demos/simple/klee/verify.sh`.
 
 ```
 use verification_annotations as verifier;
@@ -175,13 +177,12 @@ to invoke KLEE.
 (We cannot run this example with a fuzzer.)
 
 
-## Creating a test crate
-
 The Rust compiler and KLEE are in the Dockerfile (see
 [installation](installation.md)) so start the Docker image
 by running
 
 ``` shell
+cd demos/simple/annotations
 ../docker/run
 ```
 
@@ -194,37 +195,6 @@ a separate editor to edit the files in another terminal.)
 To try the above example, we will create a crate in which to experiment with this
 code.
 
-```
-cargo new try-verifier
-cd try-verifier
-
-cat >> Cargo.toml  << "EOF"
-
-verification-annotations = { path="/home/rust-verification-tools/verification-annotations" }
-
-[features]
-verifier-klee = ["verification-annotations/verifier-klee"]
-verifier-crux = ["verification-annotations/verifier-crux"]
-EOF
-
-cat > src/main.rs  << "EOF"
-use verification_annotations as verifier;
-
-#[cfg_attr(feature="verifier-crux", crux_test)]
-#[cfg_attr(not(feature="verifier-crux"), test)]
-fn t1() {
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
-    verifier::assume(1 <= a && a <= 1000);
-    verifier::assume(1 <= b && b <= 1000);
-    if verifier::is_replay() {
-        eprintln!("Test values: a = {}, b = {}", a, b);
-    }
-    let r = a*b;
-    verifier::assert!(1 <= r && r < 1000000);
-}
-EOF
-```
 
 ## Verifying with KLEE (and `cargo-verify`)
 
