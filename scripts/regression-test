@@ -3,6 +3,8 @@
 set -e
 
 readonly FLAGS="--backend=klee --verbose --clean"
+(cd demos/simple/annotations; ./verify.sh)
+(cd demos/simple/klee; ./verify.sh)
 cargo-verify ${FLAGS} --tests verification-annotations
 cargo-verify ${FLAGS} --tests compatibility-test
 

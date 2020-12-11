@@ -14,7 +14,10 @@ that we will forget to update this document so you may have to [use the
 source](../scripts/cargo-verify))._
 
 The Rust compiler is based on the LLVM platform and
-KLEE is based on LLVM so the steps involved in using
+[KLEE](http://klee.github.io/)
+is based on
+[LLVM](https://llvm.org/)
+so the steps involved in using
 KLEE to verify Rust programs are:
 
 1. Compile the program to generate LLVM bitcode.
@@ -27,10 +30,11 @@ KLEE to verify Rust programs are:
 As a running example, we will use the same example
 that we used to explain [how to use the verification-annotations
 crate](using-annotations.md).
-(Except that we will fix the deliberate bug.)
 
+This code is in `demos/simple/klee` and the shell commands in this
+file are in `demos/simple/klee/verify.sh`.
 
-```
+``` rust
 use verification_annotations as verifier;
 
 fn main() {
@@ -51,7 +55,8 @@ The Rust compiler and KLEE are in the Dockerfile (see
 by running
 
 ``` shell
-../docker/run
+cd demos/simple/klee
+docker/run
 ```
 
 All remaining commands in this file will be run in this docker
@@ -59,39 +64,6 @@ image.
 
 (It is usually easiest to run this in one terminal while using
 a separate editor to edit the files in another terminal.)
-
-To try the above example, we will create a crate in which to experiment with this
-code.
-
-``` shell
-cargo new try-klee
-cd try-klee
-
-cat >> Cargo.toml  << "EOF"
-
-verification-annotations = { path="/home/rust-verification-tools/verification-annotations" }
-
-[features]
-verifier-klee = ["verification-annotations/verifier-klee"]
-EOF
-
-cat > src/main.rs  << "EOF"
-use verification_annotations as verifier;
-
-fn main() {
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
-    verifier::assume(1 <= a && a <= 1000);
-    verifier::assume(1 <= b && b <= 1000);
-    if verifier::is_replay() {
-        eprintln!("Test values: a = {}, b = {}", a, b);
-    }
-    let r = a*b;
-    verifier::assert!(1 <= r && r <= 1000000);
-}
-EOF
-```
-
 
 
 ## Compiling Rust for verification
@@ -166,9 +138,9 @@ to compile with a low (but non-zero) level of optimization, to disable
 more sophisticated optimizations and to disable SSE and AVX features.
 
 ```
-RUSTFLAGS="-Copt-level=1 $RUSTFLAGS"
-RUSTFLAGS="-Cno-vectorize-loops -Cno-vectorize-slp $RUSTFLAGS"
-RUSTFLAGS="-Ctarget-feature=-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2 $RUSTFLAGS"
+export RUSTFLAGS="-Copt-level=1 $RUSTFLAGS"
+export RUSTFLAGS="-Cno-vectorize-loops -Cno-vectorize-slp $RUSTFLAGS"
+export RUSTFLAGS="-Ctarget-feature=-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2 $RUSTFLAGS"
 ```
 
 (This is not needed for our simple example.)
@@ -312,7 +284,7 @@ it is put in
 In the above, we used this command to invoke KLEE
 
 ```
-klee --output-dir=kleeout --warnings-only-to-file target/debug/deps/try_klee*.bc
+klee --libc=klee --output-dir=kleeout --warnings-only-to-file target/debug/deps/try_klee*.bc
 ```
 
 Some additional flags that are worth using for larger examples are
