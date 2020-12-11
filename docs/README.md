@@ -23,3 +23,5 @@
     Interesting if you want to know how `cargo-verify` works
     or if you are working with another LLVM-based verification tool.
 
+  - [using FFI](using-ffi.md): how to verify crates that use the
+    foreign function interface (ffi) to call C code.
