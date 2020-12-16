@@ -822,8 +822,6 @@ pub struct VecStrategy<S: Strategy> {
     size: usize, // concrete size to be more friendly to concolic/DSE
 }
 impl<S: Strategy> Strategy for VecStrategy<S>
-where
-    S: Strategy + Clone,
 {
     type Value = Vec<S::Value>;
     fn value(&self) -> Self::Value {
