@@ -1,39 +1,57 @@
 use clap::{Arg, App};
 use std::path::Path;
+use std::ffi::OsStr;
 
 use inkwell::memory_buffer::MemoryBuffer;
 use inkwell::context::Context;
 use inkwell::module::Module;
 
 fn main() {
+    // Command line argument parsing (using clap)
     let matches = App::new("Test inkwell")
         // .version("0.1.0")
         // .author("")
         // .about("")
-        .arg(Arg::with_name("output")
+        .arg(Arg::with_name("INPUT")
+                 .help("Input file name")
+                 .required(true)
+                 .index(1))
+        .arg(Arg::with_name("OUTPUT")
+                 .help("Output file name")
                  .short("o")
                  .long("output")
                  .takes_value(true)
-                 .help("Output file name"))
-        .arg(Arg::with_name("INPUT")
-                 .required(true)
-                 .index(1)
-                 .help("The input file"))
+                 .default_value("out"))
         .get_matches();
 
-    let path_in  = matches.value_of("INPUT").expect("ERROR: missing input file name argument.");
+    let path_in  = matches.value_of("INPUT")
+        .expect("ERROR: missing input file name argument.");
     let path_in  = Path::new(path_in);
-    let path_out = matches.value_of("output").unwrap_or("out");
+
+    let path_out = matches.value_of("OUTPUT")
+        .expect("ERROR: missing output file name argument.");
     let path_out = Path::new(path_out);
+
 
     let memory_buffer = MemoryBuffer::create_from_file(path_in)
         .expect("ERROR: failed to open file.");
+
+
     let context = Context::create();
     let module = context.create_module_from_ir(memory_buffer)
         .expect("ERROR: failed to create module.");
+
     handle_initializers(&module);
-    module.print_to_file(path_out)
-        .expect("ERROR: failed to write to file.");
+
+    if path_out.extension() == Some(OsStr::new("bc")) {
+        // output bitcode
+        module.write_bitcode_to_path(path_out);
+    } else {
+        // output disassembled bitcode
+        // TODO: this function returns bool but the doc doesn't say anything about it.
+        module.print_to_file(path_out)
+            .expect("ERROR: failed to write to file.");
+    }
 }
 
 ////////////////////////////////////////////////////////////////
