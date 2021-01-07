@@ -9,4 +9,5 @@ edition = "2018"
 [dependencies]
 clap = "2.33"
 # inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm10-0"] }
-inkwell = { features = ["llvm10-0"] }
+# inkwell = { features = ["llvm10-0"] }
+inkwell = { git = "https://github.com/dylanede/inkwell", branch = "section_null", features = ["llvm10-0"] }
