@@ -34,7 +34,12 @@ fn main() {
     let mut og = module.get_first_global();
     while let Some(g) = og {
         if let Some(s) = g.get_section() {
-            println!("Global name: {} section: {}", g.get_name().to_str().unwrap(), s.to_str().unwrap());
+            if let Ok(s) = s.to_str() {
+                if s.starts_with(".init_array") {
+                    let i = g.get_initializer().unwrap().into_struct_value();
+                    println!("Global name: {} section: {} initializer: {:?}", g.get_name().to_str().unwrap(), s, i)
+                }
+            }
         }
         og = g.get_next_global();
     }
