@@ -31,6 +31,11 @@ fn main() {
     let context = Context::create();
     let module = context.create_module_from_ir(memory_buffer)
         .expect("ERROR: failed to create module.");
+    let mut og = module.get_first_global();
+    while let Some(g) = og {
+        println!("Global {}", g.get_name().to_str().unwrap());
+        og = g.get_next_global()
+    }
     module.print_to_file(path_out)
         .expect("ERROR: failed to write to file.");
 }
