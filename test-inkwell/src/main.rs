@@ -1,10 +1,13 @@
 use clap::{Arg, App};
 use std::path::Path;
 use std::ffi::OsStr;
+use regex::Regex;
 
 use inkwell::memory_buffer::MemoryBuffer;
 use inkwell::context::Context;
 use inkwell::module::Module;
+use inkwell::module::Linkage;
+use inkwell::values::FunctionValue;
 
 fn main() {
     // Command line argument parsing (using clap)
@@ -13,15 +16,15 @@ fn main() {
         // .author("")
         // .about("")
         .arg(Arg::with_name("INPUT")
-                 .help("Input file name")
-                 .required(true)
-                 .index(1))
+             .help("Input file name")
+             .required(true)
+             .index(1))
         .arg(Arg::with_name("OUTPUT")
-                 .help("Output file name")
-                 .short("o")
-                 .long("output")
-                 .takes_value(true)
-                 .default_value("out"))
+             .help("Output file name")
+             .short("o")
+             .long("output")
+             .takes_value(true)
+             .default_value("out"))
         .get_matches();
 
     let path_in  = matches.value_of("INPUT")
@@ -33,9 +36,9 @@ fn main() {
     let path_out = Path::new(path_out);
 
 
+    // Read the input file
     let memory_buffer = MemoryBuffer::create_from_file(path_in)
         .expect("ERROR: failed to open file.");
-
 
     let context = Context::create();
     let module = context.create_module_from_ir(memory_buffer)
@@ -43,12 +46,21 @@ fn main() {
 
     handle_initializers(&module);
 
+    handle_main(&module);
+
+    handle_panic(&module);
+
+    replace_def_with_dec(&module, "_ZN3std2io5stdio7_eprint17h1fc1a56896d4c8a5E");
+    replace_def_with_dec(&module, "_ZN3std2io5stdio6_print17h9c3861da81c12003E");
+
+
+    // Write output file
     if path_out.extension() == Some(OsStr::new("bc")) {
         // output bitcode
+        // TODO: this function returns bool but the doc doesn't say anything about it.
         module.write_bitcode_to_path(path_out);
     } else {
         // output disassembled bitcode
-        // TODO: this function returns bool but the doc doesn't say anything about it.
         module.print_to_file(path_out)
             .expect("ERROR: failed to write to file.");
     }
@@ -76,6 +88,50 @@ fn handle_initializers(module: &Module) {
 ////////////////////////////////////////////////////////////////
 // Transformations associated with SeaHorn
 ////////////////////////////////////////////////////////////////
+
+fn handle_main(module: &Module) {
+    // Remove the main function rustc generates.
+    if let Some(main) = module.get_function("main") {
+        unsafe { main.delete(); }
+    }
+
+    // Change the linkage of mangled main function from internal to external.
+    if let Some(main) = get_first_mangled_main(&module) {
+        main.set_linkage(Linkage::External);
+        println!("MAIN: {}", main.get_name().to_str().unwrap());
+    }
+}
+
+fn get_first_mangled_main<'ctx>(module: &'ctx Module) -> Option<FunctionValue<'ctx>> {
+    let re = Regex::new(r"4main17h[a-f0-9]{16}E$").unwrap();
+
+    let mut op_fun = module.get_first_function();
+    while let Some(fun) = op_fun {
+        if re.is_match(fun.get_name().to_str().expect("ERROR: function name is not in valid UTF-8")) {
+            return Some(fun);
+        }
+        op_fun = fun.get_next_function();
+    }
+    None
+}
+
+fn handle_panic(module: &Module) {
+    // TODO: make "spanic" a CL arg.
+    if let Some(spanic) = module.get_function("spanic") {
+        if let Some(unwind) = module.get_function("rust_begin_unwind") {
+            unwind.replace_all_uses_with(spanic);
+        }
+    }
+}
+
+fn replace_def_with_dec(module: &Module, name: &str) {
+    if let Some(fun) = module.get_function(name) {
+        for bb in fun.get_basic_blocks() {
+            unsafe { bb.delete().unwrap(); }
+        }
+        fun.remove_personality_function();
+    }
+}
 
 ////////////////////////////////////////////////////////////////
 // End
