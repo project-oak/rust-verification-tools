@@ -7,7 +7,9 @@ use inkwell::memory_buffer::MemoryBuffer;
 use inkwell::context::Context;
 use inkwell::module::Module;
 use inkwell::module::Linkage;
-use inkwell::values::FunctionValue;
+use inkwell::values::{FunctionValue, GlobalValue, PointerValue};
+use inkwell::values::{AnyValue, BasicValueEnum};
+use inkwell::types::{FunctionType};
 
 fn main() {
     // Command line argument parsing (using clap)
@@ -41,10 +43,10 @@ fn main() {
         .expect("ERROR: failed to open file.");
 
     let context = Context::create();
-    let module = context.create_module_from_ir(memory_buffer)
+    let mut module = context.create_module_from_ir(memory_buffer)
         .expect("ERROR: failed to create module.");
 
-    handle_initializers(&module);
+    handle_initializers(&context, &mut module);
 
     handle_main(&module);
 
@@ -70,19 +72,89 @@ fn main() {
 // Transformations associated with initializers
 ////////////////////////////////////////////////////////////////
 
-fn handle_initializers(module: &Module) {
+fn handle_initializers(context: &Context, module: &mut Module) {
+    let _ = collect_initializers(context, module, ".init_array", "my_initializer");
+}
+
+/// Collect all the initializers in a section (whose name starts with 'prefix')
+/// into a single function that calls all the initializers.
+fn collect_initializers<'a>(context: &Context, module: &mut Module<'a>, prefix: &str, nm: &str) -> Option<FunctionValue<'a>> {
+    let vs = collect_variables_in_section(module, prefix);
+    // println!("Global name: {} initializer: {:?}", v.get_name().to_str().unwrap(), fp);
+
+    let fps : Vec<PointerValue> = vs.iter().map(get_initializer_function).collect();
+
+    if ! fps.is_empty() {
+        let fp = fps[0];
+
+        // dereference the pointer type
+        let fp_type = fp.get_type().get_element_type().into_function_type();
+        println!("type {:?}", fp_type);
+
+        Some(build_fanout(context, module, nm, fp_type, fps))
+    } else {
+        None
+    }
+}
+
+/// Collect variables that are assigned to a section whose name matches prefix
+fn collect_variables_in_section<'a>(module: &Module<'a>, prefix: &str) -> Vec<GlobalValue<'a>> {
+    let mut vs = Vec::new();
+    // todo: should implement an iterator for global values so that the following loop
+    // becomes just iter().filter_map().filter_map().filter()
     let mut og = module.get_first_global();
     while let Some(g) = og {
         if let Some(s) = g.get_section() {
             if let Ok(s) = s.to_str() {
-                if s.starts_with(".init_array") {
-                    let i = g.get_initializer().unwrap().into_struct_value();
-                    println!("Global name: {} section: {} initializer: {:?}", g.get_name().to_str().unwrap(), s, i)
+                if s.starts_with(prefix) {
+                    vs.push(g)
                 }
             }
         }
         og = g.get_next_global();
     }
+    vs
+}
+
+/// Convert the contents of an initializer section to a function pointer.
+///
+/// Initializer sections contain structs where the first field is a function pointer cast to
+/// some other type.
+fn get_initializer_function<'a>(v: &GlobalValue<'a>) -> PointerValue<'a> {
+        let i = v.get_initializer().unwrap().into_struct_value();
+        assert!(i.get_num_operands() == 2); // expecting two fields in struct
+        let i = i.get_operand(0).unwrap();
+        assert!(i.get_num_operands() == 1); // expecting bitcast
+        let fp = i.get_operand(0).unwrap();
+        fp.into_pointer_value()
+}
+
+/// Given a list of functions of type 'ty', build a function that calls each function in order
+///
+/// Assumes (without checking) that return type is void
+///
+///     define void @fanout(i32 %0, i32 %1) {
+///     entry:
+///       call void @f1(i32 %0, i32 %1)
+///       call void @f2(i32 %0, i32 %1)
+///       call void @f3(i32 %0, i32 %1)
+///       ret void
+///     }
+///
+fn build_fanout<'a>(context: &Context, module: &mut Module<'a>, nm: &str, ty: FunctionType<'a>, fps: Vec<PointerValue<'a>>) -> FunctionValue<'a> {
+    let function = module.add_function(nm, ty, None);
+    let args : Vec<BasicValueEnum> = (0 .. function.count_params()).map(|i| function.get_nth_param(i).unwrap()).collect();
+    let basic_block = context.append_basic_block(function, "entry");
+    let builder = context.create_builder();
+    builder.position_at_end(basic_block);
+
+    for fp in fps {
+        builder.build_call(fp, &args, "");
+        builder.build_return(None);
+        println!("Built function {:?}", function)
+    }
+
+    function
 }
 
 ////////////////////////////////////////////////////////////////
