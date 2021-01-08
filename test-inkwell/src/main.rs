@@ -3,7 +3,7 @@ use std::path::Path;
 
 use inkwell::memory_buffer::MemoryBuffer;
 use inkwell::context::Context;
-// use inkwell::module::Module;
+use inkwell::module::Module;
 
 fn main() {
     let matches = App::new("Test inkwell")
@@ -31,6 +31,16 @@ fn main() {
     let context = Context::create();
     let module = context.create_module_from_ir(memory_buffer)
         .expect("ERROR: failed to create module.");
+    handle_initializers(&module);
+    module.print_to_file(path_out)
+        .expect("ERROR: failed to write to file.");
+}
+
+////////////////////////////////////////////////////////////////
+// Transformations associated with initializers
+////////////////////////////////////////////////////////////////
+
+fn handle_initializers(module: &Module) {
     let mut og = module.get_first_global();
     while let Some(g) = og {
         if let Some(s) = g.get_section() {
@@ -43,6 +53,12 @@ fn main() {
         }
         og = g.get_next_global();
     }
-    module.print_to_file(path_out)
-        .expect("ERROR: failed to write to file.");
 }
+
+////////////////////////////////////////////////////////////////
+// Transformations associated with SeaHorn
+////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////
+// End
+////////////////////////////////////////////////////////////////
