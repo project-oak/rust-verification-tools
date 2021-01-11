@@ -50,8 +50,8 @@ fn main() {
 
     handle_panic(&module);
 
-    replace_def_with_dec(&module, "_ZN3std2io5stdio7_eprint17h1fc1a56896d4c8a5E");
-    replace_def_with_dec(&module, "_ZN3std2io5stdio6_print17h9c3861da81c12003E");
+    replace_def_with_dec(&module, &Regex::new(r"^_ZN3std2io5stdio7_eprint17h[a-f0-9]{16}E$").unwrap());
+    replace_def_with_dec(&module, &Regex::new(r"^_ZN3std2io5stdio6_print17h[a-f0-9]{16}E$").unwrap());
 
 
     // Write output file
@@ -96,18 +96,17 @@ fn handle_main(module: &Module) {
     }
 
     // Change the linkage of mangled main function from internal to external.
-    if let Some(main) = get_first_mangled_main(&module) {
-        main.set_linkage(Linkage::External);
+    if let Some(main) = get_function(module, &Regex::new(r"4main17h[a-f0-9]{16}E$").unwrap()) {
+        // main.set_linkage(Linkage::External);
         println!("MAIN: {}", main.get_name().to_str().unwrap());
     }
 }
 
-fn get_first_mangled_main<'ctx>(module: &'ctx Module) -> Option<FunctionValue<'ctx>> {
-    let re = Regex::new(r"4main17h[a-f0-9]{16}E$").unwrap();
-
+fn get_function<'ctx>(module: &'ctx Module, re: &Regex) -> Option<FunctionValue<'ctx>> {
     let mut op_fun = module.get_first_function();
     while let Some(fun) = op_fun {
-        if re.is_match(fun.get_name().to_str().expect("ERROR: function name is not in valid UTF-8")) {
+        if re.is_match(fun.get_name().to_str()
+                       .expect("ERROR: function name is not in valid UTF-8")) {
             return Some(fun);
         }
         op_fun = fun.get_next_function();
@@ -124,12 +123,13 @@ fn handle_panic(module: &Module) {
     }
 }
 
-fn replace_def_with_dec(module: &Module, name: &str) {
-    if let Some(fun) = module.get_function(name) {
+fn replace_def_with_dec(module: &Module, re: &Regex) {
+    if let Some(fun) = get_function(module, re) {
         for bb in fun.get_basic_blocks() {
             unsafe { bb.delete().unwrap(); }
         }
         fun.remove_personality_function();
+        fun.set_linkage(Linkage::External);
     }
 }
 
