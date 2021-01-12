@@ -1,4 +1,5 @@
 use clap::{Arg, App};
+use log::{info};
 use std::path::Path;
 use std::ffi::OsStr;
 use regex::Regex;
@@ -24,9 +25,10 @@ fn main() {
         .arg(Arg::with_name("seahorn")
              .short("s")
              .help("SeaHorn preparation (conflicts with --initializers)"))
-        .arg(Arg::with_name("verbose")
+        .arg(Arg::with_name("verbosity")
              .short("v")
-             .help("Verbose output"))
+             .multiple(true)
+             .help("Increase message verbosity"))
         .arg(Arg::with_name("INPUT")
              .help("Input file name")
              .required(true)
@@ -39,7 +41,10 @@ fn main() {
              .default_value("out"))
         .get_matches();
 
-    let verbose = matches.is_present("verbose");
+    stderrlog::new()
+        .verbosity(matches.occurrences_of("verbosity") as usize)
+        .init()
+        .unwrap();
 
     let path_in  = matches.value_of("INPUT")
         .expect("ERROR: missing input file name argument.");
@@ -51,9 +56,7 @@ fn main() {
 
 
     // Read the input file
-    if verbose {
-        println!("Reading input from {}", path_in.to_str().unwrap())
-    }
+    info!("Reading input from {}", path_in.to_str().unwrap());
     let memory_buffer = MemoryBuffer::create_from_file(path_in)
         .expect("ERROR: failed to open file.");
 
@@ -62,13 +65,13 @@ fn main() {
         .expect("ERROR: failed to create module.");
 
     if matches.is_present("initializers") {
-        handle_initializers(&context, &mut module, verbose);
+        handle_initializers(&context, &mut module);
     }
 
     if matches.is_present("seahorn") {
-        handle_main(&module, verbose);
+        handle_main(&module);
 
-        handle_panic(&module, verbose);
+        handle_panic(&module);
 
         replace_def_with_dec(&module, &Regex::new(r"^_ZN3std2io5stdio7_eprint17h[a-f0-9]{16}E$").unwrap());
         replace_def_with_dec(&module, &Regex::new(r"^_ZN3std2io5stdio6_print17h[a-f0-9]{16}E$").unwrap());
@@ -76,9 +79,7 @@ fn main() {
 
 
     // Write output file
-    if verbose {
-        println!("Writing output to {}", path_out.to_str().unwrap())
-    }
+    info!("Writing output to {}", path_out.to_str().unwrap());
     if path_out.extension() == Some(OsStr::new("bc")) {
         // output bitcode
         // TODO: this function returns bool but the doc doesn't say anything about it.
@@ -94,11 +95,9 @@ fn main() {
 // Transformations associated with initializers
 ////////////////////////////////////////////////////////////////
 
-fn handle_initializers(context: &Context, module: &mut Module, verbose: bool) {
-    if let Some(initializer) = collect_initializers(context, module, ".init_array", "__init_function", verbose) {
-        if verbose {
-            println!("Combined .init_array* initializers into '{}'", initializer.get_name().to_str().unwrap())
-        }
+fn handle_initializers(context: &Context, module: &mut Module) {
+    if let Some(initializer) = collect_initializers(context, module, ".init_array", "__init_function") {
+        info!("Combined .init_array* initializers into '{}'", initializer.get_name().to_str().unwrap());
 
         let main = module.get_function("main").expect("Unable to find 'main' function");
         let mut args = get_fn_args(main);
@@ -108,24 +107,18 @@ fn handle_initializers(context: &Context, module: &mut Module, verbose: bool) {
         let ppi8_type = pi8_type.ptr_type(AddressSpace::Generic);
         args.push(ppi8_type.const_null().as_basic_value_enum());
         insert_call_at_head(context, initializer, args, main);
-        if verbose {
-            println!("Inserted call to '{}' into 'main'", initializer.get_name().to_str().unwrap())
-        }
+        info!("Inserted call to '{}' into 'main'", initializer.get_name().to_str().unwrap())
     } else {
-        if verbose {
-            println!("No initializers to handle")
-        }
+        info!("No initializers to handle")
     }
 }
 
 /// Collect all the initializers in a section (whose name starts with 'prefix')
 /// into a single function that calls all the initializers.
-fn collect_initializers<'a>(context: &Context, module: &mut Module<'a>, prefix: &str, nm: &str, verbose: bool) -> Option<FunctionValue<'a>> {
+fn collect_initializers<'a>(context: &Context, module: &mut Module<'a>, prefix: &str, nm: &str) -> Option<FunctionValue<'a>> {
     let vs = collect_variables_in_section(module, prefix);
-    if verbose {
-        for v in &vs {
-            println!("Found initializer {:?}", v.get_name().to_str().unwrap());
-        }
+    for v in &vs {
+        info!("Found initializer {:?}", v.get_name().to_str().unwrap());
     }
 
     let fps : Vec<PointerValue> = vs.iter().map(get_initializer_function).collect();
@@ -135,9 +128,7 @@ fn collect_initializers<'a>(context: &Context, module: &mut Module<'a>, prefix: 
 
         // dereference the pointer type
         let fp_type = fp.get_type().get_element_type().into_function_type();
-        if verbose {
-            println!("Initializer type {:?}", fp_type.print_to_string());
-        }
+        info!("Initializer type {:?}", fp_type.print_to_string());
 
         Some(build_fanout(context, module, nm, fp_type, fps))
     } else {
@@ -221,7 +212,7 @@ fn insert_call_at_head<'a>(context: &Context, f: FunctionValue<'a>, args: Vec<Ba
 // Transformations associated with SeaHorn
 ////////////////////////////////////////////////////////////////
 
-fn handle_main(module: &Module, _verbose: bool) {
+fn handle_main(module: &Module) {
     // Remove the main function rustc generates.
     if let Some(main) = module.get_function("main") {
         unsafe { main.delete(); }
@@ -246,7 +237,7 @@ fn get_function<'ctx>(module: &'ctx Module, re: &Regex) -> Option<FunctionValue<
     None
 }
 
-fn handle_panic(module: &Module, _verbose: bool) {
+fn handle_panic(module: &Module) {
     // TODO: make "spanic" a CL arg.
     if let Some(spanic) = module.get_function("spanic") {
         if let Some(unwind) = module.get_function("rust_begin_unwind") {
