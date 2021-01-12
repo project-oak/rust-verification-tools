@@ -17,6 +17,12 @@ fn main() {
         // .version("0.1.0")
         // .author("")
         // .about("")
+        .arg(Arg::with_name("initializers")
+             .short("i")
+             .help("Call initializers from main"))
+        .arg(Arg::with_name("seahorn")
+             .short("s")
+             .help("SeaHorn preparation (conflicts with --initializers)"))
         .arg(Arg::with_name("INPUT")
              .help("Input file name")
              .required(true)
@@ -46,14 +52,18 @@ fn main() {
     let mut module = context.create_module_from_ir(memory_buffer)
         .expect("ERROR: failed to create module.");
 
-    handle_initializers(&context, &mut module);
+    if matches.is_present("initializers") {
+        handle_initializers(&context, &mut module);
+    }
 
-    handle_main(&module);
+    if matches.is_present("seahorn") {
+        handle_main(&module);
 
-    handle_panic(&module);
+        handle_panic(&module);
 
-    replace_def_with_dec(&module, &Regex::new(r"^_ZN3std2io5stdio7_eprint17h[a-f0-9]{16}E$").unwrap());
-    replace_def_with_dec(&module, &Regex::new(r"^_ZN3std2io5stdio6_print17h[a-f0-9]{16}E$").unwrap());
+        replace_def_with_dec(&module, &Regex::new(r"^_ZN3std2io5stdio7_eprint17h[a-f0-9]{16}E$").unwrap());
+        replace_def_with_dec(&module, &Regex::new(r"^_ZN3std2io5stdio6_print17h[a-f0-9]{16}E$").unwrap());
+    }
 
 
     // Write output file
