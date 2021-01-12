@@ -20,6 +20,7 @@ RUN apt-get --yes update \
   git \
   libboost-all-dev \
   libcap-dev \
+  libffi-dev \
   libgoogle-perftools-dev \
   libncurses5-dev \
   libsqlite3-dev \

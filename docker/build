@@ -2,6 +2,15 @@
 
 set -e
 
+# Before building the docker image, we ensure that the
+# rvt-patch-llvm source code will be available when building rvt
+# by copying it into a subdirectory of docker/rvt.
+# (Note that it is not sufficient to use a symlink - you actually
+# have to make a copy. I hate Docker so much right now.)
+(cd rvt-patch-llvm; cargo clean)
+rm -r docker/rvt/rvt-patch-llvm || true
+cp -r `pwd`/rvt-patch-llvm docker/rvt/rvt-patch-llvm
+
 # Build each image
 #
 # Note that each image is built in a subdirectory to avoid breaking

@@ -12,7 +12,7 @@ ENV RVT_DIR=/home/rust-verification-tools
 # The following replicates code in base_Dockerfile and
 # can be deleted next time I do a full rebuild of the images
 USER root
-RUN apt install sudo
+RUN apt-get install -y sudo libffi-dev
 RUN echo "${USERNAME}  ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Switch to USERNAME and install tools / set environment
@@ -31,10 +31,25 @@ ENV PATH="${RUSTC_DIR}/build/x86_64-unknown-linux-gnu/stage1-tools-bin:${PATH}"
 ENV PATH="${RUSTC_DIR}/build/x86_64-unknown-linux-gnu/llvm/bin:${PATH}"
 ENV PATH="$PATH:${USER_HOME}/.cargo/bin"
 ENV PATH="$PATH:${RVT_DIR}/scripts"
+ENV PATH="$PATH:${RVT_DIR}/scripts/bin"
+ENV PATH="$PATH:${USER_HOME}/bin"
 
 # Install the toolchain that we built
 RUN rustup toolchain link stage1 ${RUSTC_DIR}/build/x86*/stage1 \
   && rustup default stage1
+
+# Build LLVM file patcher by first copying the source into this image
+# and then building it.
+#
+# Note that before invoking docker-build, you need to arrange that the
+# source is a symlink to the actual source directory.
+#
+# Note too that this is installed in ~/bin but that if you explicitly rebuild
+# it in a docker session, then it will go into ${RVT_DIR}/scripts/bin
+#
+# There seems to be no way around this complex collection of hacks.
+COPY --chown=${USER_UID}:${USER_GID} ./rvt-patch-llvm ${USER_HOME}/rvt-patch-llvm
+RUN cargo install --root=${USER_HOME} --path=${USER_HOME}/rvt-patch-llvm
 
 # Create a bashrc file
 RUN echo "export PATH=\"${PATH}\"" >> ${USER_HOME}/.bashrc
