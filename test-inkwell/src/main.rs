@@ -3,12 +3,13 @@ use std::path::Path;
 use std::ffi::OsStr;
 use regex::Regex;
 
+use inkwell::AddressSpace;
 use inkwell::memory_buffer::MemoryBuffer;
 use inkwell::context::Context;
 use inkwell::module::Module;
 use inkwell::module::Linkage;
 use inkwell::values::{FunctionValue, GlobalValue, PointerValue};
-use inkwell::values::{AnyValue, BasicValueEnum};
+use inkwell::values::{AnyValue, BasicValue, BasicValueEnum};
 use inkwell::types::{FunctionType};
 
 fn main() {
@@ -83,7 +84,18 @@ fn main() {
 ////////////////////////////////////////////////////////////////
 
 fn handle_initializers(context: &Context, module: &mut Module) {
-    let _ = collect_initializers(context, module, ".init_array", "my_initializer");
+    if let Some(initializer) = collect_initializers(context, module, ".init_array", "__init_function") {
+        let main = module.get_function("main").expect("Unable to find 'main' function");
+        let mut args = get_fn_args(main);
+        assert!(args.len() == 2); // We expect "i32 @main(i32 %0, i8** %1)"
+        let i8_type = context.i8_type();
+        let pi8_type = i8_type.ptr_type(AddressSpace::Generic);
+        let ppi8_type = pi8_type.ptr_type(AddressSpace::Generic);
+        args.push(ppi8_type.const_null().as_basic_value_enum());
+        insert_call_at_head(context, initializer, args, main);
+    } else {
+        println!("No initializers to handle")
+    }
 }
 
 /// Collect all the initializers in a section (whose name starts with 'prefix')
@@ -153,7 +165,7 @@ fn get_initializer_function<'a>(v: &GlobalValue<'a>) -> PointerValue<'a> {
 ///
 fn build_fanout<'a>(context: &Context, module: &mut Module<'a>, nm: &str, ty: FunctionType<'a>, fps: Vec<PointerValue<'a>>) -> FunctionValue<'a> {
     let function = module.add_function(nm, ty, None);
-    let args : Vec<BasicValueEnum> = (0 .. function.count_params()).map(|i| function.get_nth_param(i).unwrap()).collect();
+    let args = get_fn_args(function);
     let basic_block = context.append_basic_block(function, "entry");
     let builder = context.create_builder();
     builder.position_at_end(basic_block);
@@ -165,6 +177,19 @@ fn build_fanout<'a>(context: &Context, module: &mut Module<'a>, nm: &str, ty: Fu
     }
 
     function
+}
+
+fn get_fn_args<'a>(function: FunctionValue<'a>) -> Vec<BasicValueEnum<'a>> {
+    (0 .. function.count_params()).map(|i| function.get_nth_param(i).unwrap()).collect()
+}
+
+fn insert_call_at_head<'a>(context: &Context, f: FunctionValue<'a>, args: Vec<BasicValueEnum<'a>>, insertee: FunctionValue<'a>) {
+    let bb = insertee.get_first_basic_block().expect("Unable to find function to insert function call into");
+    let first_instruction = bb.get_first_instruction().expect("Unable to find where to insert function call into function");
+    let builder = context.create_builder();
+    builder.position_before(&first_instruction);
+    builder.build_call(f, &args, "");
+    println!("Inserted call")
 }
 
 ////////////////////////////////////////////////////////////////
