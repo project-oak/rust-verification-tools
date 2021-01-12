@@ -1,5 +1,5 @@
 [package]
-name = "test-inkwell"
+name = "rvt-patch-llvm"
 version = "0.1.0"
 authors = ["Shaked Flur <fshaked@gmail.com>"]
 edition = "2018"
