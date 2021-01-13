@@ -1,17 +1,17 @@
-use clap::{Arg, App};
-use log::{info};
-use std::path::Path;
-use std::ffi::OsStr;
+use clap::{App, Arg};
+use log::info;
 use regex::Regex;
+use std::ffi::OsStr;
+use std::path::Path;
 
-use inkwell::AddressSpace;
-use inkwell::memory_buffer::MemoryBuffer;
 use inkwell::context::Context;
-use inkwell::module::Module;
+use inkwell::memory_buffer::MemoryBuffer;
 use inkwell::module::Linkage;
-use inkwell::values::{FunctionValue, GlobalValue, PointerValue};
-use inkwell::values::{AnyValue, BasicValue, BasicValueEnum};
+use inkwell::module::Module;
 use inkwell::types::{AnyType, FunctionType};
+use inkwell::values::{AnyValue, BasicValue, BasicValueEnum};
+use inkwell::values::{FunctionValue, GlobalValue, PointerValue};
+use inkwell::AddressSpace;
 
 fn main() {
     // Command line argument parsing (using clap)
@@ -19,32 +19,42 @@ fn main() {
         // .version("0.1.0")
         // .author("")
         // .about("")
-        .arg(Arg::with_name("initializers")
-             .long("initializers")
-             .short("i")
-             .long("initializers")
-             .help("Call initializers from main"))
-        .arg(Arg::with_name("seahorn")
-             .long("seahorn")
-             .short("s")
-             .long("seahorn")
-             .conflicts_with("initializers")
-             .help("SeaHorn preparation (conflicts with --initializers)"))
-        .arg(Arg::with_name("verbosity")
-             .short("v")
-             .long("verbosity")
-             .multiple(true)
-             .help("Increase message verbosity"))
-        .arg(Arg::with_name("INPUT")
-             .help("Input file name")
-             .required(true)
-             .index(1))
-        .arg(Arg::with_name("OUTPUT")
-             .help("Output file name")
-             .short("o")
-             .long("output")
-             .takes_value(true)
-             .default_value("out"))
+        .arg(
+            Arg::with_name("initializers")
+                .long("initializers")
+                .short("i")
+                .long("initializers")
+                .help("Call initializers from main"),
+        )
+        .arg(
+            Arg::with_name("seahorn")
+                .long("seahorn")
+                .short("s")
+                .long("seahorn")
+                .conflicts_with("initializers")
+                .help("SeaHorn preparation (conflicts with --initializers)"),
+        )
+        .arg(
+            Arg::with_name("verbosity")
+                .short("v")
+                .long("verbosity")
+                .multiple(true)
+                .help("Increase message verbosity"),
+        )
+        .arg(
+            Arg::with_name("INPUT")
+                .help("Input file name")
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            Arg::with_name("OUTPUT")
+                .help("Output file name")
+                .short("o")
+                .long("output")
+                .takes_value(true)
+                .default_value("out"),
+        )
         .get_matches();
 
     stderrlog::new()
@@ -52,22 +62,24 @@ fn main() {
         .init()
         .unwrap();
 
-    let path_in  = matches.value_of("INPUT")
+    let path_in = matches
+        .value_of("INPUT")
         .expect("ERROR: missing input file name argument.");
-    let path_in  = Path::new(path_in);
+    let path_in = Path::new(path_in);
 
-    let path_out = matches.value_of("OUTPUT")
+    let path_out = matches
+        .value_of("OUTPUT")
         .expect("ERROR: missing output file name argument.");
     let path_out = Path::new(path_out);
 
-
     // Read the input file
     info!("Reading input from {}", path_in.to_str().unwrap());
-    let memory_buffer = MemoryBuffer::create_from_file(path_in)
-        .expect("ERROR: failed to open file.");
+    let memory_buffer =
+        MemoryBuffer::create_from_file(path_in).expect("ERROR: failed to open file.");
 
     let context = Context::create();
-    let mut module = context.create_module_from_ir(memory_buffer)
+    let mut module = context
+        .create_module_from_ir(memory_buffer)
         .expect("ERROR: failed to create module.");
 
     if matches.is_present("initializers") {
@@ -79,10 +91,15 @@ fn main() {
 
         handle_panic(&module);
 
-        replace_def_with_dec(&module, &Regex::new(r"^_ZN3std2io5stdio7_eprint17h[a-f0-9]{16}E$").unwrap());
-        replace_def_with_dec(&module, &Regex::new(r"^_ZN3std2io5stdio6_print17h[a-f0-9]{16}E$").unwrap());
+        replace_def_with_dec(
+            &module,
+            &Regex::new(r"^_ZN3std2io5stdio7_eprint17h[a-f0-9]{16}E$").unwrap(),
+        );
+        replace_def_with_dec(
+            &module,
+            &Regex::new(r"^_ZN3std2io5stdio6_print17h[a-f0-9]{16}E$").unwrap(),
+        );
     }
-
 
     // Write output file
     info!("Writing output to {}", path_out.to_str().unwrap());
@@ -92,7 +109,8 @@ fn main() {
         module.write_bitcode_to_path(path_out);
     } else {
         // output disassembled bitcode
-        module.print_to_file(path_out)
+        module
+            .print_to_file(path_out)
             .expect("ERROR: failed to write to file.");
     }
 }
