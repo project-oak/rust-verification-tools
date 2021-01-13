@@ -220,6 +220,7 @@ fn handle_main(module: &Module) {
     // Remove the main function rustc generates.
     if let Some(main) = module.get_function("main") {
         unsafe { main.delete(); }
+        info!("Deleted 'main' (was added by rustc).");
     }
 
     // Change the linkage of mangled main function from internal to external.
@@ -246,6 +247,7 @@ fn handle_panic(module: &Module) {
     if let Some(spanic) = module.get_function("spanic") {
         if let Some(unwind) = module.get_function("rust_begin_unwind") {
             unwind.replace_all_uses_with(spanic);
+            info!("Replaced panic handling ('rust_begin_unwind') with 'spanic'.");
         }
     }
 }
@@ -257,6 +259,7 @@ fn replace_def_with_dec(module: &Module, re: &Regex) {
         }
         fun.remove_personality_function();
         fun.set_linkage(Linkage::External);
+        info!("Removed the implementation of '{}'.", fun.get_name().to_str().unwrap());
     }
 }
 
