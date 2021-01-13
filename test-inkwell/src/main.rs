@@ -120,10 +120,17 @@ fn main() {
 ////////////////////////////////////////////////////////////////
 
 fn handle_initializers(context: &Context, module: &mut Module) {
-    if let Some(initializer) = collect_initializers(context, module, ".init_array", "__init_function") {
-        info!("Combined .init_array* initializers into '{}'", initializer.get_name().to_str().unwrap());
+    if let Some(initializer) =
+        collect_initializers(context, module, ".init_array", "__init_function")
+    {
+        info!(
+            "Combined .init_array* initializers into '{}'",
+            initializer.get_name().to_str().unwrap()
+        );
 
-        let main = module.get_function("main").expect("Unable to find 'main' function");
+        let main = module
+            .get_function("main")
+            .expect("Unable to find 'main' function");
         let mut args = get_fn_args(main);
         assert!(args.len() == 2); // We expect "i32 @main(i32 %0, i8** %1)"
         let i8_type = context.i8_type();
@@ -131,7 +138,10 @@ fn handle_initializers(context: &Context, module: &mut Module) {
         let ppi8_type = pi8_type.ptr_type(AddressSpace::Generic);
         args.push(ppi8_type.const_null().as_basic_value_enum());
         insert_call_at_head(context, initializer, args, main);
-        info!("Inserted call to '{}' into 'main'", initializer.get_name().to_str().unwrap())
+        info!(
+            "Inserted call to '{}' into 'main'",
+            initializer.get_name().to_str().unwrap()
+        )
     } else {
         info!("No initializers to handle")
     }
@@ -139,15 +149,20 @@ fn handle_initializers(context: &Context, module: &mut Module) {
 
 /// Collect all the initializers in a section (whose name starts with 'prefix')
 /// into a single function that calls all the initializers.
-fn collect_initializers<'a>(context: &Context, module: &mut Module<'a>, prefix: &str, nm: &str) -> Option<FunctionValue<'a>> {
+fn collect_initializers<'a>(
+    context: &Context,
+    module: &mut Module<'a>,
+    prefix: &str,
+    nm: &str,
+) -> Option<FunctionValue<'a>> {
     let vs = collect_variables_in_section(module, prefix);
     for v in &vs {
         info!("Found initializer {:?}", v.get_name().to_str().unwrap());
     }
 
-    let fps : Vec<PointerValue> = vs.iter().map(get_initializer_function).collect();
+    let fps: Vec<PointerValue> = vs.iter().map(get_initializer_function).collect();
 
-    if ! fps.is_empty() {
+    if !fps.is_empty() {
         let fp = fps[0];
 
         // dereference the pointer type
@@ -184,12 +199,12 @@ fn collect_variables_in_section<'a>(module: &Module<'a>, prefix: &str) -> Vec<Gl
 /// Initializer sections contain structs where the first field is a function pointer cast to
 /// some other type.
 fn get_initializer_function<'a>(v: &GlobalValue<'a>) -> PointerValue<'a> {
-        let i = v.get_initializer().unwrap().into_struct_value();
-        assert!(i.get_num_operands() == 2); // expecting two fields in struct
-        let i = i.get_operand(0).unwrap();
-        assert!(i.get_num_operands() == 1); // expecting bitcast
-        let fp = i.get_operand(0).unwrap();
-        fp.into_pointer_value()
+    let i = v.get_initializer().unwrap().into_struct_value();
+    assert!(i.get_num_operands() == 2); // expecting two fields in struct
+    let i = i.get_operand(0).unwrap();
+    assert!(i.get_num_operands() == 1); // expecting bitcast
+    let fp = i.get_operand(0).unwrap();
+    fp.into_pointer_value()
 }
 
 /// Given a list of functions of type 'ty', build a function that calls each function in order
@@ -204,7 +219,13 @@ fn get_initializer_function<'a>(v: &GlobalValue<'a>) -> PointerValue<'a> {
 ///       ret void
 ///     }
 ///
-fn build_fanout<'a>(context: &Context, module: &mut Module<'a>, nm: &str, ty: FunctionType<'a>, fps: Vec<PointerValue<'a>>) -> FunctionValue<'a> {
+fn build_fanout<'a>(
+    context: &Context,
+    module: &mut Module<'a>,
+    nm: &str,
+    ty: FunctionType<'a>,
+    fps: Vec<PointerValue<'a>>,
+) -> FunctionValue<'a> {
     let function = module.add_function(nm, ty, None);
     let args = get_fn_args(function);
     let basic_block = context.append_basic_block(function, "entry");
@@ -221,12 +242,23 @@ fn build_fanout<'a>(context: &Context, module: &mut Module<'a>, nm: &str, ty: Fu
 }
 
 fn get_fn_args<'a>(function: FunctionValue<'a>) -> Vec<BasicValueEnum<'a>> {
-    (0 .. function.count_params()).map(|i| function.get_nth_param(i).unwrap()).collect()
+    (0..function.count_params())
+        .map(|i| function.get_nth_param(i).unwrap())
+        .collect()
 }
 
-fn insert_call_at_head<'a>(context: &Context, f: FunctionValue<'a>, args: Vec<BasicValueEnum<'a>>, insertee: FunctionValue<'a>) {
-    let bb = insertee.get_first_basic_block().expect("Unable to find function to insert function call into");
-    let first_instruction = bb.get_first_instruction().expect("Unable to find where to insert function call into function");
+fn insert_call_at_head<'a>(
+    context: &Context,
+    f: FunctionValue<'a>,
+    args: Vec<BasicValueEnum<'a>>,
+    insertee: FunctionValue<'a>,
+) {
+    let bb = insertee
+        .get_first_basic_block()
+        .expect("Unable to find function to insert function call into");
+    let first_instruction = bb
+        .get_first_instruction()
+        .expect("Unable to find where to insert function call into function");
     let builder = context.create_builder();
     builder.position_before(&first_instruction);
     builder.build_call(f, &args, "");
