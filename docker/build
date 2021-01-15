@@ -8,7 +8,7 @@ set -e
 # (Note that it is not sufficient to use a symlink - you actually
 # have to make a copy. I hate Docker so much right now.)
 (cd rvt-patch-llvm; cargo clean)
-rm -r docker/rvt/rvt-patch-llvm || true
+rm -rf docker/rvt/rvt-patch-llvm
 cp -r `pwd`/rvt-patch-llvm docker/rvt/rvt-patch-llvm
 
 # Build each image
