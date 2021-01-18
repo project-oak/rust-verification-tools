@@ -21,18 +21,23 @@ fn main() {
         // .about("")
         .arg(
             Arg::with_name("initializers")
-                .long("initializers")
                 .short("i")
                 .long("initializers")
                 .help("Call initializers from main"),
         )
         .arg(
             Arg::with_name("seahorn")
-                .long("seahorn")
                 .short("s")
                 .long("seahorn")
                 .conflicts_with("initializers")
                 .help("SeaHorn preparation (conflicts with --initializers)"),
+        )
+        .arg(
+            Arg::with_name("TEST")
+                .short("t")
+                .long("test")
+                .takes_value(true)
+                .help("Select a specific test to run (instead of 'main')"),
         )
         .arg(
             Arg::with_name("verbosity")
@@ -87,7 +92,7 @@ fn main() {
     }
 
     if matches.is_present("seahorn") {
-        handle_main(&module);
+        handle_main(&module, &matches.value_of("TEST"));
 
         handle_panic(&module);
 
@@ -268,17 +273,25 @@ fn insert_call_at_head<'a>(
 // Transformations associated with SeaHorn
 ////////////////////////////////////////////////////////////////
 
-fn handle_main(module: &Module) {
+fn handle_main(module: &Module, otest: &Option<&str>) {
     // Remove the main function rustc generates.
     if let Some(main) = module.get_function("main") {
         unsafe { main.delete(); }
         info!("Deleted 'main' (was added by rustc).");
     }
 
-    // Change the linkage of mangled main function from internal to external.
-    if let Some(main) = get_function(module, &Regex::new(r"4main17h[a-f0-9]{16}E$").unwrap()) {
-        // main.set_linkage(Linkage::External);
-        println!("MAIN: {}", main.get_name().to_str().unwrap());
+    let re = match otest {
+        Some(test) => {
+            Regex::new(&(test.len().to_string() + test + r"17h[a-f0-9]{16}E$")).unwrap()
+        }
+        None => Regex::new(r"4main17h[a-f0-9]{16}E$").unwrap()
+    };
+
+    // Print the entry point function name
+    if let Some(fun) = get_function(module, &re) {
+        // Change the linkage of mangled main function from internal to external.
+        // fun.set_linkage(Linkage::External);
+        println!("ENTRY: {}", fun.get_name().to_str().unwrap());
     }
 }
 
