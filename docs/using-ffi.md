@@ -49,14 +49,14 @@ fn bar(x: i32) -> i32 {
 }
 
 proptest!{
-    fn main(i in any::<i32>()) {
+    fn main(i: i32) {
         prop_assert!(bar(i) != i)
     }
 }
 
 proptest! {
     #[test]
-    fn inequal(x in any::<i32>()) {
+    fn inequal(x: i32) {
         prop_assert!(bar(x) != x)
     }
 }
@@ -64,7 +64,7 @@ proptest! {
 proptest! {
     #[test]
     #[should_panic(expected = "assertion failed")]
-    fn greater(x in any::<i32>()) {
+    fn greater(x: i32) {
         prop_assert!(bar(x) > x)
     }
 }
