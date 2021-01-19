@@ -1,0 +1,21 @@
+[package]
+name = "ffi"
+version = "0.1.0"
+authors = ["Alastair Reid <adreid@google.com>"]
+edition = "2018"
+
+[dependencies]
+libc = "0.2"
+
+[target.'cfg(not(verify))'.dependencies]
+proptest = { version = "0.10" }
+
+[target.'cfg(verify)'.dependencies]
+propverify = { path="/home/rust-verification-tools/propverify" }
+
+[features]
+verifier-klee = ["propverify/verifier-klee"]
+verifier-crux = ["propverify/verifier-crux"]
+
+[build-dependencies]
+cc = "1.0"
