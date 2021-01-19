@@ -192,7 +192,16 @@ macro_rules! proptest {
 
           $body
       }
-  };
+    };
+    (
+      $(#[$meta:meta])*
+      fn $test_name:ident($($parm:ident : $s:ty),+ $(,)?) $body:block
+    ) => {
+        $crate::proptest!{
+            $(#[$meta])*
+            fn $test_name($($parm in $crate::prelude::any::<$s>()),+) $body
+        }
+    };
 }
 
 /// Assume that condition `cond` is true
