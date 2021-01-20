@@ -1,8 +1,8 @@
-use clap::{App, Arg};
 use log::info;
 use regex::Regex;
 use std::ffi::OsStr;
-use std::path::Path;
+use std::path::PathBuf;
+use structopt::StructOpt;
 
 use inkwell::context::Context;
 use inkwell::memory_buffer::MemoryBuffer;
@@ -13,86 +13,59 @@ use inkwell::values::{AnyValue, BasicValue, BasicValueEnum};
 use inkwell::values::{FunctionValue, GlobalValue, PointerValue};
 use inkwell::AddressSpace;
 
+// Command line argument parsing
+#[derive(Debug, StructOpt)]
+#[structopt(name = "rvt-patch-llvm", about = "Preprocess rustc generated llvm code for verification.")]
+struct Opt {
+    /// Input file.
+    #[structopt(name = "INPUT", parse(from_os_str))]
+    input: PathBuf,
+
+    /// Output file
+    #[structopt(short, long, name = "OUTPUT", parse(from_os_str), default_value = "out")]
+    output: PathBuf,
+
+    /// Call initializers from main
+    #[structopt(short, long)]
+    initializers: bool,
+
+    /// SeaHorn preparation (conflicts with --initializers)
+    #[structopt(short, long, conflicts_with = "initializers")]
+    seahorn: bool,
+
+    /// Select a specific test to run (instead of 'main')
+    #[structopt(short, long, name = "TEST")]
+    test: Option<String>,
+
+    /// Increase message verbosity
+    #[structopt(short, long, parse(from_occurrences))]
+    verbosity: usize,
+}
+
 fn main() {
-    // Command line argument parsing (using clap)
-    let matches = App::new("Test inkwell")
-        // .version("0.1.0")
-        // .author("")
-        // .about("")
-        .arg(
-            Arg::with_name("initializers")
-                .short("i")
-                .long("initializers")
-                .help("Call initializers from main"),
-        )
-        .arg(
-            Arg::with_name("seahorn")
-                .short("s")
-                .long("seahorn")
-                .conflicts_with("initializers")
-                .help("SeaHorn preparation (conflicts with --initializers)"),
-        )
-        .arg(
-            Arg::with_name("TEST")
-                .short("t")
-                .long("test")
-                .takes_value(true)
-                .help("Select a specific test to run (instead of 'main')"),
-        )
-        .arg(
-            Arg::with_name("verbosity")
-                .short("v")
-                .long("verbosity")
-                .multiple(true)
-                .help("Increase message verbosity"),
-        )
-        .arg(
-            Arg::with_name("INPUT")
-                .help("Input file name")
-                .required(true)
-                .index(1),
-        )
-        .arg(
-            Arg::with_name("OUTPUT")
-                .help("Output file name")
-                .short("o")
-                .long("output")
-                .takes_value(true)
-                .default_value("out"),
-        )
-        .get_matches();
+    let opt = Opt::from_args();
 
     stderrlog::new()
-        .verbosity(matches.occurrences_of("verbosity") as usize)
+        .verbosity(opt.verbosity)
         .init()
         .unwrap();
 
-    let path_in = matches
-        .value_of("INPUT")
-        .expect("ERROR: missing input file name argument.");
-    let path_in = Path::new(path_in);
-
-    let path_out = matches
-        .value_of("OUTPUT")
-        .expect("ERROR: missing output file name argument.");
-    let path_out = Path::new(path_out);
-
     // Read the input file
-    info!("Reading input from {}", path_in.to_str().unwrap());
+    info!("Reading input from {}", opt.input.to_str().unwrap());
     let memory_buffer =
-        MemoryBuffer::create_from_file(path_in).expect("ERROR: failed to open file.");
+        MemoryBuffer::create_from_file(&opt.input).expect("ERROR: failed to open file.");
 
     let context = Context::create();
     let mut module = context
         .create_module_from_ir(memory_buffer)
         .expect("ERROR: failed to create module.");
 
-    if matches.is_present("initializers") {
+    if opt.initializers {
         handle_initializers(&context, &mut module);
     }
 
-    if matches.is_present("seahorn") {
-        handle_main(&module, &matches.value_of("TEST"));
+    if opt.seahorn {
+        handle_main(&module, &opt.test);
 
         handle_panic(&module);
 
@@ -107,15 +80,15 @@ fn main() {
     }
 
     // Write output file
-    info!("Writing output to {}", path_out.to_str().unwrap());
-    if path_out.extension() == Some(OsStr::new("bc")) {
+    info!("Writing output to {}", opt.output.to_str().unwrap());
+    if opt.output.extension() == Some(OsStr::new("bc")) {
         // output bitcode
         // TODO: this function returns bool but the doc doesn't say anything about it.
-        module.write_bitcode_to_path(path_out);
+        module.write_bitcode_to_path(&opt.output);
     } else {
         // output disassembled bitcode
         module
-            .print_to_file(path_out)
+            .print_to_file(&opt.output)
             .expect("ERROR: failed to write to file.");
     }
 }
@@ -273,7 +246,7 @@ fn insert_call_at_head<'a>(
 // Transformations associated with SeaHorn
 ////////////////////////////////////////////////////////////////
 
-fn handle_main(module: &Module, otest: &Option<&str>) {
+fn handle_main(module: &Module, otest: &Option<String>) {
     // Remove the main function rustc generates.
     if let Some(main) = module.get_function("main") {
         unsafe { main.delete(); }
