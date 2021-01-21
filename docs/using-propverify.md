@@ -119,7 +119,7 @@ compile the program and verify the program using KLEE
 
 ```
 cargo clean
-cargo-verify . --tests --verbose
+cargo-verify --tests --verbose .
 ```
 
 The program above has a deliberate error and KLEE reports the error
@@ -143,7 +143,7 @@ a time.)
 
 
 ```
-cargo-verify . --test=multiply --replay
+cargo-verify --test=multiply --replay .
 ```
 
 This produces additional output that shows that KLEE
@@ -194,7 +194,7 @@ Seeing this failing example, it is obvious that the comparision '<' should be ch
 With that fix, we can rerun KLEE and see that the test passes
 
 ```
-cargo-verify . --tests --replay
+cargo-verify --tests --replay .
 Running 1 test(s)
 test multiply ... ok
 

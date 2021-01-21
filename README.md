@@ -63,15 +63,15 @@ TL;DR
    ```
 
    (You can also use
-   `./scripts/cargo-verify compatibility-test --backend=proptest --verbose`.)
+   `./scripts/cargo-verify --backend=proptest --verbose compatibility-test`.)
 
    One test should fail – this is correct behaviour.
 
 3. Verify some examples with propverify
 
-   `./scripts/cargo-verify verification-annotations --tests`
+   `./scripts/cargo-verify --tests verification-annotations`
 
-   `./scripts/cargo-verify compatibility-test --tests`
+   `./scripts/cargo-verify --tests compatibility-test`
 
    No tests should fail.
 

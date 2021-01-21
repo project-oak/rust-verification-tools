@@ -17,6 +17,21 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
   Thanks to Steven Jiang for this.
 
+- Demos directory.
+
+  Demonstration code (typically the same code used in documentation)
+  is now in the demos directory.
+
+- FFI support.
+
+  This makes it possible to verify programs that combine
+  C and Rust. See `demos/simple/ffi`.
+
+- `std::env::args()` support.
+
+  This makes it possible to verify programs that have
+  command line arguments. See `demos/simple/argv`.
+
 ### Changed
 
 ### Deprecated
