@@ -14,15 +14,25 @@ use inkwell::values::{FunctionValue, GlobalValue, PointerValue};
 use inkwell::AddressSpace;
 
 // Command line argument parsing
-#[derive(Debug, StructOpt)]
-#[structopt(name = "rvt-patch-llvm", about = "Preprocess rustc generated llvm code for verification.")]
+#[derive(StructOpt)]
+#[structopt(
+    name = "rvt-patch-llvm",
+    about = "Preprocess rustc generated llvm code for verification.",
+    // version number is taken automatically from Cargo.toml
+)]
 struct Opt {
     /// Input file.
     #[structopt(name = "INPUT", parse(from_os_str))]
     input: PathBuf,
 
     /// Output file
-    #[structopt(short, long, name = "OUTPUT", parse(from_os_str), default_value = "out")]
+    #[structopt(
+        short,
+        long,
+        name = "OUTPUT",
+        parse(from_os_str),
+        default_value = "out"
+    )]
     output: PathBuf,
 
     /// Call initializers from main
@@ -45,6 +55,7 @@ struct Opt {
 fn main() {
     let opt = Opt::from_args();
 
+    #[rustfmt::skip]
     stderrlog::new()
         .verbosity(opt.verbosity)
         .init()
@@ -249,15 +260,18 @@ fn insert_call_at_head<'a>(
 fn handle_main(module: &Module, otest: &Option<String>) {
     // Remove the main function rustc generates.
     if let Some(main) = module.get_function("main") {
-        unsafe { main.delete(); }
+        unsafe {
+            // Any use of `main` after calling `delete` is unsafe
+            main.delete();
+        }
         info!("Deleted 'main' (was added by rustc).");
     }
 
     let re = match otest {
         Some(test) => {
-            Regex::new(&(test.len().to_string() + test + r"17h[a-f0-9]{16}E$")).unwrap()
+            Regex::new(&format!("{}{}{}", test.len(), &test, r"17h[a-f0-9]{16}E$")).unwrap()
         }
-        None => Regex::new(r"4main17h[a-f0-9]{16}E$").unwrap()
+        None => Regex::new(r"4main17h[a-f0-9]{16}E$").unwrap(),
     };
 
     // Print the entry point function name
@@ -271,8 +285,11 @@ fn handle_main(module: &Module, otest: &Option<String>) {
 fn get_function<'ctx>(module: &'ctx Module, re: &Regex) -> Option<FunctionValue<'ctx>> {
     let mut op_fun = module.get_first_function();
     while let Some(fun) = op_fun {
-        if re.is_match(fun.get_name().to_str()
-                       .expect("ERROR: function name is not in valid UTF-8")) {
+        if re.is_match(
+            fun.get_name()
+                .to_str()
+                .expect("ERROR: function name is not in valid UTF-8"),
+        ) {
             return Some(fun);
         }
         op_fun = fun.get_next_function();
@@ -293,11 +310,17 @@ fn handle_panic(module: &Module) {
 fn replace_def_with_dec(module: &Module, re: &Regex) {
     if let Some(fun) = get_function(module, re) {
         for bb in fun.get_basic_blocks() {
-            unsafe { bb.delete().unwrap(); }
+            unsafe {
+                // Any use of `bb` after calling `delete` is unsafe
+                bb.delete().unwrap();
+            }
         }
         fun.remove_personality_function();
         fun.set_linkage(Linkage::External);
-        info!("Removed the implementation of '{}'.", fun.get_name().to_str().unwrap());
+        info!(
+            "Removed the implementation of '{}'.",
+            fun.get_name().to_str().unwrap()
+        );
     }
 }
 
