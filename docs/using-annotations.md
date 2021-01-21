@@ -203,7 +203,7 @@ compile the program and verify the program using KLEE
 
 ```
 cargo clean
-cargo-verify . --tests --verbose
+cargo-verify --tests --verbose .
 ```
 
 The program above has a deliberate error and KLEE reports the error
@@ -220,7 +220,7 @@ To see what values of `a` and `b` cause the problem, we can replay
 the program using concrete data values.
 
 ```
-cargo-verify . --tests --replay
+cargo-verify --tests --replay .
 ```
 
 This produces the following additional output that shows that KLEE
@@ -245,7 +245,7 @@ Seeing these examples, it is obvious that the assertion should be changed to
 With that fix, we can rerun KLEE and see that the test passes
 
 ```
-cargo-verify . --tests
+cargo-verify --tests .
   Running 1 test(s)
   test t1 ... ok
 
@@ -310,7 +310,7 @@ The verifier now finds the failing assertion and confirms that this matches the
 expected behavior.
 
 ```
-../scripts/cargo-verify . -v
+../scripts/cargo-verify -v .
 Checking try_verifier
 Running 1 test(s)
      t1: Detected expected failure 'assertion failed: 1 <= r && r < 1000000' at src/main.rs:13:5
@@ -350,7 +350,7 @@ fn t1() {
 Verifying this program detects the overflow behaviour.
 
 ```
-../scripts/cargo-verify . -v --replay
+../scripts/cargo-verify -v --replay .
 Running 1 test(s)
      t1: 2 paths
     Test input try-verifier/kleeout-t1/test000001.ktest

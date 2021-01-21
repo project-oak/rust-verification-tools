@@ -9,12 +9,13 @@ use std::env;
 /// to Rust functions when verifying them.
 ///
 /// Should pass:
-///    `cargo verify . foo`
-///    `cargo verify . foo foo`
+///    `cargo verify . -- foo`
+///    `cargo verify . -- foo foo`
 ///
 /// Should fail:
 ///    `cargo verify .`
-///    `cargo verify . foo bar`
+///    `cargo verify . --`
+///    `cargo verify . -- foo bar`
 fn main() {
     println!("{} args", env::args().len());
     verifier::assert!(env::args().len() >= 2);
