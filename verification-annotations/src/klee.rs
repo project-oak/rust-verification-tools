@@ -13,6 +13,8 @@
 pub use crate::traits::*;
 
 use std::default::Default;
+use std::ffi::CString;
+use std::mem;
 use std::os::raw;
 
 #[link(name = "kleeRuntest")]
@@ -118,6 +120,51 @@ make_verifier_nondet!(isize, get_value_isize);
 
 make_verifier_nondet!(f32, klee_get_value_f);
 make_verifier_nondet!(f64, klee_get_value_d);
+
+/// Allocate a symbolic vector of bytes
+pub fn verifier_nondet_bytes(n: usize) -> Vec<u8> {
+    // create an empty vector with capacity 'n'
+    let v: Vec<u8> = Vec::with_capacity(n);
+
+    // take vector apart so that we can access unused capacity
+    let mut v = mem::ManuallyDrop::new(v);
+    let p = v.as_mut_ptr();
+
+    unsafe {
+        // mark contents of vector as symbolic
+        let data = p as *mut raw::c_void;
+        let null = 0 as *const i8;
+        klee_make_symbolic(data, n, null);
+
+        // put vector back together again,
+        // with same capacity but increased length
+        Vec::from_raw_parts(p, n, n)
+    }
+}
+
+/// Allocate a symbolic CString
+pub fn verifier_nondet_cstring(size_excluding_null: usize) -> CString {
+    let mut r = verifier_nondet_bytes(size_excluding_null + 1);
+    for i in 0..size_excluding_null {
+        assume(r[i] != 0u8);
+    }
+    r[size_excluding_null] = 0u8;
+    unsafe { CString::from_vec_with_nul_unchecked(r) }
+}
+
+/// Allocate a symbolic ASCII String
+/// (ASCII strings avoid the complexity of UTF-8)
+pub fn verifier_nondet_ascii_string(n: usize) -> String {
+    let r = verifier_nondet_bytes(n);
+    for i in 0..n {
+        assume(r[i] != 0u8);
+        assume(r[i].is_ascii());
+    }
+    match String::from_utf8(r) {
+        Ok(r) => r,
+        Err(_) => reject(),
+    }
+}
 
 impl VerifierNonDet for bool {
     fn verifier_nondet(self) -> Self {

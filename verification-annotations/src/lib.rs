@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#![feature(cstring_from_vec_with_nul)]
+
 // Traits for creating symbolic/abstract values
 mod traits;
 pub use crate::traits::*;
