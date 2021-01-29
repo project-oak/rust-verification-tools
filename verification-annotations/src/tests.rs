@@ -14,7 +14,7 @@ fn t0() {
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
 
-    #[cfg(not(feature = "verifier-crux"))]
+    #[cfg(not(any(feature = "verifier-crux", feature = "verifier-seahorn")))]
     if verifier::is_replay() { eprintln!("Test values: a = {}, b = {}", a, b) }
 
     let r = a*b;
