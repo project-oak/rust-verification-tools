@@ -10,45 +10,19 @@
 // FFI wrapper for SeaHorn symbolic execution tool
 /////////////////////////////////////////////////////////////////
 
+use std::default::Default;
+use core::panic::PanicInfo;
+
 pub use crate::traits::*;
 
-use std::default::Default;
-
-use seahorn;
-// use seahorn::NonDet;
-
-impl <T: seahorn::NonDet> VerifierNonDet for T {
-    fn verifier_nondet(self) -> Self {
-        T::seahorn_nondet()
-    }
+extern {
+    fn __VERIFIER_error() -> !;
+    fn __VERIFIER_assume(pred: i32);
 }
 
-// impl VerifierNonDet for bool {
-//     fn verifier_nondet(self) -> Self {
-//         let c = u8::verifier_nondet(0u8);
-//         seahorn::assume(c == 0 || c == 1);
-//         c == 1
-//     }
-// }
-
-impl <T: VerifierNonDet + Default> AbstractValue for T {
-    fn abstract_value() -> Self {
-        Self::verifier_nondet(Self::default())
-    }
-}
-
-impl <T: VerifierNonDet + Default> Symbolic for T {
-    fn symbolic(_desc: &'static str) -> Self {
-        Self::verifier_nondet(Self::default())
-    }
-}
-
-
-/// Assume that condition `cond` is true
-///
-/// Any paths found must satisfy this assumption.
-pub fn assume(cond: bool) {
-    seahorn::assume(cond);
+#[no_mangle]
+fn spanic(_info: &PanicInfo) -> ! {
+    abort();
 }
 
 /// Reject the current execution with a verification failure.
@@ -56,7 +30,16 @@ pub fn assume(cond: bool) {
 /// In almost all circumstances, `report_error` should
 /// be used instead because it generates an error message.
 pub fn abort() -> ! {
-    seahorn::abort();
+    unsafe { __VERIFIER_error(); }
+}
+
+/// Assume that condition `cond` is true
+///
+/// Any paths found must satisfy this assumption.
+pub fn assume(pred: bool) {
+    if ! pred {
+        unsafe { __VERIFIER_assume(0); }
+    }
 }
 
 /// Reject the current execution path with a verification success.
@@ -102,6 +85,53 @@ pub fn expect(msg: Option<&str>) {
     }
 }
 
+macro_rules! make_nondet {
+    ($typ:ty, $ext:ident, $v:expr) => {
+        extern { fn $ext() -> $typ; }
+        impl VerifierNonDet for $typ {
+            fn verifier_nondet(self) -> Self {
+                unsafe { $ext() }
+            }
+        }
+    };
+}
+
+make_nondet!(u8, __VERIFIER_nondet_u8, 0);
+make_nondet!(u16, __VERIFIER_nondet_u16, 0);
+make_nondet!(u32, __VERIFIER_nondet_u32, 0);
+make_nondet!(u64, __VERIFIER_nondet_u64, 0);
+// make_nondet!(u128, __VERIFIER_nondet_u128, 0);
+make_nondet!(usize, __VERIFIER_nondet_usize, 0);
+
+make_nondet!(i8, __VERIFIER_nondet_i8, 0);
+make_nondet!(i16, __VERIFIER_nondet_i16, 0);
+make_nondet!(i32, __VERIFIER_nondet_i32, 0);
+make_nondet!(i64, __VERIFIER_nondet_i64, 0);
+// make_nondet!(i128, __VERIFIER_nondet_i128, 0);
+make_nondet!(isize, __VERIFIER_nondet_isize, 0);
+
+make_nondet!(f32, __VERIFIER_nondet_f32, 0.0);
+make_nondet!(f64, __VERIFIER_nondet_f63, 0.0);
+
+impl VerifierNonDet for bool {
+    fn verifier_nondet(self) -> Self {
+        let c = u8::verifier_nondet(0u8);
+        assume(c == 0 || c == 1);
+        c == 1
+    }
+}
+
+impl <T: VerifierNonDet + Default> AbstractValue for T {
+    fn abstract_value() -> Self {
+        Self::verifier_nondet(Self::default())
+    }
+}
+
+impl <T: VerifierNonDet + Default> Symbolic for T {
+    fn symbolic(_desc: &'static str) -> Self {
+        Self::verifier_nondet(Self::default())
+    }
+}
 
 #[macro_export]
 macro_rules! assert {
@@ -164,6 +194,13 @@ macro_rules! assert_ne {
                  \n  left: `{:?}`, \n right: `{:?}`: ", $fmt),
             left, right $($arg)*);
     }};
+}
+
+#[macro_export]
+macro_rules! unreachable {
+    () => {
+        $crate::abort();
+    };
 }
 
 /////////////////////////////////////////////////////////////////
