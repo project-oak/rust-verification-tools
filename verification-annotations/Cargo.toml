@@ -8,13 +8,13 @@ authors = [
 edition = "2018"
 description = "verification annotation library"
 categories = ["development-tools::testing"]
-keywords = ["klee", "crux", "mir", "verification", "testing"]
+keywords = ["klee", "crux", "seahorn", "mir", "verification", "testing"]
 license = "MIT OR Apache-2.0"
 
 [features]
 verifier-crux = []
 verifier-klee = []
-verifier-seahorn = [ "seahorn" ]
+verifier-seahorn = [ "cc" ]
 
-[dependencies]
-seahorn = { optional = true, git = "https://github.com/fshaked/seahorn-playgroung.git", branch = "main" }
+[build-dependencies]
+cc = { optional = true, version = "1.0" }
