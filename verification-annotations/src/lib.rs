@@ -22,6 +22,11 @@ mod crux;
 #[cfg(feature = "verifier-crux")]
 pub use crate::crux::*;
 
+#[cfg(feature = "verifier-seahorn")]
+mod seahorn;
+#[cfg(feature = "verifier-seahorn")]
+pub use crate::seahorn::*;
+
 #[macro_export]
 macro_rules! verifier_assert {
     ($cond:expr) => { $crate::assert!($cond); };

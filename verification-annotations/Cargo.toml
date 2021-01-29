@@ -14,5 +14,7 @@ license = "MIT OR Apache-2.0"
 [features]
 verifier-crux = []
 verifier-klee = []
+verifier-seahorn = [ "seahorn" ]
 
 [dependencies]
+seahorn = { optional = true, git = "https://github.com/fshaked/seahorn-playgroung.git", branch = "main" }
