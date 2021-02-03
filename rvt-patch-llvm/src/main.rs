@@ -12,6 +12,7 @@ use std::ffi::OsStr;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::memory_buffer::MemoryBuffer;
 use inkwell::module::Linkage;
@@ -42,6 +43,10 @@ struct Opt {
         default_value = "out"
     )]
     output: PathBuf,
+
+    /// Eliminate feature tests
+    #[structopt(short, long)]
+    features: bool,
 
     /// Call initializers from main
     #[structopt(short, long)]
@@ -78,6 +83,23 @@ fn main() {
     let mut module = context
         .create_module_from_ir(memory_buffer)
         .expect("ERROR: failed to create module.");
+
+    if opt.features {
+        info!("Patching feature functions");
+        stub_functions(
+            &context,
+            &module,
+            &[
+                "std::std_detect::detect::arch::__is_feature_detected::avx2",
+                "std::std_detect::detect::arch::__is_feature_detected::ssse3",
+                "std::std_detect::detect::check_for",
+            ],
+            |builder| {
+                builder.build_return(Some(&context.bool_type().const_int(0, false)));
+                ()
+            },
+        );
+    }
 
     if opt.initializers {
         handle_initializers(&context, &mut module);
@@ -262,6 +284,56 @@ fn insert_call_at_head<'a>(
 }
 
 ////////////////////////////////////////////////////////////////
+// Function transformation functions
+////////////////////////////////////////////////////////////////
+
+/// Apply Rust mangling rule to a function name like 'foo::bar'.
+/// Does not insert a unique hash at the end or the final 'E' character.
+fn rust_mangle(rust_name: &str) -> String {
+    let mangled =
+        &rust_name
+        .split("::")
+        .into_iter()
+        .map(|x| format!("{}{}", x.len(), x))
+        .collect::<Vec<String>>()
+        .concat();
+    "_ZN".to_string() + mangled
+}
+
+/// Delete the body of a function
+fn delete_body<'ctx>(fun: &FunctionValue<'ctx>) {
+    for bb in fun.get_basic_blocks() {
+        unsafe {
+            // Any use of `bb` after calling `delete` is unsafe
+            bb.delete().expect("delete basic block");
+        }
+    }
+}
+
+/// Stub out a list of functions by deleting the existing
+/// body of each function and using mk_stub to construct a new body.
+///
+/// Functions are identified specified by names like "foo::bar"
+/// and exclude the uniquifying hash code at the end.
+fn stub_functions<F>(context: &Context, module: &Module, functions: &[&str], mk_stub: F)
+where
+    F: Fn(&Builder),
+{
+    for f in functions {
+        if let Some(fun) = get_function_by_unmangled_name(&module, f) {
+            info!("Stubbing out function function {}", f);
+            delete_body(&fun);
+            let basic_block = context.append_basic_block(fun, "entry");
+            let builder = context.create_builder();
+            builder.position_at_end(basic_block);
+            mk_stub(&builder)
+        } else {
+            info!("Did not find function to stub {}", f)
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////
 // Transformations associated with SeaHorn
 ////////////////////////////////////////////////////////////////
 
@@ -283,17 +355,32 @@ fn handle_main(module: &Module, otest: &Option<String>) {
     };
 
     // Print the entry point function name
-    if let Some(fun) = get_function(module, &re) {
+    if let Some(fun) = get_function_by_regex(module, &re) {
         // Change the linkage of mangled main function from internal to external.
         // fun.set_linkage(Linkage::External);
         println!("ENTRY: {}", fun.get_name().to_str().unwrap());
     }
 }
 
-fn get_function<'ctx>(module: &'ctx Module, re: &Regex) -> Option<FunctionValue<'ctx>> {
+/// Find a function whose name matches regex `re`
+fn get_function_by_regex<'ctx>(module: &'ctx Module, re: &Regex) -> Option<FunctionValue<'ctx>> {
+    get_function(module, |name| re.is_match(name))
+}
+
+/// Find a function whose name matches a Rust-mangled prefix
+fn get_function_by_unmangled_name<'ctx>(module: &'ctx Module, prefix: &str) -> Option<FunctionValue<'ctx>> {
+    let prefix = rust_mangle(prefix);
+    get_function(module, |name| name.starts_with(&prefix))
+}
+
+/// Find a function whose name satisfies predicate `is_match`
+fn get_function<'ctx, P>(module: &'ctx Module, is_match: P) -> Option<FunctionValue<'ctx>>
+where
+    P: Fn(&str) -> bool,
+{
     let mut op_fun = module.get_first_function();
     while let Some(fun) = op_fun {
-        if re.is_match(
+        if is_match(
             fun.get_name()
                 .to_str()
                 .expect("ERROR: function name is not in valid UTF-8"),
@@ -315,14 +402,12 @@ fn handle_panic(module: &Module) {
     }
 }
 
+/// Change a function to a declaration by
+/// deleting all basic blocks and modifying metadata
+/// such as personality_function, linkage, etc.
 fn replace_def_with_dec(module: &Module, re: &Regex) {
-    if let Some(fun) = get_function(module, re) {
-        for bb in fun.get_basic_blocks() {
-            unsafe {
-                // Any use of `bb` after calling `delete` is unsafe
-                bb.delete().unwrap();
-            }
-        }
+    if let Some(fun) = get_function_by_regex(module, re) {
+        delete_body(&fun);
         fun.remove_personality_function();
         fun.set_linkage(Linkage::External);
         info!(
