@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 
-# Most of the script is boilerplate for processing command-line arguments (see
-# usage below).
-# For the interesting part jump to the 'main' function.
+# Copyright 2021 The Rust verification tool Authors
+#
+# Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+# http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+# <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+# option. This file may not be copied, modified, or distributed
+# except according to those terms.
+
+# This is a temporary script for running Seahorn. We should merge this with
+# `cargo-verify`.  Most of the script is boilerplate for processing command-line
+# arguments (see usage below).  For the interesting part jump to the 'main'
+# function.
 
 # Debug
 # set -x

@@ -1,9 +1,18 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 
-void __VERIFIER_error() {}
+void __VERIFIER_error() {
+  fprintf(stderr, "ERROR: a verification assertion failed.");
+  exit(1);
+}
 
-void __VERIFIER_assume(int pred) { if (pred == 0) exit(1); }
+void __VERIFIER_assume(int pred) {
+  if (pred == 0) {
+    fprintf(stderr, "ERROR: a verification assumption has been violated.");
+    exit(1);
+  }
+}
 
 uint8_t   __VERIFIER_nondet_u8()    { return 0; }
 uint16_t  __VERIFIER_nondet_u16()   { return 0; }
