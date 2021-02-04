@@ -136,6 +136,88 @@ fn concrete3() {
     verifier::assert!(b <= 1_000_000_000);
 }
 
+
+/// Test of verifier_nondet_bytes
+#[cfg_attr(not(feature = "verifier-crux"), test)]
+#[cfg_attr(feature = "verifier-crux", crux_test)]
+fn bytes() {
+    let a = verifier::verifier_nondet_bytes(8);
+    for i in &a {
+        verifier::assume(*i == 42);
+    }
+    if verifier::is_replay() {
+        println!("{:?}", a);
+    }
+    verifier::assert_eq!(a.len(), 8);
+    verifier::assert_ne!(a[2], 0u8);
+    verifier::assert_eq!(a[3], 42u8);
+}
+
+/// Test of verifier_nondet_cstring
+#[cfg_attr(not(feature = "verifier-crux"), test)]
+#[cfg_attr(feature = "verifier-crux", crux_test)]
+fn cstring() {
+    let a = verifier::verifier_nondet_cstring(8);
+
+    if verifier::is_replay() {
+        println!("{:?}", a);
+    }
+
+    // force string to be plain ASCII - to keep things simple
+    for i in a.as_bytes() {
+        // note: this code suffers from a path explosion and
+        // would benefit from using verifier::coherent!
+        // We will not do that though because the goal is to
+        // test this feature in isolation.
+        verifier::assume(i.is_ascii_alphabetic());
+    }
+
+    for i in a.as_bytes() {
+        verifier::assert!(i.is_ascii());
+        // this assertion would fail
+        // verifier::assert!(i.is_ascii_digit());
+    }
+}
+
+/// Test of verifier_nondet_ascii_string
+#[cfg_attr(not(feature = "verifier-crux"), test)]
+#[cfg_attr(feature = "verifier-crux", crux_test)]
+fn string_ok() {
+    let a = verifier::verifier_nondet_ascii_string(6);
+
+    if verifier::is_replay() {
+        println!("{:?}", a);
+    }
+
+    // force string to be a legal int
+    for i in a.as_bytes() {
+        verifier::assume(('0'..='3').contains(&(*i as char)))
+    }
+
+    let i: u32 = a.parse().unwrap();
+    verifier::assert!(i <= 333_333);
+}
+
+/// Test of  verifier_nondet_ascii_stringg
+#[cfg_attr(not(feature = "verifier-crux"), test)]
+#[cfg_attr(feature = "verifier-crux", crux_test)]
+fn string_should_fail() {
+    verifier::expect(Some("assertion failed"));
+    let a = verifier::verifier_nondet_ascii_string(6);
+
+    if verifier::is_replay() {
+        println!("{:?}", a);
+    }
+
+    // force string to be a legal int
+    for i in a.as_bytes() {
+        verifier::assume(('0'..='3').contains(&(*i as char)))
+    }
+
+    let i: u32 = a.parse().unwrap();
+    verifier::assert!(i <= 222_222);
+}
+
 ////////////////////////////////////////////////////////////////
 // End
 ////////////////////////////////////////////////////////////////
