@@ -197,7 +197,8 @@ def compile(label, crate, runtests, verbose, rustflags, features, target):
   # (This may not be inside the crate if using workspaces)
   targetdir = metadata["target_directory"]
 
-  flags = features
+  flags = []
+  flags.extend(features)
   if verbose: flags.append("-v")
   if runtests: flags.append("--tests")
 
