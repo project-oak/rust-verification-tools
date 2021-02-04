@@ -245,7 +245,11 @@ def compile(label, crate, runtests, verbose, rustflags, features, target):
   bcfiles = glob.glob(pattern)
 
   pattern = f"{targetdir}/{target}/debug/build/*/out/*.o"
-  c_files = glob.glob(pattern)
+  c_files1 = glob.glob(pattern)
+
+  pattern = f"{targetdir}/{target}/debug/build/*/out/*/*.o"
+  c_files2 = glob.glob(pattern)
+  c_files = c_files1 + c_files2
 
   # build_plan = read_build_plan(crate, flags)
   # print(json.dumps(build_plan, indent=4, sort_keys=True))
@@ -525,7 +529,7 @@ def klee_importance(l, expect):
 
 
 # Replay a KLEE "ktest" file
-def replay_klee(ktest, name, crate, program_args, features, runtests):
+def replay_klee(ktest, name, crate, program_args, features, runtests, verbosity):
   cmd = []
   if runtests:
     cmd.extend(["cargo", "test"])
@@ -551,6 +555,9 @@ def replay_klee(ktest, name, crate, program_args, features, runtests):
                              cwd=crate,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
+  if verbosity > 3:
+    print(f"Replaying test {ktest} with command " + ' '.join(process.args))
+    print(f"  and RUSTFLAGS={rustflags}")
   stdout, stderr = process.communicate()
   if process.returncode != 0:
     for l in stderr.splitlines(): print("      " + l.decode("utf-8"))
@@ -597,7 +604,7 @@ def klee_verify(bcfile, name, test, crate, runtests, features, flags, program_ar
 
     for ktest in ktests:
       print(f"    Test input {ktest}")
-      replay_klee(ktest, name, crate, program_args, features, runtests)
+      replay_klee(ktest, name, crate, program_args, features, runtests, verbose)
   return status
 
 
@@ -623,6 +630,21 @@ def verifier_run(bcfile, name, entry, crate, runtests, features, flags, program_
 # Compile a Rust crate to generate bitcode
 # and run one of the LLVM verifier backends on the result.
 def verify(label, crate, runtests, testfilter, verifier_flags, program_args, verbose, replay, features, target, backend, jobs):
+
+  # If using the --tests flag, generate a list of tests
+  if runtests:
+    # get a list of the tests
+    if verbose > 2: print(f"  Getting list of tests in {label}")
+    tests = list_tests(crate, verbose, features)
+    if testfilter:
+      tests = [ t for t in tests if any([ f in t for f in testfilter ]) ]
+    if not tests:
+      print("No tests found")
+      return status_unknown
+    if verbose > 0: print(f"  Checking {' '.join(tests)}")
+  else:
+    tests = [("main", "main")]
+
 
   # Compile and link the patched file using LTO to generate the entire
   # application in a single LLVM file
@@ -677,22 +699,9 @@ def verify(label, crate, runtests, testfilter, verifier_flags, program_args, ver
   else:
     bcfile = rust_file
 
-  # If using the --tests flag, generate a list of tests and their mangled names
-  if runtests:
-    # get a list of the tests
-    if verbose > 2: print(f"  Getting list of tests in {label}")
-    tests = list_tests(crate, verbose, features)
-    if testfilter:
-      tests = [ t for t in tests if any([ f in t for f in testfilter ]) ]
-    if not tests:
-      print("No tests found")
-      return status_unknown
-    if verbose > 0: print(f"  Checking {' '.join(tests)}")
-    # then look up their mangled names in the bcfile
+  if runtests: # lookup the mangled names of any tests in the bcfile
     tests = mangle_functions(rust_file, [ t.split('::') for t in tests ], verbose)
     if verbose > 3: print(f"  Mangled: {tests}")
-  else:
-    tests = [("main", "main")]
 
   if program_args:
     if verbose > 2: print(f"  Patching LLVM file for initializers")
