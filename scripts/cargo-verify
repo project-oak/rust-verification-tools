@@ -39,7 +39,7 @@ status_unknown   = "UNKNOWN"
 ################################################################
 
 # Read metadata from manifest
-def read_metadata(crate, features):
+def read_metadata(crate, features, verbosity):
   rustflags = os.environ.get("RUSTFLAGS", "")
   rustflags = rustflags +" --cfg=verify"
 
@@ -51,6 +51,7 @@ def read_metadata(crate, features):
                              cwd=crate,
                              stdout=subprocess.PIPE, 
                              stderr=subprocess.PIPE)
+  if verbosity > 3: print(f"    Reading metadata with RUSTFLAGS=\"{rustflags}\" " + " ".join(process.args))
   stdout, stderr = process.communicate()
   if process.returncode != 0:
     print("Unable to read crate metadata")
@@ -70,10 +71,11 @@ def get_packagename(crate):
 # Get name of default_host
 # This is passed to cargo using "--target=..." and will be the name of
 # the directory within the target directory
-def get_default_host():
+def get_default_host(verbosity):
   process = subprocess.Popen(['rustup', 'show'],
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
+  if verbosity > 3: print(f"  Getting target name with " + " ".join(process.args))
   stdout, stderr = process.communicate()
   for l in stdout.splitlines():
       l = l.decode('ascii').split(':')
@@ -94,18 +96,19 @@ def demangle_name(l):
   return (bits, l)
 
 # Count how many functions in fs are present in bitcode file
-def count_symbols(bcfile, fs, verbose):
-  if verbose > 3: print(f"    Counting symbols {fs} in {bcfile}")
+def count_symbols(bcfile, fs, verbosity):
+  if verbosity > 3: print(f"    Counting symbols {fs} in {bcfile}")
   process = subprocess.Popen(['/usr/bin/env', 'llvm-nm', '--defined-only', bcfile],
                              stdout=subprocess.PIPE, 
                              stderr=subprocess.PIPE)
+  if verbosity > 3: print(f"      Running llvm-nm with " + " ".join(process.args))
   stdout, stderr = process.communicate()
   count = 0
   for l in stdout.splitlines():
     l = l.split()
     if len(l) == 3 and l[1] == b'T' and l[2].decode("ascii") in fs:
       count = count + 1
-  if verbose > 3: print(f"    Found {count} functions")
+  if verbosity > 3: print(f"    Found {count} functions")
   return count
 
 
@@ -113,19 +116,20 @@ def count_symbols(bcfile, fs, verbose):
 #
 # This amounts to mangling the function names but is
 # more complicated because we don't have the hash value in our hand
-def mangle_functions(bcfile, paths, verbose):
-  if verbose > 3: print(f"    Looking up {paths} in {bcfile}")
+def mangle_functions(bcfile, paths, verbosity):
+  if verbosity > 3: print(f"    Looking up {paths} in {bcfile}")
   # apply rustc-style name mangling
   paths = { "".join([ str(len(n)) + n for n in path]): "::".join(path) for path in paths }
 
   process = subprocess.Popen(['/usr/bin/env', 'llvm-nm', '--defined-only', bcfile],
                              stdout=subprocess.PIPE, 
                              stderr=subprocess.PIPE)
+  if verbosity > 3: print(f"    Running llvm-nm again with " + " ".join(process.args))
   stdout, stderr = process.communicate()
   if process.returncode != 0:
     print("FAILED: Couldn't run llvm-nm")
     print(process.args)
-    if verbose:
+    if verbosity:
         print(stdout.decode("utf-8"))
         print(stderr.decode("utf-8"))
     return None
@@ -149,7 +153,7 @@ def mangle_functions(bcfile, paths, verbose):
         t = paths[key]
         f = prefix + "".join(name) + rest
         rs.append((t, f))
-  if verbose > 3: print(f"      Found {rs}")
+  if verbosity > 3: print(f"      Found {rs}")
   missing = set(paths) - paths.keys()
   if len(missing) > 0:
     raise Exception(f"Unable to find tests {list(missing)} in bytecode file")
@@ -164,7 +168,7 @@ def mangle_functions(bcfile, paths, verbose):
 #   (this makes std::env::args() work)
 # - redirecting panic! to invoke backend-specific intrinsic functions
 #   for reporting errors
-def patch_llvm(bcfile, new_bcfile, backend, verbose):
+def patch_llvm(bcfile, new_bcfile, backend, verbosity):
   config = []
   if backend == 'klee':
     config.append('--initializers')
@@ -176,18 +180,18 @@ def patch_llvm(bcfile, new_bcfile, backend, verbose):
                              + config,
                              stdout=subprocess.PIPE, 
                              stderr=subprocess.PIPE)
-  if verbose > 3:
+  if verbosity > 3:
     print(f"Patching {bcfile} with command {' '.join(process.args)}")
   stdout, stderr = process.communicate()
   if process.returncode != 0:
     print("FAILED: Couldn't run rvt-patch-llvm")
     print(process.args)
-    if verbose:
+    if verbosity:
         print(stdout.decode("utf-8"))
         print(stderr.decode("utf-8"))
     return False
 
-  if verbose > 3:
+  if verbosity > 3:
     print(stdout.decode("utf-8"))
     print(stderr.decode("utf-8"))
 
@@ -199,15 +203,15 @@ def patch_llvm(bcfile, new_bcfile, backend, verbose):
 #
 # Todo: as more backends are supported, this function is likely
 # to need some modification.
-def compile(label, crate, runtests, verbose, rustflags, features, target):
-  metadata = read_metadata(crate, features)
+def compile(label, crate, runtests, verbosity, rustflags, ccflags, features, target):
+  metadata = read_metadata(crate, features, verbosity)
 
   # Find the target directory
   # (This may not be inside the crate if using workspaces)
   targetdir = metadata["target_directory"]
 
   flags = features.copy()
-  if verbose: flags.append("-v")
+  if verbosity: flags.append("-v")
   if runtests: flags.append("--tests")
 
   # The following line is not present because we care about the target
@@ -231,19 +235,17 @@ def compile(label, crate, runtests, verbose, rustflags, features, target):
                              cwd=crate,
                              env = { "RUSTFLAGS": rustflags
                                    , "PATH": os.environ["PATH"]
-                                   , "CRATE_CC_NO_DEFAULTS": "true"
-                                   , "CFLAGS": "-flto=thin"
-                                   , "CC": "clang-10"
+                                   , **ccflags # flags for compiling C code
                                    },
                              stdout=subprocess.PIPE, 
                              stderr=subprocess.PIPE)
-  if verbose > 3:
-    print(f"Compiling {crate} with command {' '.join(process.args)}")
-    print(f"RUSTFLAGS=\"{rustflags}\"")
+  if verbosity > 3:
+    print(f"Compiling {crate} with RUSTFLAGS=\"{rustflags}\" {' '.join(process.args)}")
+    print(ccflags)
   stdout, stderr = process.communicate()
   if process.returncode != 0:
     print(colored("FAILED: Couldn't compile", 'red'))
-    if verbose:
+    if verbosity:
       print(f"RUSTFLAGS=\"{rustflags}\" {' '.join(process.args)}")
       print(stdout.decode("utf-8"))
       print(stderr.decode("utf-8"))
@@ -260,19 +262,19 @@ def compile(label, crate, runtests, verbose, rustflags, features, target):
   return (bcfiles, c_files)
 
 # link multiple bitcode files together
-def link(crate, out_file, in_files, verbose):
+def link(crate, out_file, in_files, verbosity):
   process = subprocess.Popen(['/usr/bin/env', 'llvm-link']
                              + ['-o', out_file]
                              + in_files,
                              cwd=crate,
                              stdout=subprocess.PIPE, 
                              stderr=subprocess.PIPE)
-  if verbose > 3:
+  if verbosity > 3:
     print(f"Linking with command {' '.join(process.args)}")
   stdout, stderr = process.communicate()
   if process.returncode != 0:
     print(colored("FAILED: Couldn't link", 'red'))
-    if verbose:
+    if verbosity:
       print(stdout.decode("utf-8"))
       # print(stderr.decode("utf-8"))
     return False
@@ -282,7 +284,7 @@ def link(crate, out_file, in_files, verbose):
 
 # Generate a list of tests in the crate
 # by parsing the output of "cargo test -- --list"
-def list_tests(crate, verbose, features):
+def list_tests(crate, verbosity, features, ccflags):
 
   rustflags = os.environ.get("RUSTFLAGS", "")
   rustflags = rustflags +" --cfg=verify"
@@ -291,15 +293,19 @@ def list_tests(crate, verbose, features):
                              #'--exclude-should-panic' ],
                              env = { "RUSTFLAGS": rustflags
                                    , "PATH": os.environ["PATH"]
+                                   , **ccflags
                                    },
                              cwd=crate,
                              stdout=subprocess.PIPE, 
                              stderr=subprocess.PIPE)
+  if verbosity > 3:
+    print(f"    Getting list of tests with RUSTFLAGS=\"{rustflags}\" " + " ".join(process.args))
+    print(ccflags)
   stdout, stderr = process.communicate()
   if False and process.returncode != 0:
     print("Couldn't get list of tests")
     print(process.args)
-    if verbose:
+    if verbosity:
         print(stdout.decode("utf-8"))
         print(stderr.decode("utf-8"))
     raise Exception("failure")
@@ -318,9 +324,9 @@ def list_tests(crate, verbose, features):
 ################################################################
 
 # Invoke proptest to compile and fuzz proptest targets
-def run_proptest(crate, runtests, tests, program_args, verbose, replay, features):
+def run_proptest(crate, runtests, tests, program_args, verbosity, replay, features):
   flags = features.copy();
-  if verbose: flags.append("-v")
+  if verbosity: flags.append("-v")
 
   if runtests or tests:
       cmd = 'test'
@@ -341,10 +347,12 @@ def run_proptest(crate, runtests, tests, program_args, verbose, replay, features
                              cwd=crate,
                              stdout=subprocess.PIPE, 
                              stderr=subprocess.PIPE)
+  if verbosity > 3:
+    print(f"    Running cargo test (proptest) with " + " ".join(process.args))
   stdout, stderr = process.communicate()
   if process.returncode != 0:
-    if verbose: print(stderr.decode("utf-8"))
-    if verbose: print(stdout.decode("utf-8"))
+    if verbosity: print(stderr.decode("utf-8"))
+    if verbosity: print(stdout.decode("utf-8"))
     for l in stderr.splitlines():
       if b"with overflow" in l:
         return status_overflow
@@ -459,15 +467,15 @@ def klee_run(bcfile, name, entry, crate, kleeout, stats, klee_flags, program_arg
   return status
 
 # Detect lines that match #[should_panic(expected = ...)] string
-def is_expected_panic(l, expect, name, verbose):
+def is_expected_panic(l, expect, name, verbosity):
   m = re.search(" panicked at '([^']*)',\s+(.*)", l)
   if m:
     message = m[1]
     srcloc  = m[2]
     if expect in message:
-      if verbose:
+      if verbosity:
         print(f"     {name}: Detected expected failure '{message}' at {srcloc}")
-        if verbose > 1: print("     Error message: "+l)
+        if verbosity > 1: print("     Error message: "+l)
       return True
   return False
 
@@ -533,7 +541,7 @@ def klee_importance(l, expect):
 
 
 # Replay a KLEE "ktest" file
-def replay_klee(ktest, name, crate, program_args, features, runtests):
+def replay_klee(ktest, name, crate, program_args, features, runtests, verbosity):
   cmd = []
   if runtests:
     cmd.extend(["cargo", "test"])
@@ -559,6 +567,9 @@ def replay_klee(ktest, name, crate, program_args, features, runtests):
                              cwd=crate,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
+  if verbosity > 3:
+    print(f"Replaying test {ktest} with command " + ' '.join(process.args))
+    print(f"  and RUSTFLAGS={rustflags}")
   stdout, stderr = process.communicate()
   if process.returncode != 0:
     for l in stderr.splitlines(): print("      " + l.decode("utf-8"))
@@ -566,29 +577,29 @@ def replay_klee(ktest, name, crate, program_args, features, runtests):
 
 # Run KLEE and optionally replay all the paths to display the concrete
 # values that will trigger that path.
-def klee_verify(bcfile, name, test, crate, runtests, features, flags, program_args, verbose, replay):
+def klee_verify(bcfile, name, test, crate, runtests, features, flags, program_args, verbosity, replay):
   kleeout = os.path.abspath(f"{crate}/kleeout-{name}")
   shutil.rmtree(kleeout, ignore_errors=True)
   if os.path.exists(kleeout):
     print(f"Unable to create file {kleeout}")
     return status_unknown
-  if verbose > 1: print(f"     Running KLEE to verify {name}")
-  if verbose > 2:
+  if verbosity > 1: print(f"     Running KLEE to verify {name}")
+  if verbosity > 2:
     print(f"      file: {bcfile}")
     print(f"      entry: {test}")
     print(f"      results: {kleeout}")
   stats = {}
-  status = klee_run(bcfile, name, test, crate, kleeout, stats, flags, program_args, verbose)
+  status = klee_run(bcfile, name, test, crate, kleeout, stats, flags, program_args, verbosity)
   if stats:
-    if verbose > 1:
+    if verbosity > 1:
       stats = ", ".join([k +": "+ str(v) for (k, v) in stats.items()])
       print(f"     {name}: {stats}")
-    elif verbose:
+    elif verbosity:
       stats = f"{stats['completed paths']} paths"
       print(f"     {name}: {stats}")
 
   failures = sorted(glob.glob(f"{kleeout}/test*.err"))
-  if verbose > 0 and failures:
+  if verbosity > 0 and failures:
     for f in failures:
       print(f"      Failing test: {f}")
 
@@ -605,7 +616,7 @@ def klee_verify(bcfile, name, test, crate, runtests, features, flags, program_ar
 
     for ktest in ktests:
       print(f"    Test input {ktest}")
-      replay_klee(ktest, name, crate, program_args, features, runtests)
+      replay_klee(ktest, name, crate, program_args, features, runtests, verbosity)
   return status
 
 
@@ -619,22 +630,22 @@ def klee_verify(bcfile, name, test, crate, runtests, features, flags, program_ar
 # Invoke one of the supported verification backends on
 # entrypoint 'entry' (with pretty name 'name')
 # in bitcodefile 'bcfile'
-def verifier_run(bcfile, name, entry, crate, runtests, features, flags, program_args, verbose, replay, backend):
+def verifier_run(bcfile, name, entry, crate, runtests, features, flags, program_args, verbosity, replay, backend):
   if backend == "klee":
-    status = klee_verify(bcfile, name, entry, crate, runtests, features, flags, program_args, verbose, replay)
+    status = klee_verify(bcfile, name, entry, crate, runtests, features, flags, program_args, verbosity, replay)
     return status
   else:
-    if verbose: print(f"Unsupported backend {backend}")
+    if verbosity: print(f"Unsupported backend {backend}")
     return (None, status_unknown)
 
 
 # Compile a Rust crate to generate bitcode
 # and run one of the LLVM verifier backends on the result.
-def verify(label, crate, runtests, testfilter, verifier_flags, program_args, verbose, replay, features, target, backend, jobs):
+def verify(label, crate, runtests, testfilter, verifier_flags, program_args, verbosity, replay, features, target, backend, jobs):
 
   # Compile and link the patched file using LTO to generate the entire
   # application in a single LLVM file
-  if verbose > 1: print(f"  Compiling {label}")
+  if verbosity > 1: print(f"  Compiling {label}")
   rustflags = [
       '-Clto',                 # Generate linked bitcode for entire crate
       '-Cembed-bitcode=yes',
@@ -658,17 +669,24 @@ def verify(label, crate, runtests, testfilter, verifier_flags, program_args, ver
       '-Ctarget-feature=-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2',
   ]
 
-  (bcfiles, c_files) = compile(label, crate, runtests, verbose, rustflags, features, target)
+  # environment-variables for compiling C code with to ensure that it is
+  # compiled with clang and generates bitcode files.
+  ccflags = {
+     "CRATE_CC_NO_DEFAULTS": "true"
+     , "CFLAGS": "-flto=thin"
+     , "CC": "clang-10"
+  }
+  (bcfiles, c_files) = compile(label, crate, runtests, verbosity, rustflags, ccflags, features, target)
   if bcfiles is None: return status_unknown
 
-  bcs = [ bc for bc in bcfiles if count_symbols(bc, ['main', '_main'], verbose) > 0 ]
+  bcs = [ bc for bc in bcfiles if count_symbols(bc, ['main', '_main'], verbosity) > 0 ]
 
   if len(bcs) == 0 and not runtests:
     print(colored(f"  FAILED: Use --tests with library crates", 'red'))
     return status_unknown
   elif len(bcs) != 1:
     print(colored(f"  FAILED: Test {label} compilation error", 'red'))
-    if verbose:
+    if verbosity:
       if len(bcfiles) > 0:
         for bc in bcfiles:
           print(f"    Ambiguous bitcode file {bc}")
@@ -680,8 +698,8 @@ def verify(label, crate, runtests, testfilter, verifier_flags, program_args, ver
     # Link bc file (from all the Rust code) against the c_files from
     # any C/C++ code generated by build scripts
     bcfile = f"linked.bc"
-    if verbose > 2: print(f"  Linking {rust_file} and {c_files} to produce {bcfile}")
-    if not link(crate, bcfile, [rust_file] + c_files, verbose):
+    if verbosity > 2: print(f"  Linking {rust_file} and {c_files} to produce {bcfile}")
+    if not link(crate, bcfile, [rust_file] + c_files, verbosity):
       return status_unknown
   else:
     bcfile = rust_file
@@ -689,23 +707,23 @@ def verify(label, crate, runtests, testfilter, verifier_flags, program_args, ver
   # If using the --tests flag, generate a list of tests and their mangled names
   if runtests:
     # get a list of the tests
-    if verbose > 2: print(f"  Getting list of tests in {label}")
-    tests = list_tests(crate, verbose, features)
+    if verbosity > 2: print(f"  Getting list of tests in {label}")
+    tests = list_tests(crate, verbosity, features, ccflags)
     if testfilter:
       tests = [ t for t in tests if any([ f in t for f in testfilter ]) ]
     if not tests:
       print("No tests found")
       return status_unknown
-    if verbose > 0: print(f"  Checking {' '.join(tests)}")
+    if verbosity > 0: print(f"  Checking {' '.join(tests)}")
     # then look up their mangled names in the bcfile
-    tests = mangle_functions(rust_file, [ t.split('::') for t in tests ], verbose)
-    if verbose > 3: print(f"  Mangled: {tests}")
+    tests = mangle_functions(rust_file, [ t.split('::') for t in tests ], verbosity)
+    if verbosity > 3: print(f"  Mangled: {tests}")
   else:
     tests = [("main", "main")]
 
   new_bcfile = f"patched.bc"
-  if verbose > 2: print(f"  Patching LLVM file {bcfile} to produce {new_bcfile}")
-  if not patch_llvm(bcfile, new_bcfile, backend, verbose):
+  if verbosity > 2: print(f"  Patching LLVM file {bcfile} to produce {new_bcfile}")
+  if not patch_llvm(bcfile, new_bcfile, backend, verbosity):
     return status_unknown
   bcfile = new_bcfile
 
@@ -718,7 +736,7 @@ def verify(label, crate, runtests, testfilter, verifier_flags, program_args, ver
   with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
     jobs = { executor.submit(verifier_run,
                              bcfile, name, entry, crate, runtests, features,
-                             verifier_flags, program_args, verbose, replay, backend
+                             verifier_flags, program_args, verbosity, replay, backend
                              ): name
              for (name, entry) in tests
            }
@@ -794,7 +812,7 @@ def main():
     if args.verbose: print(f"  Invoking cargo run with proptest backend")
     status = run_proptest(args.crate, args.tests, args.test, args.arg, args.verbose, args.replay, features)
   else:
-    target = get_default_host()
+    target = get_default_host(args.verbose)
     status = verify(label, args.crate, args.tests or args.test, args.test, args.klee_flags, args.arg, args.verbose, args.replay, features, target, args.backend, args.jobs)
 
   print(f"VERIFICATION_RESULT: {status}")
