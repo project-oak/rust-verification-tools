@@ -206,8 +206,7 @@ def compile(label, crate, runtests, verbose, rustflags, features, target):
   # (This may not be inside the crate if using workspaces)
   targetdir = metadata["target_directory"]
 
-  flags = []
-  flags.extend(features)
+  flags = features.copy()
   if verbose: flags.append("-v")
   if runtests: flags.append("--tests")
 
@@ -320,7 +319,7 @@ def list_tests(crate, verbose, features):
 
 # Invoke proptest to compile and fuzz proptest targets
 def run_proptest(crate, runtests, tests, program_args, verbose, replay, features):
-  flags = features;
+  flags = features.copy();
   if verbose: flags.append("-v")
 
   if runtests or tests:
