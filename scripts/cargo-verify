@@ -168,7 +168,7 @@ def mangle_functions(bcfile, paths, verbosity):
 #   (this makes std::env::args() work)
 # - redirecting panic! to invoke backend-specific intrinsic functions
 #   for reporting errors
-def patch_llvm(bcfile, new_bcfile, backend, verbosity):
+def patch_llvm(crate, bcfile, new_bcfile, backend, verbosity):
   config = []
   if backend == 'klee':
     config.append('--initializers')
@@ -178,6 +178,7 @@ def patch_llvm(bcfile, new_bcfile, backend, verbosity):
 
   process = subprocess.Popen(['/usr/bin/env', 'rvt-patch-llvm', bcfile, '-o', new_bcfile]
                              + config,
+                             cwd=crate,
                              stdout=subprocess.PIPE, 
                              stderr=subprocess.PIPE)
   if verbosity > 3:
@@ -275,9 +276,10 @@ def link(crate, out_file, in_files, verbosity):
   stdout, stderr = process.communicate()
   if process.returncode != 0:
     print(colored("FAILED: Couldn't link", 'red'))
+    print(process.returncode)
     if verbosity:
       print(stdout.decode("utf-8"))
-      # print(stderr.decode("utf-8"))
+      print(stderr.decode("utf-8"))
     return False
   else:
     return True
@@ -721,7 +723,7 @@ def verify(label, crate, runtests, testfilter, verifier_flags, program_args, ver
 
   new_bcfile = f"patched.bc"
   if verbosity > 2: print(f"  Patching LLVM file {bcfile} to produce {new_bcfile}")
-  if not patch_llvm(bcfile, new_bcfile, backend, verbosity):
+  if not patch_llvm(crate, bcfile, new_bcfile, backend, verbosity):
     return status_unknown
   bcfile = new_bcfile
 
