@@ -1,0 +1,11 @@
+# See more keys and their definitions at https://rust-lang.github.io/rustfmt
+
+# Use unstable features of rustfmt
+unstable_features = true
+
+merge_imports = true
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"
+
+enum_discrim_align_threshold = 20
+struct_field_align_threshold = 20
