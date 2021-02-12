@@ -1,0 +1,26 @@
+[package]
+name = "rust2calltree"
+version = "0.1.0"
+authors = [
+        "Alastair Reid <adreid@google.com>"
+	]
+edition = "2018"
+
+license = "MIT OR Apache-2.0"
+
+description = "Convert Rust-derived profiles to kcachegrind's calltree input format by demangling function names"
+
+repository = "https://github.com/project-oak/rust-verification-tools/"
+keywords = ["profiling, kcachegrind"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+anyhow = "1.0"	
+log = "0.4"
+rustc-demangle = "0.1"
+stderrlog = "0.5"
+structopt = "0.3"
+
+[[bin]]
+name = "rust2calltree"
+
