@@ -6,4 +6,7 @@ readonly RVT_DST=/home/rust-verification-tools
 readonly MOUNT_PWD="type=bind,source=${PWD},target=${PWD}"
 readonly MOUNT_RVT="type=bind,source=${RVT_SRC},target=${RVT_DST}"
 
-sudo docker run --rm --mount ${MOUNT_RVT} --mount ${MOUNT_PWD} --workdir ${PWD} -it rvt:latest $*
+# based on https://dzone.com/articles/docker-x11-client-via-ssh
+readonly X11="--net=host --env=DISPLAY --volume=$HOME/.Xauthority:/home/$USER/.Xauthority:rw"
+
+sudo docker run --rm --mount ${MOUNT_RVT} --mount ${MOUNT_PWD} --workdir ${PWD} ${X11} -it rvt_r2ct:latest $*

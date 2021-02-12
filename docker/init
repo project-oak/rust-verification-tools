@@ -8,5 +8,6 @@ make -C runtime TGT=seahorn
 
 # Build tools
 mkdir -p ${USER_HOME}/bin
+cargo install --root=${USER_HOME} --path=${RVT_DIR}/rust2calltree
 cargo install --root=${USER_HOME} --path=${RVT_DIR}/rvt-patch-llvm
 cargo +nightly install --root=${USER_HOME} --path=${RVT_DIR}/cargo-verify
