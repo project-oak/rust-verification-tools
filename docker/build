@@ -16,6 +16,11 @@ cargo clean --manifest-path cargo-verify/Cargo.toml
 rm -rf docker/rvt/cargo-verify
 cp -a `pwd`/cargo-verify docker/rvt/cargo-verify
 
+# Copy rust2calltree over
+cargo clean --manifest-path rust2calltree/Cargo.toml
+rm -rf docker/rust2calltree/rust2calltree
+cp -a `pwd`/rust2calltree docker/rust2calltree/rust2calltree
+
 # Build each image
 #
 # Note that each image is built in a subdirectory to avoid breaking
@@ -35,3 +40,4 @@ cp -a `pwd`/cargo-verify docker/rvt/cargo-verify
 (cd docker/yices   && ../mkimage rvt_yices      Dockerfile)
 (cd docker/seahorn && ../mkimage rvt_seahorn    Dockerfile)
 (cd docker/rvt     && ../mkimage rvt            Dockerfile)
+(cd docker/rust2calltree && ../mkimage rvt_r2ct Dockerfile)
