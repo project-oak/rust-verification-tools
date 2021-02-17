@@ -29,7 +29,7 @@ RUN curl --location https://sh.rustup.rs > /tmp/rustup \
 
 ENV PATH="${RUSTC_DIR}/build/x86_64-unknown-linux-gnu/stage1-tools-bin:${PATH}"
 ENV PATH="${RUSTC_DIR}/build/x86_64-unknown-linux-gnu/llvm/bin:${PATH}"
-ENV PATH="$PATH:${USER_HOME}/.cargo/bin"
+ENV PATH="${USER_HOME}/.cargo/bin:${PATH}"
 ENV PATH="$PATH:${RVT_DIR}/scripts"
 ENV PATH="$PATH:${RVT_DIR}/scripts/bin"
 ENV PATH="$PATH:${USER_HOME}/bin"
@@ -37,6 +37,12 @@ ENV PATH="$PATH:${USER_HOME}/bin"
 # Install the toolchain that we built
 RUN rustup toolchain link stage1 ${RUSTC_DIR}/build/x86*/stage1 \
   && rustup default stage1
+
+# Install the nightly toolchain - we use it to build some of our tools.
+# We do not set it as the default though because we want to use the
+# version of rustc and lib{core,std} that we built before
+# and, in particular, we have to use a version of rustc that uses LLVM-10.
+RUN rustup toolchain install nightly
 
 # Build LLVM file patcher by first copying the source into this image
 # and then building it.
@@ -50,6 +56,10 @@ RUN rustup toolchain link stage1 ${RUSTC_DIR}/build/x86*/stage1 \
 # There seems to be no way around this complex collection of hacks.
 COPY --chown=${USER_UID}:${USER_GID} ./rvt-patch-llvm ${USER_HOME}/rvt-patch-llvm
 RUN cargo install --root=${USER_HOME} --path=${USER_HOME}/rvt-patch-llvm
+
+# Build cargo-verify too
+COPY --chown=${USER_UID}:${USER_GID} ./cargo-verify ${USER_HOME}/cargo-verify
+RUN cargo +nightly install --root=${USER_HOME} --path=${USER_HOME}/cargo-verify
 
 # Create a bashrc file
 RUN echo "export PATH=\"${PATH}\"" >> ${USER_HOME}/.bashrc

@@ -11,6 +11,11 @@ set -e
 rm -rf docker/rvt/rvt-patch-llvm
 cp -r `pwd`/rvt-patch-llvm docker/rvt/rvt-patch-llvm
 
+# Copy cargo-verify over
+cargo clean --manifest-path cargo-verify/Cargo.toml
+rm -rf docker/rvt/cargo-verify
+cp -a `pwd`/cargo-verify docker/rvt/cargo-verify
+
 # Build each image
 #
 # Note that each image is built in a subdirectory to avoid breaking
