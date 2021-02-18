@@ -437,8 +437,10 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
         bc_file = new_bc_file;
     }
 
-    if !opt.args.is_empty() {
-        info_at!(&opt, 1, "  Patching LLVM file for initializers");
+    // todo: This is probably useful with all verifiers - but
+    // making it KLEE-only until we have a chance to test it.
+    if opt.backend == Backend::Klee {
+        info_at!(&opt, 1, "  Patching LLVM file for initializers and feature tests");
         let new_bc_file = add_pre_ext(&bc_file, "patch-init-feat");
         patch_llvm(
             &opt,
