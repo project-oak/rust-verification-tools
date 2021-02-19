@@ -7,9 +7,9 @@ set -e
 # by copying it into a subdirectory of docker/rvt.
 # (Note that it is not sufficient to use a symlink - you actually
 # have to make a copy. I hate Docker so much right now.)
-(cd rvt-patch-llvm; cargo clean)
+cargo clean --manifest-path rvt-patch-llvm/Cargo.toml
 rm -rf docker/rvt/rvt-patch-llvm
-cp -r `pwd`/rvt-patch-llvm docker/rvt/rvt-patch-llvm
+cp -a `pwd`/rvt-patch-llvm docker/rvt/rvt-patch-llvm
 
 # Copy cargo-verify over
 cargo clean --manifest-path cargo-verify/Cargo.toml
