@@ -18,6 +18,7 @@ float = []
 
 verifier-klee = [ "verification-annotations/verifier-klee", "float" ]
 verifier-crux = [ "verification-annotations/verifier-crux" ]
+verifier-seahorn = [ "verification-annotations/verifier-seahorn" ]
 
 
 [dependencies]
