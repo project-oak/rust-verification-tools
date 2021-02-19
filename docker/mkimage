@@ -28,9 +28,12 @@ sudo docker build \
   --build-arg=MINISAT_VERSION="37158a35c62d448b3feccfa83006266e12e5acb7" \
   --build-arg=RUSTC_VERSION="1.46.0" \
   --build-arg=STP_VERSION="2.3.3" \
-  --build-arg=SEAHORN_VERSION="2e7239d8d2d7be21e64956aa83d936a773e18e32" \
+  --build-arg=SEAHORN_VERSION="eb69f87c161a8947731afa889e0edfaf167cb8db" \
   --build-arg=UCLIBC_VERSION="klee_uclibc_v1.2" \
-  --build-arg=VERIFY_COMMON_VERSION="8dadb385483984cde4d3a24a61629621e12f6437" \
+  --build-arg=VERIFY_COMMON_VERSION="70129bf47c421d8283785a8fb13cdb216424ef91" \
   --build-arg=YICES_VERSION="2.6.2" \
   --build-arg=Z3_VERSION="4.8.7" \
   . 1>&2
+
+# sea nov 30 "2e7239d8d2d7be21e64956aa83d936a773e18e32"
+# common "8dadb385483984cde4d3a24a61629621e12f6437"
