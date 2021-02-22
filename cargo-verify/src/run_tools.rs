@@ -204,6 +204,9 @@ pub fn list_tests(opt: &Opt, target: &str) -> CVResult<Vec<String>> {
         cmd.arg("--features").arg(opt.features.join(","));
     }
 
+    // List the types of test we do want - to (implicitly) exclude doc tests.
+    cmd.arg("--lib").arg("--bins");
+
     cmd.arg(format!("--target={}", target))
         .args(vec!["-v"; opt.verbose])
         .envs(get_build_envs(&opt)?)
