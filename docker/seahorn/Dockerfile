@@ -8,16 +8,20 @@ ARG VERIFY_COMMON_VERSION
 ARG SEAHORN_VERSION
 ARG YICES_VERSION
 
-RUN git clone --no-checkout https://github.com/yvizel/verify-c-common.git \
-  && cd verify-c-common \
+ENV VERIFY_COMMON_DIR=/home/seahorn/verify-c-common
+
+RUN git clone --no-checkout https://github.com/yvizel/verify-c-common.git ${VERIFY_COMMON_DIR} \
+  && cd ${VERIFY_COMMON_DIR} \
   && git checkout ${VERIFY_COMMON_VERSION}
 
-RUN git clone --no-checkout https://github.com/seahorn/seahorn.git \
-  && cd seahorn \
+ENV SEAHORN_DIR=/home/seahorn/seahorn
+
+RUN git clone --no-checkout https://github.com/seahorn/seahorn.git ${SEAHORN_DIR} \
+  && cd ${SEAHORN_DIR} \
   && git checkout ${SEAHORN_VERSION}
 
-RUN mkdir seahorn/build \
-  && cd seahorn/build \
+RUN mkdir ${SEAHORN_DIR}/build \
+  && cd ${SEAHORN_DIR}/build \
   && cmake \
      -DCMAKE_INSTALL_PREFIX=run \
      # -DCMAKE_BUILD_TYPE="Debug" \
@@ -35,3 +39,5 @@ RUN mkdir seahorn/build \
 RUN cd seahorn/build && cmake --build . --target extra  && cmake ..
 RUN cd seahorn/build && cmake --build . --target crab  && cmake ..
 RUN cd seahorn/build && cmake --build . --target install
+
+ENV PATH="${SEAHORN_DIR}/build/run/bin:$PATH"
