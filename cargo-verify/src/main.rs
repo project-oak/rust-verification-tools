@@ -462,7 +462,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
 /// Return the environment variables needed for building.  Each item in the
 /// vector is a pair `(a, b)` where `a` is the variable name and `b` is its
 /// value.
-fn get_build_envs(opt: &Opt) -> CVResult<Vec<(String, String)>> {
+fn get_build_envs(_opt: &Opt) -> CVResult<Vec<(String, String)>> {
     let mut rustflags = vec![
         "-Clto", // Generate linked bitcode for entire crate
         "-Cembed-bitcode=yes",
@@ -483,11 +483,6 @@ fn get_build_envs(opt: &Opt) -> CVResult<Vec<(String, String)>> {
         "-Clink-arg=-fuse-ld=lld",
     ]
     .join(" ");
-
-    if opt.backend != Backend::Seahorn {
-        // Avoid generating SSE instructions
-        rustflags.push_str(" -Copt-level=1");
-    }
 
     match std::env::var_os("RUSTFLAGS") {
         Some(env) => {
