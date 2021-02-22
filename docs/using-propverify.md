@@ -5,12 +5,12 @@ interesting things about non-trivial programs.
 Unfortunately, interesting/non-trivial programs are too large for introducing
 you to a tool so, for now, we will consider this trivial program.
 
-```
+```rust
 proptest! {
     #[test]
     fn multiply(a in 1..=1000u32, b in 1..=1000u32) {
         let r = a*b;
-        assert!(1 <= r && r < 1000000);
+        prop_assert!(1 <= r && r < 1000000);
     }
 }
 ```
@@ -25,13 +25,13 @@ In this note, we shall do the following to check this code
 
 1. create a test crate
 1. fuzz the crate using proptest
-1. verify the crate using propverify and KLEE, and the cargo-verify script
+1. verify the crate using propverify and cargo-verify
 1. verify the crate using propverify and Crux-mir
 
 ### Workaround for `compilation error`
 
 Before we really get started...
-The `cargo-verify` script sometimes gets confused by previous compilations.
+The `cargo-verify` tool sometimes gets confused by previous compilations.
 If you get an error message involving `compilation error`, try running `cargo
 clean` and try again.
 
@@ -40,7 +40,7 @@ Hopefully we'll make cargo-verify more robust soon.
 
 ## Creating a test crate
 
-The Rust compiler and KLEE are in the Dockerfile (see
+The Rust compiler, KLEE, and Seahorn are in the Dockerfile (see
 [installation](installation.md)) so start the Docker image
 by running
 
@@ -57,7 +57,7 @@ a separate editor to edit the files in another terminal.)
 To try the above example, we will create a crate in which to experiment with this
 code.
 
-```
+```shell
 cargo new try-propverify
 cd try-propverify
 
@@ -72,6 +72,7 @@ proptest = { version = "*" }
 [features]
 verifier-klee = ["propverify/verifier-klee"]
 verifier-crux = ["propverify/verifier-crux"]
+verifier-seahorn = ["propverify/verifier-seahorn"]
 EOF
 
 cat > src/main.rs  << "EOF"
@@ -84,7 +85,7 @@ proptest! {
     #[test]
     fn multiply(a in 1..=1000u32, b in 1..=1000u32) {
         let r = a*b;
-        assert!(1 <= r && r < 1000000);
+        prop_assert!(1 <= r && r < 1000000);
     }
 }
 EOF
@@ -112,14 +113,15 @@ We have deliberately chosen ranges that are large enough that
 the current version of proptest is unlikely to find the bug.)
 
 
-## Verifying with `propverify` using KLEE
+## Verifying with `propverify` using `cargo-verify`
 
-To verify the program using propverify, we use the `cargo-verify` script to
-compile the program and verify the program using KLEE
+To verify the program using propverify, we use the `cargo-verify` tool to
+compile the program and verify the program using one of the verification
+backends (currently we support KLEE and Seahorn).
 
-```
+```shell
 cargo clean
-cargo-verify --tests --verbose .
+cargo-verify --backend=klee --tests --verbose
 ```
 
 The program above has a deliberate error and KLEE reports the error
@@ -132,18 +134,22 @@ test result: ERROR. 0 passed; 1 failed
 VERIFICATION_RESULT: ERROR
 ```
 
+Running `cargo-verify` with the option `--backend=seahorn` will give the same
+result, but with Seahorn as the verification backend, instead of KLEE.
+
 While it is nice that it has found a bug, we need more detail
 before we can understand and fix the bug.
 After finding the bug, we can "replay" the test
 to see some concrete data values that it fails on.
 
+(The Seahorn backend does not support replay at the moment)
+
 (Although it makes no difference in this small example, it is usually best to
 use `--test=...` instead of `--tests` to focus on a single failing test at
 a time.)
 
-
-```
-cargo-verify --test=multiply --replay .
+```shell
+cargo-verify --backend=klee --test=multiply --replay
 ```
 
 This produces additional output that shows that KLEE
@@ -187,14 +193,14 @@ The second path has value `a = 1000` and `b = 1000` and it fails the test that `
 
 Seeing this failing example, it is obvious that the comparision '<' should be changed to '<='
 
-```
-    assert!(1 <= r && r <= 1000000);
+```rust
+    prop_assert!(1 <= r && r <= 1000000);
 ```
 
 With that fix, we can rerun KLEE and see that the test passes
 
-```
-cargo-verify --tests --replay .
+```shell
+cargo-verify --backend=klee --tests --replay
 Running 1 test(s)
 test multiply ... ok
 
