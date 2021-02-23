@@ -204,6 +204,13 @@ pub fn list_tests(opt: &Opt, target: &str) -> CVResult<Vec<String>> {
         cmd.arg("--features").arg(opt.features.join(","));
     }
 
+    // Surprisingly, the effect of the following line is to prevent
+    // consideration of doc tests from the list of tests.
+    // We ignore doc tests because installing rustdoc to enable this
+    // causes additional build problems and because we don't currently
+    // expect doc tests to be based on property-based testing.
+    cmd.arg("--all-targets");
+
     cmd.arg(format!("--target={}", target))
         .args(vec!["-v"; opt.verbose])
         .envs(get_build_envs(&opt)?)
