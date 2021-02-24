@@ -10,7 +10,6 @@
 // FFI wrapper for SeaHorn symbolic execution tool
 /////////////////////////////////////////////////////////////////
 
-use core::panic::PanicInfo;
 use std::default::Default;
 use std::convert::TryInto;
 
@@ -22,7 +21,7 @@ extern {
 }
 
 #[no_mangle]
-fn spanic(_info: &PanicInfo) -> ! {
+fn spanic() -> ! {
     abort();
 }
 
