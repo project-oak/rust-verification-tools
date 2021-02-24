@@ -56,10 +56,6 @@ struct Opt {
     #[structopt(short, long, conflicts_with = "initializers")]
     seahorn: bool,
 
-    /// Select a specific test to run (instead of 'main')
-    #[structopt(short, long, name = "TEST")]
-    test: Option<String>,
-
     /// Increase message verbosity
     #[structopt(short, long, parse(from_occurrences))]
     verbosity: usize,
@@ -106,9 +102,9 @@ fn main() {
     }
 
     if opt.seahorn {
-        handle_main(&module, &opt.test);
+        handle_main(&module);
 
-        handle_panic(&module);
+        handle_panic(&context, &module);
 
         replace_def_with_dec(
             &module,
@@ -319,16 +315,14 @@ fn stub_functions<F>(context: &Context, module: &Module, functions: &[&str], mk_
 where
     F: Fn(&Builder),
 {
-    for f in functions {
-        if let Some(fun) = get_function_by_unmangled_name(&module, f) {
-            info!("Stubbing out function function {}", f);
-            delete_body(&fun);
-            let basic_block = context.append_basic_block(fun, "entry");
-            let builder = context.create_builder();
+    let builder = context.create_builder();
+    for function in functions {
+        for fv in get_function_by_unmangled_name(&module, function) {
+            info!("Stubbing out function function {}", function);
+            delete_body(&fv);
+            let basic_block = context.append_basic_block(fv, "entry");
             builder.position_at_end(basic_block);
             mk_stub(&builder)
-        } else {
-            info!("Did not find function to stub {}", f)
         }
     }
 }
@@ -337,8 +331,9 @@ where
 // Transformations associated with SeaHorn
 ////////////////////////////////////////////////////////////////
 
-fn handle_main(module: &Module, otest: &Option<String>) {
-    // Remove the main function rustc generates.
+fn handle_main(module: &Module) {
+    // Remove the main function rustc generates. I don't know why, but passing
+    // --entry=.. to seahorn is not enough, we also have to remove main.
     if let Some(main) = module.get_function("main") {
         unsafe {
             // Any use of `main` after calling `delete` is unsafe
@@ -346,58 +341,63 @@ fn handle_main(module: &Module, otest: &Option<String>) {
         }
         info!("Deleted 'main' (was added by rustc).");
     }
-
-    let re = match otest {
-        Some(test) => {
-            Regex::new(&format!("{}{}{}", test.len(), &test, r"17h[a-f0-9]{16}E$")).unwrap()
-        }
-        None => Regex::new(r"4main17h[a-f0-9]{16}E$").unwrap(),
-    };
-
-    // Print the entry point function name
-    if let Some(fun) = get_function_by_regex(module, &re) {
-        // Change the linkage of mangled main function from internal to external.
-        // fun.set_linkage(Linkage::External);
-        println!("ENTRY: {}", fun.get_name().to_str().unwrap());
-    }
 }
 
 /// Find a function whose name matches regex `re`
-fn get_function_by_regex<'ctx>(module: &'ctx Module, re: &Regex) -> Option<FunctionValue<'ctx>> {
+fn get_function_by_regex<'ctx>(module: &'ctx Module, re: &Regex) -> Vec<FunctionValue<'ctx>> {
     get_function(module, |name| re.is_match(name))
 }
 
-/// Find a function whose name matches a Rust-mangled prefix
-fn get_function_by_unmangled_name<'ctx>(module: &'ctx Module, prefix: &str) -> Option<FunctionValue<'ctx>> {
-    let prefix = rust_mangle(prefix);
+/// Find a function whose name matches a Rust-mangled name
+fn get_function_by_unmangled_name<'ctx>(module: &'ctx Module, prefix: &str) -> Vec<FunctionValue<'ctx>> {
+    let prefix = format!("{}17h", rust_mangle(prefix));
     get_function(module, |name| name.starts_with(&prefix))
 }
 
 /// Find a function whose name satisfies predicate `is_match`
-fn get_function<'ctx, P>(module: &'ctx Module, is_match: P) -> Option<FunctionValue<'ctx>>
+fn get_function<'ctx, P>(module: &'ctx Module, is_match: P) -> Vec<FunctionValue<'ctx>>
 where
     P: Fn(&str) -> bool,
 {
+    let mut funs = vec![];
     let mut op_fun = module.get_first_function();
     while let Some(fun) = op_fun {
-        if is_match(
-            fun.get_name()
-                .to_str()
-                .expect("ERROR: function name is not in valid UTF-8"),
-        ) {
-            return Some(fun);
+        if fun.get_name()
+            .to_str()
+            .map(&is_match)
+            .unwrap_or(false)
+        {
+            funs.push(fun);
         }
         op_fun = fun.get_next_function();
     }
-    None
+    funs
 }
 
-fn handle_panic(module: &Module) {
+fn handle_panic(context: &Context, module: &Module) {
     // TODO: make "spanic" a CL arg.
     if let Some(spanic) = module.get_function("spanic") {
-        if let Some(unwind) = module.get_function("rust_begin_unwind") {
-            unwind.replace_all_uses_with(spanic);
-            info!("Replaced panic handling ('rust_begin_unwind') with 'spanic'.");
+        let builder = context.create_builder();
+
+        // Delete the body of panic functions, and replace it with a call to
+        // `spanic`.
+        
+        // Note that std::panicking::begin_panic can have multiple instances
+        // with different hash suffix, I'm not sure why.
+        for fv in module.get_function("rust_begin_unwind").into_iter()
+            .chain(get_function_by_unmangled_name(&module, "std::panicking::begin_panic"))
+            .chain(get_function_by_unmangled_name(&module, "core::panicking::panic"))
+        {
+            delete_body(&fv);
+            let basic_block = context.append_basic_block(fv, "entry");
+            builder.position_at_end(basic_block);
+            builder.build_call(spanic, &[], "call");
+            builder.build_return(None);
+
+            info!("Replaced the body of '{}' with a call to '{}'.",
+                  fv.get_name().to_string_lossy(),
+                  spanic.get_name().to_string_lossy(),
+            );
         }
     }
 }
@@ -406,7 +406,7 @@ fn handle_panic(module: &Module) {
 /// deleting all basic blocks and modifying metadata
 /// such as personality_function, linkage, etc.
 fn replace_def_with_dec(module: &Module, re: &Regex) {
-    if let Some(fun) = get_function_by_regex(module, re) {
+    for fun in get_function_by_regex(module, re) {
         delete_body(&fun);
         fun.remove_personality_function();
         fun.set_linkage(Linkage::External);
