@@ -1,4 +1,4 @@
-FROM rvt_seahorn:latest
+FROM rvt_rustc:latest
 
 # Placeholder args that are expected to be passed in at image build time.
 # See https://code.visualstudio.com/docs/remote/containers-advanced#_creating-a-nonroot-user
