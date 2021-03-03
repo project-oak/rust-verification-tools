@@ -14,6 +14,7 @@ use std::{
     path::{Path, PathBuf},
     process::{exit, Command},
     str::from_utf8,
+    time::Instant,
 };
 
 use cargo_metadata::{CargoOpt, MetadataCommand};
@@ -284,6 +285,8 @@ fn main() -> CVResult<()> {
 /// Compile a Rust crate to generate bitcode and run one of the LLVM verifier
 /// backends on the result.
 fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
+    let beginning = Instant::now();
+
     // Compile and link the patched file using LTO to generate the entire
     // application in a single LLVM file
     info_at!(&opt, 1, "  Building {} for verification", package);
@@ -345,6 +348,8 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
     // output to generate an appropriate status string.
     println!("Running {} test(s)", tests.len());
 
+    let before_verifier = Instant::now();
+
     let results: Vec<Status> = if opt.jobs > 1 {
         // Run the verification in parallel.
 
@@ -375,10 +380,17 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
         .find(|r| *r != Status::Verified)
         .unwrap_or(Status::Verified);
 
+    let end = Instant::now();
+
     println!(
         "test result: {:#}. {} passed; {} failed",
         status, passes, fails
     );
+
+    info_at!(&opt, 1, "Build {:.3}s", before_verifier.duration_since(beginning).as_secs_f32());
+    info_at!(&opt, 1, "Verify {:.3}s", end.duration_since(before_verifier).as_secs_f32());
+    info_at!(&opt, 1, "Total {:.3}s", end.duration_since(beginning).as_secs_f32());
+
     Ok(status)
 }
 
