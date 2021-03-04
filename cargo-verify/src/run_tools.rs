@@ -1,4 +1,4 @@
-use std::{iter, str::Lines};
+use std::{io::Write, iter, str::Lines};
 
 use log::info;
 
@@ -6,26 +6,27 @@ use crate::*;
 
 /// Trait for wrapping `std::process::Command::output()` with logging.
 pub trait OutputInfo {
-    fn output_info(&mut self) -> CVResult<(String, String)> {
-        self.output_info_helper(|v| String::from(from_utf8(v).expect("not UTF-8")), false)
+    fn output_info(&mut self, opt: &Opt) -> CVResult<(String, String)> {
+        self.output_info_helper(&opt, |v| String::from(from_utf8(v).expect("not UTF-8")), false)
             .map(|(stdout, stderr, _)| (stdout, stderr))
     }
 
-    fn latin1_output_info(&mut self) -> CVResult<(String, String)> {
-        self.output_info_helper(utils::from_latin1, false)
+    fn latin1_output_info(&mut self, opt: &Opt) -> CVResult<(String, String)> {
+        self.output_info_helper(&opt, utils::from_latin1, false)
             .map(|(stdout, stderr, _)| (stdout, stderr))
     }
 
-    fn output_info_ignore_exit(&mut self) -> CVResult<(String, String, bool)> {
-        self.output_info_helper(|v| String::from(from_utf8(v).expect("not UTF-8")), true)
+    fn output_info_ignore_exit(&mut self, opt: &Opt) -> CVResult<(String, String, bool)> {
+        self.output_info_helper(&opt, |v| String::from(from_utf8(v).expect("not UTF-8")), true)
     }
 
-    fn latin1_output_info_ignore_exit(&mut self) -> CVResult<(String, String, bool)> {
-        self.output_info_helper(utils::from_latin1, true)
+    fn latin1_output_info_ignore_exit(&mut self, opt: &Opt) -> CVResult<(String, String, bool)> {
+        self.output_info_helper(&opt, utils::from_latin1, true)
     }
 
     fn output_info_helper(
         &mut self,
+        opt: &Opt,
         trans: impl Fn(&[u8]) -> String,
         ignore_exit: bool,
     ) -> CVResult<(String, String, bool)>;
@@ -34,10 +35,15 @@ pub trait OutputInfo {
 impl OutputInfo for Command {
     fn output_info_helper(
         &mut self,
+        opt: &Opt,
         trans: impl Fn(&[u8]) -> String,
         ignore_exit: bool,
     ) -> CVResult<(String, String, bool)> {
         info_cmd(&self);
+
+        if let Err(e) = add_to_script(&self, &opt) {
+            eprintln!("Cannot write to script: {:?}", e);
+        }
 
         let output = self.output()?;
 
@@ -98,6 +104,62 @@ fn info_cmd(cmd: &Command) {
     }
 }
 
+/// Add `cmd` to the script.
+fn add_to_script(cmd: &Command, opt: &Opt) -> CVResult<()> {
+    match &opt.script {
+        None => Ok(()),
+        Some(script) => {
+            let cd_str = cmd.get_current_dir().map(|dir| format!("cd '{}'", dir.to_string_lossy()));
+            let envs = cmd.get_envs().map(|(env, val)| {
+                match val {
+                    Some(val) => {
+                        // TODO: escape val properly?
+                        format!("export {}='{}'",
+                                env.to_string_lossy(),
+                                val.to_string_lossy()
+                        )
+                    }
+                    None => {
+                        format!("export {}=''", env.to_string_lossy())
+                    }
+                }
+            }).collect::<Vec<_>>();
+
+            let cmd_str = iter::once(cmd.get_program())
+                .chain(cmd.get_args())
+                .map(|s| shell_escape::escape(s.to_string_lossy()))
+                .collect::<Vec<_>>()
+                .join(" ");
+
+            let mut file = script.lock().map_err(|_| "Cannot acquire the script lock")?;
+
+            let mut indent = 0;
+
+            if cd_str != None || !envs.is_empty() {
+                file.write_all(format!("{:ind$}(\n", "", ind = indent).as_bytes())?;
+                indent += 4;
+            }
+
+            if let Some(cd_str) = &cd_str {
+                file.write_all(format!("{:ind$}{}\n", "", cd_str, ind = indent).as_bytes())?;
+            }
+
+            for env_str in &envs {
+                file.write_all(format!("{:ind$}{}\n", "", env_str, ind = indent).as_bytes())?;
+            }
+
+            file.write_all(format!("{:ind$}{}\n", "", cmd_str, ind = indent).as_bytes())?;
+
+            if cd_str != None || !envs.is_empty() {
+                indent -= 4;
+                file.write_all(format!("{:ind$})\n", "", ind = indent).as_bytes())?;
+            }
+
+            Ok(())
+        }
+    }
+}
+
 /// Print each line of `Lines` using `info!`, prefixed with `prefix`.
 pub fn info_lines(prefix: &str, lines: Lines) {
     for l in lines {
@@ -112,7 +174,7 @@ pub fn clean(opt: &Opt) {
         .arg("clean")
         .arg("--manifest-path")
         .arg(&opt.cargo_toml)
-        .output_info_ignore_exit()
+        .output_info_ignore_exit(&opt)
         .ok(); // Discarding the error on purpose.
 }
 
@@ -153,16 +215,17 @@ pub fn get_meta_target_directory(opt: &Opt) -> CVResult<PathBuf> {
 /// Get name of default_host.
 /// This is passed to cargo using "--target=..." and will be the name of the
 /// directory within the target directory.
-pub fn get_default_host(crate_path: &Path) -> CVResult<String> {
+pub fn get_default_host(opt: &Opt) -> CVResult<String> {
     let mut cmd = Command::new("rustup");
     cmd.arg("show");
 
-    if crate_path != PathBuf::from("") {
+    let crate_path = opt.cargo_toml.parent().unwrap_or(Path::new("."));
+    if crate_path != Path::new("") {
         cmd.current_dir(crate_path);
     }
 
     Ok(cmd
-        .output_info()?
+        .output_info(&opt)?
         .0
         .lines()
         .find_map(|l| l.strip_prefix("Default host:").and_then(|l| Some(l.trim())))
@@ -182,7 +245,7 @@ pub fn count_symbols(opt: &Opt, bcfile: &Path, fs: &[&str]) -> CVResult<usize> {
 
     let mut cmd = Command::new("llvm-nm");
     cmd.arg("--defined-only").arg(bcfile);
-    let (stdout, _) = cmd.output_info()?;
+    let (stdout, _) = cmd.output_info(&opt)?;
 
     let count = stdout
         .lines()
@@ -224,7 +287,7 @@ pub fn list_tests(opt: &Opt, target: &str) -> CVResult<Vec<String>> {
 
     // TODO: Python ignores bad exit codes
     let tests = cmd
-        .output_info()?
+        .output_info(&opt)?
         .0
         .lines()
         .filter_map(|l| {

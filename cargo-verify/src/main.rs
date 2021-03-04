@@ -11,9 +11,11 @@
 use std::{
     collections::HashSet,
     error, fmt,
+    fs::{self, File, OpenOptions},
     path::{Path, PathBuf},
     process::{exit, Command},
     str::from_utf8,
+    sync::Mutex,
     time::Instant,
 };
 
@@ -121,6 +123,18 @@ pub struct Opt {
     /// Use verbose output (-vvvvvv very verbose output)
     #[structopt(short, long, parse(from_occurrences))]
     verbose: usize,
+
+    // script_arg is used for holding the CL option. After parsing, if the user
+    // specified a script, a `File` will be opened for writing, wrapped in a
+    // `Mutex` to allow concurrent jobs to write to it, and put in the `script`
+    // field below.
+    /// Generate a script with all the commands (and environment variables) that cargo-verify runs
+    #[structopt(long = "script", name = "PATH")]
+    script_arg: Option<String>,
+
+    // See the comment of `script_arg` above.
+    #[structopt(skip)]
+    script: Option<Mutex<File>>,
 }
 
 arg_enum! {
@@ -177,6 +191,16 @@ fn process_command_line() -> CVResult<Opt> {
     }
     let mut opt = Opt::from_iter(args.into_iter());
     // let mut opt = Opt::from_args();
+
+    if let Some(script) = &opt.script_arg {
+        fs::remove_file(script).unwrap_or(());
+        opt.script = Some(Mutex::new(
+            OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(script)?
+        ));
+    }
 
     opt.backend = match opt.backend_arg {
         // Check if the backend that was specified on the CL is installed.
@@ -265,7 +289,7 @@ fn main() -> CVResult<()> {
             proptest::run(&opt)
         }
         _ => {
-            let target = get_default_host(&opt.cargo_toml.parent().unwrap_or(&PathBuf::from(".")))?;
+            let target = get_default_host(&opt)?;
             info_at!(&opt, 4, "target: {}", target);
             verify(&opt, &package, &target)
         }
@@ -444,7 +468,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
         .arg(runtime)
         .arg(&bc_file)
         .args(&c_files)
-        .output_info()?;
+        .output_info(&opt)?;
     bc_file = new_bc_file;
 
     if opt.backend == Backend::Seahorn {
@@ -534,7 +558,7 @@ fn compile(opt: &Opt, package: &str, target: &str) -> CVResult<(PathBuf, Vec<Pat
     cmd.arg(format!("--target={}", target))
         .args(vec!["-v"; opt.verbose])
         .envs(get_build_envs(&opt)?)
-        .output_info()?;
+        .output_info(&opt)?;
     // .env("PATH", ...)
 
     // Find the target directory
@@ -626,7 +650,7 @@ fn patch_llvm(opt: &Opt, options: &[&str], bcfile: &Path, new_bcfile: &Path) -> 
         .arg(new_bcfile)
         .args(options)
         .args(vec!["-v"; opt.verbose])
-        .output_info()?;
+        .output_info(&opt)?;
     Ok(())
 }
 
@@ -650,7 +674,7 @@ fn mangle_functions(
     let (stdout, _) = Command::new("llvm-nm")
         .arg("--defined-only")
         .arg(bcfile)
-        .output_info()?;
+        .output_info(&opt)?;
 
     let rs: Vec<(String, String)> = stdout
         .lines()
