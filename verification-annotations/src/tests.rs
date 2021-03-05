@@ -85,6 +85,29 @@ fn t5() {
     verifier::assert_ne!(a, a+1);
 }
 
+// KLEE-only test of get_concrete_value and is_symbolic
+#[cfg(feature = "verifier-klee")]
+#[test]
+fn concrete1() {
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    verifier::assume(a <= 100); // avoid overflow
+    verifier::assert!(verifier::VerifierNonDet::is_symbolic(a));
+
+    let b = verifier::VerifierNonDet::get_concrete_value(a);
+    verifier::assert!(verifier::VerifierNonDet::is_symbolic(a));
+    verifier::assert!(!verifier::VerifierNonDet::is_symbolic(b));
+    verifier::assert!(b <= 100);
+
+    // There is no expectation that each call to get_concrete_value
+    // will produce a different result and, on KLEE, it can
+    // produce the same result unless you add assumptions/branches
+    // to avoid repetition.
+    // This test is commented out because we don't want to insist
+    // on one behavior or another.
+    // let c = verifier::VerifierNonDet::get_concrete_value(a);
+    // verifier::assert_eq!(b, c);
+}
+
 ////////////////////////////////////////////////////////////////
 // End
 ////////////////////////////////////////////////////////////////

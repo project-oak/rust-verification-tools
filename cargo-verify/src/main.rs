@@ -498,7 +498,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
 /// Return the environment variables needed for building.  Each item in the
 /// vector is a pair `(a, b)` where `a` is the variable name and `b` is its
 /// value.
-fn get_build_envs(_opt: &Opt) -> CVResult<Vec<(String, String)>> {
+fn get_build_envs(opt: &Opt) -> CVResult<Vec<(String, String)>> {
     let mut rustflags = vec![
         "-Clto", // Generate linked bitcode for entire crate
         "-Cembed-bitcode=yes",
@@ -519,6 +519,14 @@ fn get_build_envs(_opt: &Opt) -> CVResult<Vec<(String, String)>> {
         "-Clink-arg=-fuse-ld=lld",
     ]
     .join(" ");
+
+    if opt.backend == Backend::Klee {
+        // Most of KLEE's verification API is also implemented in the
+        // kleeRuntest library (used when replaying tests) but klee_is_symbolic
+        // is not (and cannot be) provided in that library.
+        // Defining this symbol allows code that uses is_symbolic to be linked.
+        rustflags.push_str(" -Clink-arg=-Wl,--defsym=klee_is_symbolic=0");
+    }
 
     match std::env::var_os("RUSTFLAGS") {
         Some(env) => {
