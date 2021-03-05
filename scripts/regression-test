@@ -10,5 +10,6 @@ cargo-verify ${FLAGS} --tests --manifest-path=compatibility-test/Cargo.toml
 cargo-verify ${FLAGS} --tests --manifest-path=demos/bottlenecks/bornholt2018-1/Cargo.toml
 cargo-verify ${FLAGS} --tests --manifest-path=demos/simple/ffi/Cargo.toml
 cargo-verify ${FLAGS} -v -v -v --manifest-path=demos/simple/argv/Cargo.toml -- foo foo
+cargo verify ${FLAGS} --tests --manifest-path=demos/bottlenecks/merging/Cargo.toml --backend-flags=--use-merge
 
 echo Regression test successful

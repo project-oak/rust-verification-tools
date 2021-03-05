@@ -22,6 +22,8 @@ extern "C" {
     fn klee_abort() -> !;
     fn klee_silent_exit(_ignored: u32) -> !;
     fn klee_is_replay() -> i32;
+    fn klee_open_merge();
+    fn klee_close_merge();
 }
 
 /// Create instance for any type consisting of contiguous memory
@@ -112,6 +114,51 @@ pub fn reject() -> ! {
 /// variables that may be either symbolic or concrete.
 pub fn is_replay() -> bool {
     unsafe { klee_is_replay() != 0 }
+}
+
+/// Open a merge block
+///
+/// Should be paired with `close_merge`
+pub fn open_merge() {
+    // safe because it only affects KLEE scheduling
+    unsafe {
+        klee_open_merge();
+    }
+}
+
+/// Close a merge block
+///
+/// Should be paired with `open_merge`
+pub fn close_merge() {
+    // safe because it only affects KLEE scheduling
+    unsafe {
+        klee_close_merge();
+    }
+}
+
+/// Coherent blocks don't fork execution during verification.
+///
+/// This will only take effect if executed with the
+/// KLEE command line flags `--use-merge` and, optionally,
+/// `--use-incomplete-merge`.
+///
+/// This might reduce the number of instructions that KLEE explores
+/// because there are less forks.
+/// This might also make evaluation of the symbolic constraints
+/// more expensive because of state merging.
+///
+/// Caveats:
+/// - Branches out of the middle of `$body` such as return, etc. will not be merged.
+///   If this is a problem, you should use open_merge/close_merge explicitly.
+///
+/// - If the body performs memory allocation, merging cannot happen (KLEE limitation).
+#[macro_export]
+macro_rules! coherent {
+    ( $body:block ) => {
+        $crate::open_merge();
+        $body;
+        $crate::close_merge();
+    };
 }
 
 /// Reject the current execution with a verification failure
