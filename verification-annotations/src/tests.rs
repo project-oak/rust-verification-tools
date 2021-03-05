@@ -108,6 +108,20 @@ fn concrete1() {
     // verifier::assert_eq!(b, c);
 }
 
+// KLEE-only test of concretize
+#[cfg(feature = "verifier-klee")]
+#[test]
+fn concrete2() {
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    verifier::assume(a <= 10); // limit number of distinct solutions
+    verifier::assert!(verifier::VerifierNonDet::is_symbolic(a));
+
+    let b = verifier::concretize(a);
+    verifier::assert!(verifier::VerifierNonDet::is_symbolic(a));
+    verifier::assert!(!verifier::VerifierNonDet::is_symbolic(b));
+    verifier::assert!(b <= 10);
+}
+
 ////////////////////////////////////////////////////////////////
 // End
 ////////////////////////////////////////////////////////////////
