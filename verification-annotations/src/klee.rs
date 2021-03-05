@@ -226,6 +226,22 @@ macro_rules! coherent {
     };
 }
 
+/// Exhaustively enumerate all possible concrete values for `x`.
+///
+/// If there are a finite number of possible values for `x`,
+/// this terminates because get_concrete_value terminates this path
+/// if there are no further solutions.
+pub fn concretize<T>(x: T) -> T
+    where T: VerifierNonDet + Eq + Copy
+{
+    loop {
+        let s = T::get_concrete_value(x);
+        if s == x {
+            return s;
+        }
+    }
+}
+
 /// Reject the current execution with a verification failure
 /// and an error message.
 pub fn report_error(message: &str) -> ! {
