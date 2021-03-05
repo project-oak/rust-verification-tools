@@ -62,6 +62,6 @@ COPY --chown=${USER_UID}:${USER_GID} ./cargo-verify ${USER_HOME}/cargo-verify
 RUN cargo +nightly install --root=${USER_HOME} --path=${USER_HOME}/cargo-verify
 
 # Create a bashrc file
-RUN echo "export PATH=\"${PATH}\"" >> ${USER_HOME}/.bashrc \\
+RUN echo "export PATH=\"${PATH}\"" >> ${USER_HOME}/.bashrc \
   && echo "ulimit -c0" >> ${USER_HOME}/.bashrc
 
