@@ -242,6 +242,23 @@ pub fn concretize<T>(x: T) -> T
     }
 }
 
+/// Generate `samples` paths each of which explores a single, distinct
+/// concrete value for `x` which is expected to be symbolic.
+///
+/// In most cases, this results in an incomplete exploration because there may
+/// be more possible solutions than we explore.
+pub fn sample<T>(samples: usize, x: T) -> T
+    where T: VerifierNonDet + Eq + Copy
+{
+    for _i in 0..samples-1 {
+        let s = T::get_concrete_value(x);
+        if s == x {
+            return s;
+        }
+    }
+    T::get_concrete_value(x)
+}
+
 /// Reject the current execution with a verification failure
 /// and an error message.
 pub fn report_error(message: &str) -> ! {
