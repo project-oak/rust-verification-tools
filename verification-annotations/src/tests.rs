@@ -122,6 +122,20 @@ fn concrete2() {
     verifier::assert!(b <= 10);
 }
 
+// KLEE-only test of sample
+#[cfg(feature = "verifier-klee")]
+#[test]
+fn concrete3() {
+    let a : u32 = verifier::AbstractValue::abstract_value();
+    verifier::assume(a <= 1_000_000_000); // allow a huge number of solutions
+    verifier::assert!(verifier::VerifierNonDet::is_symbolic(a));
+
+    let b = verifier::sample(10, a); // consider only 10 of the possible solutions for a
+    verifier::assert!(verifier::VerifierNonDet::is_symbolic(a));
+    verifier::assert!(!verifier::VerifierNonDet::is_symbolic(b));
+    verifier::assert!(b <= 1_000_000_000);
+}
+
 ////////////////////////////////////////////////////////////////
 // End
 ////////////////////////////////////////////////////////////////
