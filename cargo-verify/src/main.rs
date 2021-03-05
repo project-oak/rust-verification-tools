@@ -55,14 +55,14 @@ pub struct Opt {
     /// Path to Cargo.toml
     #[structopt(
         long = "manifest-path",
-        name = "PATH",
+        value_name = "PATH",
         parse(from_os_str),
         default_value = "Cargo.toml"
     )]
     cargo_toml: PathBuf,
 
     /// Arguments to pass to program under test
-    #[structopt(name = "ARG", last = true)]
+    #[structopt(value_name = "ARG", last = true)]
     args: Vec<String>,
 
     // backend_arg is used for holding the CL option. After parsing, if the user
@@ -73,7 +73,7 @@ pub struct Opt {
     #[structopt(
         short = "b",
         long = "backend",
-        name = "BACKEND",
+        value_name = "BACKEND",
         possible_values = &Backend::variants(),
         case_insensitive = true,
     )]
@@ -88,7 +88,7 @@ pub struct Opt {
     backend_flags: Vec<String>,
 
     /// Space or comma separated list of features to activate
-    #[structopt(long, name = "FEATURES", number_of_values = 1, use_delimiter = true)]
+    #[structopt(long, value_name = "FEATURES", number_of_values = 1, use_delimiter = true)]
     features: Vec<String>,
 
     /// Run `cargo clean` first
@@ -101,7 +101,7 @@ pub struct Opt {
 
     // TODO: make this more like 'cargo test [TESTNAME]'
     /// Only verify tests containing this string in their names
-    #[structopt(long, number_of_values = 1, name = "TESTNAME")]
+    #[structopt(long, number_of_values = 1, value_name = "TESTNAME")]
     test: Vec<String>,
 
     // jobs_arg is used for holding the CL option. After parsing, if the user
@@ -109,7 +109,7 @@ pub struct Opt {
     // user didn't specify a value, we will use num_cpus, and put it in the
     // `jobs` field.
     /// Number of parallel jobs, defaults to # of CPUs
-    #[structopt(short = "j", long = "jobs", name = "N")]
+    #[structopt(short = "j", long = "jobs", value_name = "N")]
     jobs_arg: Option<usize>,
 
     // See the comment of `jobs_arg` above.
@@ -129,7 +129,7 @@ pub struct Opt {
     // `Mutex` to allow concurrent jobs to write to it, and put in the `script`
     // field below.
     /// Generate a script with all the commands (and environment variables) that cargo-verify runs
-    #[structopt(long = "script", name = "PATH")]
+    #[structopt(long = "script", value_name = "PATH")]
     script_arg: Option<String>,
 
     // See the comment of `script_arg` above.
