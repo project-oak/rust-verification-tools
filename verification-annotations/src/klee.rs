@@ -24,12 +24,61 @@ extern "C" {
     fn klee_is_replay() -> i32;
     fn klee_open_merge();
     fn klee_close_merge();
+    fn klee_get_value_i32(x: i32) -> i32;
+    fn klee_get_value_i64(x: i64) -> i64;
+    fn klee_get_value_f(x: f32) -> f32;
+    fn klee_get_value_d(x: f64) -> f64;
+    fn klee_is_symbolic(x: usize) -> i32;
+}
+
+unsafe fn get_value_i8(x: i8) -> i8 {
+    klee_get_value_i32(x as i32) as i8
+}
+
+unsafe fn get_value_u8(x: u8) -> u8 {
+    klee_get_value_i32(x as i32) as u8
+}
+
+unsafe fn get_value_i16(x: i16) -> i16 {
+    klee_get_value_i32(x as i32) as i16
+}
+
+unsafe fn get_value_u16(x: u16) -> u16 {
+    klee_get_value_i32(x as i32) as u16
+}
+
+unsafe fn get_value_u32(x: u32) -> u32 {
+    klee_get_value_i32(x as i32) as u32
+}
+
+unsafe fn get_value_u64(x: u64) -> u64 {
+    klee_get_value_i64(x as i64) as u64
+}
+
+unsafe fn get_value_i128(x: i128) -> i128 {
+    get_value_u128(x as u128) as i128
+}
+
+unsafe fn get_value_u128(x: u128) -> u128 {
+    let hi = (x >> 64) as u64;
+    let lo = x as u64;
+    let hi = klee_get_value_i64(hi as i64) as u64;
+    let lo = klee_get_value_i64(lo as i64) as u64;
+    ((hi as u128) << 64) | (lo as u128)
+}
+
+unsafe fn get_value_isize(x: isize) -> isize {
+    klee_get_value_i64(x as i64) as isize
+}
+
+unsafe fn get_value_usize(x: usize) -> usize {
+    klee_get_value_i64(x as i64) as usize
 }
 
 /// Create instance for any type consisting of contiguous memory
 /// where all bit-patterns are legal values of the type.
 macro_rules! make_verifier_nondet {
-    ($typ:ident) => {
+    ($typ:ident, $get_value:ident) => {
         impl VerifierNonDet for $typ {
             fn verifier_nondet(self) -> Self {
                 let mut r = self;
@@ -41,32 +90,48 @@ macro_rules! make_verifier_nondet {
                 }
                 return r;
             }
+
+            fn get_concrete_value(x: Self) -> Self {
+                unsafe { $get_value(x) }
+            }
+
+            fn is_symbolic(x: Self) -> bool {
+                unsafe { klee_is_symbolic(x as usize) != 0 }
+            }
         }
     };
 }
 
-make_verifier_nondet!(u8);
-make_verifier_nondet!(u16);
-make_verifier_nondet!(u32);
-make_verifier_nondet!(u64);
-make_verifier_nondet!(u128);
-make_verifier_nondet!(usize);
+make_verifier_nondet!(u8, get_value_u8);
+make_verifier_nondet!(u16, get_value_u16);
+make_verifier_nondet!(u32, get_value_u32);
+make_verifier_nondet!(u64, get_value_u64);
+make_verifier_nondet!(u128, get_value_u128);
+make_verifier_nondet!(usize, get_value_usize);
 
-make_verifier_nondet!(i8);
-make_verifier_nondet!(i16);
-make_verifier_nondet!(i32);
-make_verifier_nondet!(i64);
-make_verifier_nondet!(i128);
-make_verifier_nondet!(isize);
+make_verifier_nondet!(i8, get_value_i8);
+make_verifier_nondet!(i16, get_value_i16);
+make_verifier_nondet!(i32, klee_get_value_i32);
+make_verifier_nondet!(i64, klee_get_value_i64);
+make_verifier_nondet!(i128, get_value_i128);
+make_verifier_nondet!(isize, get_value_isize);
 
-make_verifier_nondet!(f32);
-make_verifier_nondet!(f64);
+make_verifier_nondet!(f32, klee_get_value_f);
+make_verifier_nondet!(f64, klee_get_value_d);
 
 impl VerifierNonDet for bool {
     fn verifier_nondet(self) -> Self {
         let c = VerifierNonDet::verifier_nondet(0u8);
         assume(c == 0 || c == 1);
         c == 1
+    }
+
+    fn get_concrete_value(x: Self) -> Self {
+        unsafe { klee_get_value_i32(x as i32) != 0 }
+    }
+
+    fn is_symbolic(x: Self) -> bool {
+        unsafe { klee_is_symbolic(x as usize) != 0 }
     }
 }
 

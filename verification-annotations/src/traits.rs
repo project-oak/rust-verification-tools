@@ -22,6 +22,27 @@ use crate::assume;
 /// This is intended to be compatible with SMACK
 pub trait VerifierNonDet {
     fn verifier_nondet(self) -> Self;
+
+    #[cfg(feature = "verifier-klee")]
+    /// Obtain a concrete value satisfying the constraints
+    /// currently in force for the expression.
+	///
+	/// Not guaranteed to produce different (or the same) value
+	/// if called repeatedly.
+	/// (Use assumptions or if-statements to produce different results
+	/// each time.)
+    ///
+    /// This function may not be implementable with other
+    /// verifiers so it should be used with caution.
+    fn get_concrete_value(x: Self) -> Self;
+
+    #[cfg(feature = "verifier-klee")]
+	/// Test whether a value is concrete or symbolic
+	///
+	/// Values are guaranteed to be concrete if they are derived
+	/// from concrete values, literal constants or
+	/// calls to `get_concrete_value`.
+	fn is_symbolic(x: Self) -> bool;
 }
 
 pub trait AbstractValue : Sized {
