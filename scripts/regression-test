@@ -7,6 +7,7 @@ readonly FLAGS="--backend=klee --verbose --clean"
 (cd demos/simple/klee; ./verify.sh)
 cargo-verify ${FLAGS} --tests --manifest-path=verification-annotations/Cargo.toml
 cargo-verify ${FLAGS} --tests --manifest-path=compatibility-test/Cargo.toml
+cargo-verify ${FLAGS} --tests --manifest-path=demos/bottlenecks/bornholt2018-1/Cargo.toml
 cargo-verify ${FLAGS} --tests --manifest-path=demos/simple/ffi/Cargo.toml
 cargo-verify ${FLAGS} -v -v -v --manifest-path=demos/simple/argv/Cargo.toml -- foo foo
 
