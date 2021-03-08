@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 
 [target.'cfg(verify)'.dependencies]
-propverify = { path="/home/rust-verification-tools/propverify" }
+propverify = { path="../../../propverify" }
 
 [target.'cfg(not(verify))'.dependencies]
 proptest = { version = "*" }
