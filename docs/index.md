@@ -17,7 +17,7 @@ either form of verification.
 
 We aim to add other backends in the near future.
 
-In addition, [we document](docs/README.md) how the tools we wrote work
+In addition, [we document](Documentation.md) how the tools we wrote work
 in case you are porting a verification tool for use with Rust.
 (In particular, we describe how to generate LLVM bitcode files that can
 be used with LLVM-based verification tools.)
@@ -46,13 +46,13 @@ be used with LLVM-based verification tools.)
 
 TL;DR
 
-1. Install
-   [Rust](docs/install-rust.md)
-   and
-   [KLEE](docs/install-klee.md)
+1. Install the dockerfile [instructions][installation].
 
-   (Warning: these installation instructions are quite complicated,
-   poorly tested and may be missing steps.)
+    ``` shell
+    git clone https://github.com/project-oak/rust-verification-tools.git
+    cd rust-verification-tools
+    docker/build
+    ```
 
 2. Fuzz some examples with proptest
 
@@ -75,7 +75,7 @@ TL;DR
 
    No tests should fail.
 
-4. Read [the propverify intro](docs/using-propverify.md) for an example
+4. Read [the propverify intro](using-propverify.md) for an example
    of fuzzing with `proptest` and verifying with `propverify`.
 
 5. Read [the proptest book](https://altsysrq.github.io/proptest-book/intro.html)
@@ -85,23 +85,23 @@ TL;DR
    (Many of these examples are taken from or based on examples in
    [the proptest book](https://altsysrq.github.io/proptest-book/intro.html).)
 
-There is also [some limited documentation](docs/README.md) of how this works.
+There is also [some limited documentation](Documentation.md) of how this works.
 
 
 ## Installation
 
-- [Overall installation instructions](docs/installation.md)
-  - [Instructions for building Rust libraries](docs/install-rust.md)
-  - [Instructions for installing KLEE](docs/install-klee.md)
+- [Overall installation instructions](installation.md)
+  - [Instructions for building Rust libraries](install-rust.md)
+  - [Instructions for installing KLEE](install-klee.md)
 
 
 ## License
 
 Licensed under either of
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or
+- Apache License, Version 2.0 ([LICENSE-APACHE][LICENSE-APACHE] or
   http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or
+- MIT license ([LICENSE-MIT][LICENSE-MIT] or
   http://opensource.org/licenses/MIT)
 
 at your option.
@@ -155,3 +155,7 @@ above, without any
 additional terms or conditions.
 
 See [the contribution instructions](CONTRIBUTING.md) for further details.
+
+[git repo]: https://github.com/project-oak/rust-verification-tools
+[LICENSE-APACHE]: https://github.com/project-oak/rust-verification-tools/LICENSE-APACHE
+[LICENSE-MIT]: https://github.com/project-oak/rust-verification-tools/LICENSE-MIT

@@ -17,8 +17,5 @@ This will take several hours to build the Docker images.
 The resulting docker image can be run by executing `docker/run`
 which executes a bash shell using the current user in the current directory.
 
-For more details see [the README](../docker/README.md).
-
 If you are unable to use Docker, the best approach is to manually execute
 the commands in the Dockerfile.
-
