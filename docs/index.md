@@ -2,7 +2,7 @@
 layout: page
 ---
 
-This is a collection of tools/libraries to support both static
+RVT is a collection of tools/libraries to support both static
 and dynamic verification of Rust programs.
 
 We see static verification (formal verification) and dynamic verification
@@ -25,7 +25,20 @@ in case you are porting a verification tool for use with Rust.
 be used with LLVM-based verification tools.)
 
 
-## Tools and libraries
+## Tools
+
+- `cargo-verify`: a tool for compiling a crate and
+  either verifying main/tests or for fuzzing main/tests.
+  (Use the `--backend` flag to select which.)
+
+- `rvt-patch-llvm`: a tool for preprocessing LLVM bitfiles before verification.
+  (Used by `cargo-verify`.)
+
+- `rust2calltree`: a tool for fixing (demangling) function names in
+  kcachegrind profile files.
+
+
+## Libraries
 
 - `verification-annotations` crate: an FFI layer for creating symbolic values in
   [KLEE](http://klee.github.io/)
@@ -33,10 +46,6 @@ be used with LLVM-based verification tools.)
 - `propverify` crate:
   an implementation of the [proptest](https://github.com/AltSysrq/proptest)
   library for use with static verification tools.
-
-- `scripts/cargo-verify`: a tool for compiling a crate and
-  either verifying main/tests or for fuzzing main/tests.
-  (Use the `--backend` flag to select which.)
 
 - `compatibility-test` test crate:
   test programs that can be verified either using the original `proptest`
@@ -65,15 +74,15 @@ TL;DR
    ```
 
    (You can also use
-   `./scripts/cargo-verify --backend=proptest --verbose compatibility-test`.)
+   `cargo-verify --backend=proptest --verbose compatibility-test`.)
 
    One test should fail – this is correct behaviour.
 
 3. Verify some examples with propverify
 
-   `./scripts/cargo-verify --tests verification-annotations`
+   `cargo-verify --tests verification-annotations`
 
-   `./scripts/cargo-verify --tests compatibility-test`
+   `cargo-verify --tests compatibility-test`
 
    No tests should fail.
 

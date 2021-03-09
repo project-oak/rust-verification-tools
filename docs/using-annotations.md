@@ -313,7 +313,7 @@ The verifier now finds the failing assertion and confirms that this matches the
 expected behavior.
 
 ```
-../scripts/cargo-verify -v .
+cargo-verify -v .
 Checking try_verifier
 Running 1 test(s)
      t1: Detected expected failure 'assertion failed: 1 <= r && r < 1000000' at src/main.rs:13:5
@@ -353,7 +353,7 @@ fn t1() {
 Verifying this program detects the overflow behaviour.
 
 ```
-../scripts/cargo-verify -v --replay .
+cargo-verify -v --replay .
 Running 1 test(s)
      t1: 2 paths
     Test input try-verifier/kleeout-t1/test000001.ktest
