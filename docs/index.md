@@ -17,7 +17,7 @@ either form of verification.
 
 We aim to add other backends in the near future.
 
-In addition, [we document](Documentation.md) how the tools we wrote work
+In addition, [we document]({% link Documentation.md %}) how the tools we wrote work
 in case you are porting a verification tool for use with Rust.
 (In particular, we describe how to generate LLVM bitcode files that can
 be used with LLVM-based verification tools.)
@@ -46,7 +46,7 @@ be used with LLVM-based verification tools.)
 
 TL;DR
 
-1. Install the dockerfile [instructions][installation].
+1. Install the dockerfile [instructions]({% link installation.md %}).
 
     ``` shell
     git clone https://github.com/project-oak/rust-verification-tools.git
@@ -75,24 +75,24 @@ TL;DR
 
    No tests should fail.
 
-4. Read [the propverify intro](using-propverify.md) for an example
+4. Read [the propverify intro]({% link using-propverify.md %}) for an example
    of fuzzing with `proptest` and verifying with `propverify`.
 
 5. Read [the proptest book](https://altsysrq.github.io/proptest-book/intro.html)
 
-6. Read the source code for the [compatibility test suite](compatibility-test/src).
+6. Read the source code for the [compatibility test suite][compatibility-test].
 
    (Many of these examples are taken from or based on examples in
    [the proptest book](https://altsysrq.github.io/proptest-book/intro.html).)
 
-There is also [some limited documentation](Documentation.md) of how this works.
+There is also [some limited documentation]({% link Documentation.md %}) of how this works.
 
 
 ## Installation
 
-- [Overall installation instructions](installation.md)
-  - [Instructions for building Rust libraries](install-rust.md)
-  - [Instructions for installing KLEE](install-klee.md)
+- [Overall installation instructions]({% link installation.md %})
+  - [Instructions for building Rust libraries]({% link install-rust.md %})
+  - [Instructions for installing KLEE]({% link install-klee.md %})
 
 
 ## License
@@ -154,8 +154,10 @@ work by you, as defined in the Apache-2.0 license, shall be dual licensed as
 above, without any
 additional terms or conditions.
 
-See [the contribution instructions](CONTRIBUTING.md) for further details.
+See [the contribution instructions][CONTRIBUTING] for further details.
 
 [git repo]: https://github.com/project-oak/rust-verification-tools
 [LICENSE-APACHE]: https://github.com/project-oak/rust-verification-tools/LICENSE-APACHE
 [LICENSE-MIT]: https://github.com/project-oak/rust-verification-tools/LICENSE-MIT
+[CONTRIBUTING]: https://github.com/project-oak/rust-verification-tools/CONTRIBUTING.md
+[compatibility-test]: https://github.com/project-oak/rust-verification-tools/compatibility-test/src
