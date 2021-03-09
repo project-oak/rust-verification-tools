@@ -90,9 +90,7 @@ There is also [some limited documentation]({% link Documentation.md %}) of how t
 
 ## Installation
 
-- [Overall installation instructions]({% link installation.md %})
-  - [Instructions for building Rust libraries]({% link install-rust.md %})
-  - [Instructions for installing KLEE]({% link install-klee.md %})
+Follow the [installation instructions]({% link installation.md %}).
 
 
 ## License
