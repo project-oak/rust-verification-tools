@@ -1,4 +1,8 @@
-# Using the `propverify` library to verify Rust programs
+---
+layout: page
+title: "Using the `propverify` library to verify Rust programs"
+permalink: /using-propverify/
+---
 
 The goal of the tools and library in this repository is to let you verify
 interesting things about non-trivial programs.
@@ -41,7 +45,7 @@ Hopefully we'll make cargo-verify more robust soon.
 ## Creating a test crate
 
 The Rust compiler, KLEE, and Seahorn are in the Dockerfile (see
-[installation](installation.md)) so start the Docker image
+[installation]({% link installation.md %})) so start the Docker image
 by running
 
 ``` shell

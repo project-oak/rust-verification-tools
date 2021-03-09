@@ -1,4 +1,6 @@
-# Rust verification tools
+---
+layout: page
+---
 
 This is a collection of tools/libraries to support both static
 and dynamic verification of Rust programs.
@@ -90,7 +92,7 @@ There is also [some limited documentation]({{ site.baseurl }}{% link Documentati
 
 ## Installation
 
-Follow the [installation instructions]({{ site.baseurl }}{% link installation.md %}).
+Follow the [installation instructions]({% link installation.md %}).
 
 
 ## License
@@ -154,8 +156,8 @@ additional terms or conditions.
 
 See [the contribution instructions][CONTRIBUTING] for further details.
 
-[git repo]: https://github.com/project-oak/rust-verification-tools
-[LICENSE-APACHE]: https://github.com/project-oak/rust-verification-tools/LICENSE-APACHE
-[LICENSE-MIT]: https://github.com/project-oak/rust-verification-tools/LICENSE-MIT
-[CONTRIBUTING]: https://github.com/project-oak/rust-verification-tools/CONTRIBUTING.md
-[compatibility-test]: https://github.com/project-oak/rust-verification-tools/compatibility-test/src
+[git repo]: https://github.com/project-oak/rust-verification-tools/
+[LICENSE-APACHE]: https://github.com/project-oak/rust-verification-tools/blob/main/LICENSE-APACHE
+[LICENSE-MIT]: https://github.com/project-oak/rust-verification-tools/blob/main/LICENSE-MIT
+[CONTRIBUTING]: https://github.com/project-oak/rust-verification-tools/blob/main/CONTRIBUTING.md
+[compatibility-test]: https://github.com/project-oak/rust-verification-tools/blob/main/compatibility-test/src

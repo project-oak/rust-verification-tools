@@ -1,4 +1,8 @@
-# Installation
+---
+layout: page
+title: Installation
+permalink: /installation/
+---
 
 Rust verification is relatively new and we are trying to use multiple
 verification tools so, at least for now, these libraries have many complex dependencies.

@@ -1,4 +1,8 @@
-# Using Rust's foreign function interface
+---
+layout: page
+title: "Using Rust's foreign function interface"
+permalink: /using-ffi/
+---
 
 _[Note:
 You should not need any of the information in this note to
@@ -103,7 +107,7 @@ verifier-crux = ["propverify/verifier-crux"]
 cc = "1.0"
 ```
 
-This code is all in the [demos/simple/ffi directory](../demos/simple/ffi).
+This code is all in the [demos/simple/ffi directory](https://github.com/project-oak/rust-verification-tools/blob/main/demos/simple/ffi).
 
 
 ## Testing FFI code with proptest
@@ -208,7 +212,7 @@ or if you run into problems, read this section to learn how cargo-verify
 handles FFI code.
 
 
-In [docs/using-klee.md](using-klee.md) we saw the following
+In [docs/using-klee.md]({% link using-klee.md %}) we saw the following
 
 - The Rust compiler is based on [LLVM](https://llvm.org/).
 - Verifiers such as [KLEE](http://klee.github.io/) can verify programs built using LLVM.

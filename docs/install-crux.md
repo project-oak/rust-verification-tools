@@ -1,4 +1,7 @@
-# Installation
+---
+layout: page
+title: Crux-Mir installation
+---
 
 The best way to install crux (aka mir-verifier) is to follow the instructions on
 [crux's GitHub page](https://github.com/GaloisInc/mir-verifier).

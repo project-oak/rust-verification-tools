@@ -1,4 +1,8 @@
-# Using command-line arguments ("argv")
+---
+layout: page
+title: "Using command-line arguments ('argv')"
+permalink: /using-argv/
+---
 
 _[Note:
 You should not need any of the information in this note to

@@ -1,9 +1,13 @@
-# Using KLEE
+---
+layout: page
+title: "Using KLEE"
+permalink: /using-klee/
+---
 
 _Note:
 The recommended way to use KLEE is with the `propverify` library
 and the `cargo-verify` script
-as described [here](using-propverify.md).
+as described [here]({% link using-propverify.md %}).
 This note describes how to use the KLEE directly
 in case you wonder how `cargo-verify` works or want
 to add support for a different tool.6
@@ -11,7 +15,7 @@ This is going to be a fairly low-level description and most
 people will be happier not knowing how the sausage is made.
 (Since there are so many low-level details, there is a risk
 that we will forget to update this document so you may have to [use the
-source](../scripts/cargo-verify))._
+source](https://github.com/project-oak/rust-verification-tools/blob/main/cargo-verify))._
 
 The Rust compiler is based on the LLVM platform and
 [KLEE](http://klee.github.io/)
@@ -29,7 +33,7 @@ KLEE to verify Rust programs are:
 
 As a running example, we will use the same example
 that we used to explain [how to use the verification-annotations
-crate](using-annotations.md).
+crate]({% link using-annotations.md %}).
 
 This code is in `demos/simple/klee` and the shell commands in this
 file are in `demos/simple/klee/verify.sh`.
@@ -51,7 +55,7 @@ fn main() {
 ```
 
 The Rust compiler and KLEE are in the Dockerfile (see
-[installation](installation.md)) so start the Docker image
+[installation]({% link installation.md %})) so start the Docker image
 by running
 
 ``` shell

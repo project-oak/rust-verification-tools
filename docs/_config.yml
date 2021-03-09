@@ -1,1 +1,7 @@
-theme: jekyll-theme-minimal
+theme: minima
+title: Rust Verification Tools
+author: Google Research
+
+header_pages:
+  - Documentation.md
+  - installation.md
