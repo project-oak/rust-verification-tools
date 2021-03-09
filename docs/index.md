@@ -17,7 +17,7 @@ either form of verification.
 
 We aim to add other backends in the near future.
 
-In addition, [we document]({% link Documentation.md %}) how the tools we wrote work
+In addition, [we document]({{ site.baseurl }}{% link Documentation.md %}) how the tools we wrote work
 in case you are porting a verification tool for use with Rust.
 (In particular, we describe how to generate LLVM bitcode files that can
 be used with LLVM-based verification tools.)
@@ -46,7 +46,7 @@ be used with LLVM-based verification tools.)
 
 TL;DR
 
-1. Install the dockerfile [instructions]({% link installation.md %}).
+1. Install the dockerfile [instructions]({{ site.baseurl }}{% link installation.md %}).
 
     ``` shell
     git clone https://github.com/project-oak/rust-verification-tools.git
@@ -75,7 +75,7 @@ TL;DR
 
    No tests should fail.
 
-4. Read [the propverify intro]({% link using-propverify.md %}) for an example
+4. Read [the propverify intro]({{ site.baseurl }}{% link using-propverify.md %}) for an example
    of fuzzing with `proptest` and verifying with `propverify`.
 
 5. Read [the proptest book](https://altsysrq.github.io/proptest-book/intro.html)
@@ -85,12 +85,12 @@ TL;DR
    (Many of these examples are taken from or based on examples in
    [the proptest book](https://altsysrq.github.io/proptest-book/intro.html).)
 
-There is also [some limited documentation]({% link Documentation.md %}) of how this works.
+There is also [some limited documentation]({{ site.baseurl }}{% link Documentation.md %}) of how this works.
 
 
 ## Installation
 
-Follow the [installation instructions]({% link installation.md %}).
+Follow the [installation instructions]({{ site.baseurl }}{% link installation.md %}).
 
 
 ## License
