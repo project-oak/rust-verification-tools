@@ -101,7 +101,7 @@ There is also [some limited documentation]({{ site.baseurl }}{% link Documentati
 
 ## Installation
 
-Follow the [installation instructions]({% link installation.md %}).
+Follow the [installation instructions]({{site.baseurl}}{% link installation.md %}).
 
 
 ## License

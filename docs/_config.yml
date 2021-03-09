@@ -1,6 +1,7 @@
 theme: minima
 title: Rust Verification Tools
 author: Google Research
+baseurl: "/rust-verification-tools"
 
 header_pages:
   - Documentation.md

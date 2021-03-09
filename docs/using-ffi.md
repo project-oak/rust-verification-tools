@@ -212,7 +212,7 @@ or if you run into problems, read this section to learn how cargo-verify
 handles FFI code.
 
 
-In [docs/using-klee.md]({% link using-klee.md %}) we saw the following
+In [docs/using-klee.md]({{site.baseurl}}{% link using-klee.md %}) we saw the following
 
 - The Rust compiler is based on [LLVM](https://llvm.org/).
 - Verifiers such as [KLEE](http://klee.github.io/) can verify programs built using LLVM.

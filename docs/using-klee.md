@@ -7,7 +7,7 @@ permalink: /using-klee/
 _Note:
 The recommended way to use KLEE is with the `propverify` library
 and the `cargo-verify` script
-as described [here]({% link using-propverify.md %}).
+as described [here]({{site.baseurl}}{% link using-propverify.md %}).
 This note describes how to use the KLEE directly
 in case you wonder how `cargo-verify` works or want
 to add support for a different tool.6
@@ -33,7 +33,7 @@ KLEE to verify Rust programs are:
 
 As a running example, we will use the same example
 that we used to explain [how to use the verification-annotations
-crate]({% link using-annotations.md %}).
+crate]({{site.baseurl}}{{site.baseurl}}{{site.baseurl}}{% link using-annotations.md %}).
 
 This code is in `demos/simple/klee` and the shell commands in this
 file are in `demos/simple/klee/verify.sh`.
@@ -55,7 +55,7 @@ fn main() {
 ```
 
 The Rust compiler and KLEE are in the Dockerfile (see
-[installation]({% link installation.md %})) so start the Docker image
+[installation]({{site.baseurl}}{% link installation.md %})) so start the Docker image
 by running
 
 ``` shell

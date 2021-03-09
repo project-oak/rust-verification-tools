@@ -138,7 +138,7 @@ Verification tools for C are able to use this API to verify large, complex
 C code such as [Linux kernel drivers](http://linuxtesting.org/ldv).
 For this note though, we will limit ourselves to
 the same simple example we
-[used with `propverify`]({% link using-propverify.md %}).
+[used with `propverify`]({{site.baseurl}}{% link using-propverify.md %}).
 This might be useful if you wonder how propverify is implemented
 or if you prefer to use the more conventional verifier interface.
 
@@ -163,7 +163,7 @@ fn t1() {
 ```
 
 This program is identical to the code that the `proptest!` macro expands to
-for the [propverify example]({% link using-propverify.md %}).
+for the [propverify example]({{site.baseurl}}{% link using-propverify.md %}).
 It does the following
 
 - generates two values `a` and `b` in the range [1..1000] and [1..1000]
@@ -174,14 +174,14 @@ It does the following
 - asserts that their product is in the range 1..1000000
 
 To check this, we will follow the same steps that we
-did in [the propverify example]({% link using-propverify.md %})
+did in [the propverify example]({{site.baseurl}}{% link using-propverify.md %})
 of creating a test crate and then using `cargo-verify`
 to invoke KLEE.
 (We cannot run this example with a fuzzer.)
 
 
 The Rust compiler and KLEE are in the Dockerfile (see
-[installation]({% link installation.md %})) so start the Docker image
+[installation]({{site.baseurl}}{% link installation.md %})) so start the Docker image
 by running
 
 ``` shell
