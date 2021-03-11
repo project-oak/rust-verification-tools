@@ -1,0 +1,21 @@
+[package]
+name = "errors"
+version = "0.1.0"
+authors = ["adreid"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[target.'cfg(verify)'.dependencies]
+propverify = { path="/home/rust-verification-tools/propverify" }
+
+[target.'cfg(not(verify))'.dependencies]
+proptest = { version = "*" }
+
+
+[features]
+verifier-crux = ["propverify/verifier-crux"]
+verifier-klee = ["propverify/verifier-klee"]
+verifier-seahorn = ["propverify/verifier-seahorn"]
