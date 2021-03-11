@@ -151,9 +151,12 @@ pub enum Status {
     Unknown, // E.g. the verifier failed to execute.
     Verified,
     Error, // E.g. the verifier found a violation.
-    Timeout,
+    AssertFailed,
+    OutOfBounds,
     Overflow,
+    Panic,
     Reachable,
+    Timeout,
 }
 
 impl fmt::Display for Status {
@@ -170,9 +173,12 @@ impl fmt::Display for Status {
                 }
             }
             Status::Error => write!(f, "ERROR"),
-            Status::Timeout => write!(f, "TIMEOUT"),
+            Status::AssertFailed => write!(f, "ASSERT_FAILED"),
             Status::Overflow => write!(f, "OVERFLOW"),
+            Status::OutOfBounds => write!(f, "OUT_OF_BOUNDS"),
+            Status::Panic => write!(f, "PANIC"),
             Status::Reachable => write!(f, "REACHABLE"),
+            Status::Timeout => write!(f, "TIMEOUT"),
         }
     }
 }

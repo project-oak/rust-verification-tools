@@ -224,11 +224,15 @@ fn run(
             } else if backends_common::is_expected_panic(&l, &expect, &name) {
                 Some(Status::Verified)
             } else if l.contains("assertion failed") {
-                Some(Status::Error)
+                Some(Status::AssertFailed)
             } else if l.contains("verification failed") {
                 Some(Status::Error)
+            } else if l.contains("index out of bounds") {
+                Some(Status::OutOfBounds)
             } else if l.contains("with overflow") {
                 Some(Status::Overflow)
+            } else if l.contains("panicked at") {
+                Some(Status::Panic)
             } else if l.contains("note: run with `RUST_BACKTRACE=1`") {
                 Some(Status::Error)
             } else if l.contains("KLEE: done:") {
