@@ -13,3 +13,4 @@ verification-annotations = { path="/home/rust-verification-tools/verification-an
 [features]
 verifier-klee = ["verification-annotations/verifier-klee"]
 verifier-crux = ["verification-annotations/verifier-crux"]
+verifier-seahorn = ["verification-annotations/verifier-seahorn"]
