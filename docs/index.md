@@ -10,6 +10,8 @@ You can download RVT from
 RVT is dual-licensed ([Apache][LICENSE-APACHE]/[MIT][LICENSE-MIT]) so that you can use and adapt our 
 code for your own tools.
 
+<a class="github-fork-ribbon" href="{{site.gitrepo}}" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a>
+
 ----------------
 <br>
 
