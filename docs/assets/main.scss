@@ -26,6 +26,12 @@ pre, code, .highlighter-rouge .highlight {
   }
 }
 
+// Fix appearance of footnotes
+sup {
+  vertical-align: super;
+  font-size: x-small;
+}
+
 
 /*!
  * "Fork me on GitHub" CSS ribbon v0.2.3 | MIT License
