@@ -4,5 +4,8 @@ author: Google Research
 baseurl: "/rust-verification-tools"
 
 header_pages:
+  - about.md
+  - tools.md
   - Documentation.md
   - installation.md
+
