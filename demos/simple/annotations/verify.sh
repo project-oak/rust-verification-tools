@@ -6,11 +6,9 @@ cargo clean
 
 # verify using KLEE
 # this should detect an error
-( cargo-verify --tests --verbose > out1 || true )
-cat out1
-grep -q "test t1 ... .*ERROR" out1
+cargo-verify --tests --verbose | tee out1 || true
+grep -q -F "test t1 ... ASSERT_FAILED" out1
 
 # replay input values
-( cargo-verify --tests --replay > out2 || true )
-cat out2
-grep -q "Test values: a = 1000, b = 1000" out2
+cargo-verify --tests --replay | tee out2 || true
+grep -q -F "Test values: a = 1000, b = 1000" out2
