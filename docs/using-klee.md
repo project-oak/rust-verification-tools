@@ -1,1 +1,1 @@
-This page has moved to https://github.com/project-oak/rust-verification-tools/using-klee/
+This page has moved to https://project-oak.github.io/rust-verification-tools/using-klee/
