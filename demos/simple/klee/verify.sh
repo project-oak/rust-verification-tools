@@ -5,8 +5,6 @@ set -e
 export RUSTFLAGS="-Clto -Cembed-bitcode=yes --emit=llvm-bc $RUSTFLAGS"
 export RUSTFLAGS="--cfg=verify $RUSTFLAGS"
 export RUSTFLAGS="-Warithmetic-overflow -Coverflow-checks=yes $RUSTFLAGS"
-export RUSTFLAGS="--cfg=verify $RUSTFLAGS"
-export RUSTFLAGS="-Warithmetic-overflow -Coverflow-checks=yes $RUSTFLAGS"
 export RUSTFLAGS="-Zpanic_abort_tests -Cpanic=abort $RUSTFLAGS"
 
 # optional for this simple example
