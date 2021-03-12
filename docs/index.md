@@ -5,17 +5,19 @@ regenerate: true
 
 [RVT][RVT git repo] is a collection of research tools/libraries to support both static verification
 (formal verification) and dynamic verification (testing) of Rust.
-
 You can download RVT from
 [https://github.com/project-oak/rust-verification-tools/](https://github.com/project-oak/rust-verification-tools/);
 RVT is dual-licensed ([Apache][LICENSE-APACHE]/[MIT][LICENSE-MIT]) so that you can use and adapt our 
 code for your own tools.
 
+----------------
+<br>
+
 <div class="posts">
   {% for post in site.posts %}
     <article class="post">
 
-      <h1><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h1>
+      <h2><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h2>
 
       <div class="entry">
         {{ post.excerpt }}

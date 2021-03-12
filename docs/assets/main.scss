@@ -10,3 +10,19 @@ body {
 pre, code, .highlighter-rouge .highlight {
   background: #f8f8f0;
 }
+
+.posts > .post {
+  padding-bottom: 2em;
+}
+
+.posts > .post:last-child {
+  padding-bottom: 1em;
+}
+
+.post {
+  .read-more {
+    text-transform: uppercase;
+    font-size: 15px;
+  }
+}
+
