@@ -1,22 +1,21 @@
 ---
-layout: page
+layout: post
 title: "Using the `verification-annotations` crate"
 permalink: /using-annotations/
 ---
 
-_Note:
-The recommended way to use KLEE is with the `propverify` library
-as described [here](using-propverify.md).
-This section describes how to use the `verification-annotations`
-library instead of the `propverify` library:
-in case you wonder how `propverify` works._
+Our tools for verifying Rust programs are based on the `verification-annotations` API
+that provides a common API for multiple tools to use.
+While we recommend that you use the [higher-level `propverify` library][using propverify]
+it is useful to describes how to use the `verification-annotations` library 
+in case you wonder how `propverify` works.
 
 ## The low-level verification API for C
 
 Many tools for verifying C and Java programs share a common
 API that looks a bit like this (where 'X' is any primitive type
 like `int` or `char`).
-(See [the Software Verification Competition website](https://sv-comp.sosy-lab.org/2020/rules.php)
+(See [the Software Verification Competition website][SV-COMP]
 for more details.)
 
 ```
@@ -51,9 +50,9 @@ a higher-level by, for example, defining an `assert` macro.)
 
 ## A low-level verification API for Rust
 
-The [SMACK developers](http://smackers.github.io/) have been developing
+The [SMACK developers][SMACK] have been developing
 some
-[Rust benchmarks](https://github.com/soarlab/rust-benchmarks)
+[Rust benchmarks]
 using a similar interfaces.
 In adapting this interface for use with KLEE and PropVerify, we made
 some small changes.
@@ -135,10 +134,10 @@ concrete input values.
 ## A simple example
 
 Verification tools for C are able to use this API to verify large, complex
-C code such as [Linux kernel drivers](http://linuxtesting.org/ldv).
+C code such as [Linux kernel drivers][Linux driver verification].
 For this note though, we will limit ourselves to
 the same simple example we
-[used with `propverify`]({{site.baseurl}}{% link using-propverify.md %}).
+[used with `propverify`][Using PropVerify].
 This might be useful if you wonder how propverify is implemented
 or if you prefer to use the more conventional verifier interface.
 
@@ -163,7 +162,7 @@ fn t1() {
 ```
 
 This program is identical to the code that the `proptest!` macro expands to
-for the [propverify example]({{site.baseurl}}{% link using-propverify.md %}).
+for the [propverify example][Using PropVerify].
 It does the following
 
 - generates two values `a` and `b` in the range [1..1000] and [1..1000]
@@ -174,14 +173,14 @@ It does the following
 - asserts that their product is in the range 1..1000000
 
 To check this, we will follow the same steps that we
-did in [the propverify example]({{site.baseurl}}{% link using-propverify.md %})
+did in [the propverify example][Using PropVerify]
 of creating a test crate and then using `cargo-verify`
 to invoke KLEE.
 (We cannot run this example with a fuzzer.)
 
 
 The Rust compiler and KLEE are in the Dockerfile (see
-[installation]({{site.baseurl}}{% link installation.md %})) so start the Docker image
+[installation][RVT installation]) so start the Docker image
 by running
 
 ``` shell
@@ -373,3 +372,39 @@ VERIFICATION_RESULT: OVERFLOW
 
 And, of course, we can uncomment the call to `verifier::expect()` to indicate
 that this is an expected failure.
+
+[CC-rs crate]:                    https://github.com/alexcrichton/cc-rs/
+[Cargo build scripts]:            https://doc.rust-lang.org/cargo/reference/build-scripts.html
+[Clang]:                          https://clang.llvm.org/
+[Crux-MIR]:                       https://github.com/GaloisInc/mir-verifier/
+[Docker]:                         https://www.docker.com/
+[GraalVM and Rust]:               https://michaelbh.com/blog/graalvm-and-rust-1/
+[Hypothesis]:                     https://hypothesis.works/
+[KLEE]:                           https://klee.github.io/
+[Linux driver verification]:      http://linuxtesting.org/ldv/
+[LLVM]:                           https://llvm.org/
+[PropTest book]:                  https://altsysrq.github.io/proptest-book/intro.html
+[PropTest]:                       https://github.com/AltSysrq/proptest/
+[Rust benchmarks]:                https://github.com/soarlab/rust-benchmarks/
+[Rust port of QuickCheck]:        https://github.com/burntsushi/quickcheck/
+[Rust's runtime]:                 https://blog.mgattozzi.dev/rusts-runtime/
+[SMACK]:                          https://smackers.github.io/
+[SV-COMP]:                        https://sv-comp.sosy-lab.org/2020/rules.php
+[std::env::args source code]:     https://github.com/rust-lang/rust/blob/master/library/std/src/sys/unix/args.rs
+
+[RVT git repo]:                   {{site.gitrepo}}
+[compatibility-test]:             {{site.gitrepo}}blob/main/compatibility-test/src
+[demos/simple/ffi directory]:     {{site.gitrepo}}blob/main/demos/simple/ffi
+[CONTRIBUTING]:                   {{site.gitrepo}}blob/main/CONTRIBUTING.md
+[LICENSE-APACHE]:                 {{site.gitrepo}}blob/main/LICENSE-APACHE
+[LICENSE-MIT]:                    {{site.gitrepo}}blob/main/LICENSE-MIT
+
+[Using KLEE]:                     {{site.baseurl}}{% post_url 2020-09-01-using-klee %}
+[Using verification-annotations]: {{site.baseurl}}{% post_url 2020-09-02-using-annotations %}
+[Using PropVerify]:               {{site.baseurl}}{% post_url 2020-09-03-using-propverify %}
+[Install Crux]:                   {{site.baseurl}}{% post_url 2020-09-07-install-crux %}
+[Using ARGV]:                     {{site.baseurl}}{% post_url 2020-09-09-using-argv %}
+[Using FFI]:                      {{site.baseurl}}{% post_url 2020-12-11-using-ffi %}
+
+[RVT installation]:               {{site.baseurl}}{% link installation.md %}
+

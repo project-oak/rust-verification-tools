@@ -1,5 +1,6 @@
 ---
 layout: page
+title: About
 ---
 
 RVT is a collection of tools/libraries to support both static
@@ -10,26 +11,54 @@ We see static verification (formal verification) and dynamic verification
 either form of verification.
 
 - Dynamic verification using the
-  [proptest](https://github.com/AltSysrq/proptest)
+  [proptest]
   fuzzing/property testing library.
 
 - Static verification using the
-  [KLEE](http://klee.github.io/)
+  [KLEE]
   symbolic execution engine.
 
 We aim to add other backends in the near future.
 
-In addition, [we document]({{ site.baseurl }}{% link Documentation.md %}) how the tools we wrote work
+In addition, we write articles about how the tools we wrote work
+(and you can read [the source][RVT git repo])
 in case you are porting a verification tool for use with Rust.
 (In particular, we describe how to generate LLVM bitcode files that can
 be used with LLVM-based verification tools.)
 
+## Articles
+
+
+- [Installation (using Docker)][RVT installation]
+  - If you want to use Crux-MIR, see these [alternative installation instructions][Install Crux]
+
+- Usage (using our tools)
+
+  - [propverify][Using PropVerify]: a simple example to test
+    `propverify` with.
+
+  We also recommend reading
+  [the proptest book][PropTest book]
+  that thoroughly explains and documents the `proptest` API that `propverify` is based on.
+
+- How our tools work (in case you are creating your own tools)
+
+  - [verification-annotations][Using verification-annotations]: how to use the
+    `verification-annotations` crate directly.
+    Mostly interesting if you want to know how `propverify` works.
+
+  - [using KLEE][Using KLEE]: how to use KLEE directly.
+    Interesting if you want to know how `cargo-verify` works
+    or if you are working with another LLVM-based verification tool.
+
+  - [using FFI][Using FFI]: how to verify crates that use the
+    foreign function interface (ffi) to call C code.
 
 ## Usage
 
 TL;DR
 
-1. Install the dockerfile [instructions]({{ site.baseurl }}{% link installation.md %}).
+1. Install the dockerfile (see [instructions][RVT installation]).
 
     ``` shell
     git clone https://github.com/project-oak/rust-verification-tools.git
@@ -58,22 +87,21 @@ TL;DR
 
    No tests should fail.
 
-4. Read [the propverify intro]({{ site.baseurl }}{% link using-propverify.md %}) for an example
+4. Read [the propverify intro][Using PropVerify] for an example
    of fuzzing with `proptest` and verifying with `propverify`.
 
-5. Read [the proptest book](https://altsysrq.github.io/proptest-book/intro.html)
+5. Read [the proptest book][PropTest book]
 
 6. Read the source code for the [compatibility test suite][compatibility-test].
 
    (Many of these examples are taken from or based on examples in
-   [the proptest book](https://altsysrq.github.io/proptest-book/intro.html).)
+   [the proptest book][PropTest book].)
 
-There is also [some limited documentation]({{ site.baseurl }}{% link Documentation.md %}) of how this works.
 
 
 ## Installation
 
-Follow the [installation instructions]({{site.baseurl}}{% link installation.md %}).
+Follow the [installation instructions][RVT installation].
 
 
 ## License
@@ -137,8 +165,40 @@ additional terms or conditions.
 
 See [the contribution instructions][CONTRIBUTING] for further details.
 
-[git repo]: https://github.com/project-oak/rust-verification-tools/
-[LICENSE-APACHE]: https://github.com/project-oak/rust-verification-tools/blob/main/LICENSE-APACHE
-[LICENSE-MIT]: https://github.com/project-oak/rust-verification-tools/blob/main/LICENSE-MIT
-[CONTRIBUTING]: https://github.com/project-oak/rust-verification-tools/blob/main/CONTRIBUTING.md
-[compatibility-test]: https://github.com/project-oak/rust-verification-tools/blob/main/compatibility-test/src
+[CC-rs crate]:                    https://github.com/alexcrichton/cc-rs/
+[Cargo build scripts]:            https://doc.rust-lang.org/cargo/reference/build-scripts.html
+[Clang]:                          https://clang.llvm.org/
+[Crux-MIR]:                       https://github.com/GaloisInc/mir-verifier/
+[Docker]:                         https://www.docker.com/
+[GraalVM and Rust]:               https://michaelbh.com/blog/graalvm-and-rust-1/
+[Hypothesis]:                     https://hypothesis.works/
+[KLEE]:                           https://klee.github.io/
+[Linux driver verification]:      http://linuxtesting.org/ldv/
+[LLVM]:                           https://llvm.org/
+[MIR blog post]:                  https://blog.rust-lang.org/2016/04/19/MIR.html
+[PropTest book]:                  https://altsysrq.github.io/proptest-book/intro.html
+[PropTest]:                       https://github.com/AltSysrq/proptest/
+[Rust benchmarks]:                https://github.com/soarlab/rust-benchmarks/
+[Rust port of QuickCheck]:        https://github.com/burntsushi/quickcheck/
+[Rust's runtime]:                 https://blog.mgattozzi.dev/rusts-runtime/
+[SMACK]:                          https://smackers.github.io/
+[SV-COMP]:                        https://sv-comp.sosy-lab.org/2020/rules.php
+[std::env::args source code]:     https://github.com/rust-lang/rust/blob/master/library/std/src/sys/unix/args.rs
+
+[RVT git repo]:                   {{site.gitrepo}}/
+[cargo-verify source]:            {{site.gitrepo}}blob/main/cargo-verify/
+[compatibility-test]:             {{site.gitrepo}}blob/main/compatibility-test/src
+[demos/simple/ffi directory]:     {{site.gitrepo}}blob/main/demos/simple/ffi/
+[CONTRIBUTING]:                   {{site.gitrepo}}blob/main/CONTRIBUTING.md
+[LICENSE-APACHE]:                 {{site.gitrepo}}blob/main/LICENSE-APACHE
+[LICENSE-MIT]:                    {{site.gitrepo}}blob/main/LICENSE-MIT
+
+[Using KLEE]:                     {{site.baseurl}}{% post_url 2020-09-01-using-klee %}
+[Using verification-annotations]: {{site.baseurl}}{% post_url 2020-09-02-using-annotations %}
+[Using PropVerify]:               {{site.baseurl}}{% post_url 2020-09-03-using-propverify %}
+[Install Crux]:                   {{site.baseurl}}{% post_url 2020-09-07-install-crux %}
+[Using ARGV]:                     {{site.baseurl}}{% post_url 2020-09-09-using-argv %}
+[Using FFI]:                      {{site.baseurl}}{% post_url 2020-12-11-using-ffi %}
+
+[RVT installation]:               {{site.baseurl}}{% link installation.md %}
+

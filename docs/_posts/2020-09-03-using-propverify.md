@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: post
 title: "Using the `propverify` library to verify Rust programs"
 permalink: /using-propverify/
 ---
@@ -45,7 +45,7 @@ Hopefully we'll make cargo-verify more robust soon.
 ## Creating a test crate
 
 The Rust compiler, KLEE, and Seahorn are in the Dockerfile (see
-[installation]({{site.baseurl}}{% link installation.md %})) so start the Docker image
+[installation][RVT installation]) so start the Docker image
 by running
 
 ``` shell
@@ -278,3 +278,42 @@ The point of this example (and the point of making propverify
 compatible with proptest) is not that one approach is better
 than another but that they are complementary and
 you should use both fuzzing and verification tools.
+
+
+[CC-rs crate]:                    https://github.com/alexcrichton/cc-rs/
+[Cargo build scripts]:            https://doc.rust-lang.org/cargo/reference/build-scripts.html
+[Clang]:                          https://clang.llvm.org/
+[Crux-MIR]:                       https://github.com/GaloisInc/mir-verifier/
+[Docker]:                         https://www.docker.com/
+[GraalVM and Rust]:               https://michaelbh.com/blog/graalvm-and-rust-1/
+[Hypothesis]:                     https://hypothesis.works/
+[KLEE]:                           https://klee.github.io/
+[Linux driver verification]:      http://linuxtesting.org/ldv/
+[LLVM]:                           https://llvm.org/
+[MIR blog post]:                  https://blog.rust-lang.org/2016/04/19/MIR.html
+[PropTest book]:                  https://altsysrq.github.io/proptest-book/intro.html
+[PropTest]:                       https://github.com/AltSysrq/proptest/
+[Rust benchmarks]:                https://github.com/soarlab/rust-benchmarks/
+[Rust port of QuickCheck]:        https://github.com/burntsushi/quickcheck/
+[Rust's runtime]:                 https://blog.mgattozzi.dev/rusts-runtime/
+[SMACK]:                          https://smackers.github.io/
+[SV-COMP]:                        https://sv-comp.sosy-lab.org/2020/rules.php
+[std::env::args source code]:     https://github.com/rust-lang/rust/blob/master/library/std/src/sys/unix/args.rs
+
+[RVT git repo]:                   {{site.gitrepo}}/
+[cargo-verify source]:            {{site.gitrepo}}blob/main/cargo-verify/
+[compatibility-test]:             {{site.gitrepo}}blob/main/compatibility-test/src
+[demos/simple/ffi directory]:     {{site.gitrepo}}blob/main/demos/simple/ffi/
+[CONTRIBUTING]:                   {{site.gitrepo}}blob/main/CONTRIBUTING.md
+[LICENSE-APACHE]:                 {{site.gitrepo}}blob/main/LICENSE-APACHE
+[LICENSE-MIT]:                    {{site.gitrepo}}blob/main/LICENSE-MIT
+
+[Using KLEE]:                     {{site.baseurl}}{% post_url 2020-09-01-using-klee %}
+[Using verification-annotations]: {{site.baseurl}}{% post_url 2020-09-02-using-annotations %}
+[Using PropVerify]:               {{site.baseurl}}{% post_url 2020-09-03-using-propverify %}
+[Install Crux]:                   {{site.baseurl}}{% post_url 2020-09-07-install-crux %}
+[Using ARGV]:                     {{site.baseurl}}{% post_url 2020-09-09-using-argv %}
+[Using FFI]:                      {{site.baseurl}}{% post_url 2020-12-11-using-ffi %}
+
+[RVT installation]:               {{site.baseurl}}{% link installation.md %}
+
