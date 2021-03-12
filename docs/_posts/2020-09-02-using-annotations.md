@@ -392,7 +392,7 @@ that this is an expected failure.
 [SV-COMP]:                        https://sv-comp.sosy-lab.org/2020/rules.php
 [std::env::args source code]:     https://github.com/rust-lang/rust/blob/master/library/std/src/sys/unix/args.rs
 
-[RVT git repo]:                   {{site.gitrepo}}
+[RVT git repo]:                   {{site.gitrepo}}/
 [compatibility-test]:             {{site.gitrepo}}blob/main/compatibility-test/src
 [demos/simple/ffi directory]:     {{site.gitrepo}}blob/main/demos/simple/ffi
 [CONTRIBUTING]:                   {{site.gitrepo}}blob/main/CONTRIBUTING.md
