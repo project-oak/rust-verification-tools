@@ -60,8 +60,7 @@ fn main() {
 }
 ```
 
-The Rust compiler and KLEE are in the Dockerfile (see
-[installation][RVT installation]) so start the Docker image
+The Rust compiler and KLEE are in the Dockerfile so start the Docker image
 by running
 
 ``` shell

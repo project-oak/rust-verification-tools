@@ -44,8 +44,7 @@ Hopefully we'll make cargo-verify more robust soon.
 
 ## Creating a test crate
 
-The Rust compiler, KLEE, and Seahorn are in the Dockerfile (see
-[installation][RVT installation]) so start the Docker image
+The Rust compiler, KLEE, and Seahorn are in the Dockerfile so start the Docker image
 by running
 
 ``` shell

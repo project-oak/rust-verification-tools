@@ -179,8 +179,7 @@ to invoke KLEE.
 (We cannot run this example with a fuzzer.)
 
 
-The Rust compiler and KLEE are in the Dockerfile (see
-[installation][RVT installation]) so start the Docker image
+The Rust compiler and KLEE are in the Dockerfile so start the Docker image
 by running
 
 ``` shell
