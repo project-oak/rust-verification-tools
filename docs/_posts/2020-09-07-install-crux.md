@@ -9,6 +9,9 @@ The best way to install crux (aka mir-verifier) is to follow the instructions on
 For convenience, instructions for installing crux and its dependencies are
 provided below.
 
+*[Note: the instructions here are probably out of date. We don't test with crux
+often enough to spot when things change.]*
+
 
 We are going to install Haskell, Rust, mir-json, Yices and crux.
 

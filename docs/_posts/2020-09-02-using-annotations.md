@@ -54,7 +54,7 @@ The [SMACK developers][SMACK] have been developing
 some
 [Rust benchmarks]
 using a similar interfaces.
-In adapting this interface for use with KLEE and PropVerify, we made
+In adapting this interface for use with [KLEE] and PropVerify, we made
 some small changes.
 
 Our interface looks like this (but we should maybe change it to be
@@ -122,7 +122,7 @@ What we are doing here is telling the verifier that it should ignore any
 non-deterministic values that can lead to a call to `reject`.  This is similar
 to rejecting an invalid random input value when fuzzing.
 
-Some verifiers (such as KLEE) output some example input values that would
+Some verifiers (such as [KLEE]) output some example input values that would
 reproduce the error when they find a bug.
 You can then rerun the program using those input values to try to
 understand the bug. In particular, you might use a conventional debugger to
@@ -141,8 +141,8 @@ the same simple example we
 This might be useful if you wonder how propverify is implemented
 or if you prefer to use the more conventional verifier interface.
 
-This code is in `demos/simple/klee` and the shell commands in this
-file are in `demos/simple/klee/verify.sh`.
+This code is in [demos/simple/annotations/src/main.rs] and the shell commands in this
+file are in [demos/simple/annotations/verify.sh].
 
 ```
 use verification_annotations as verifier;
@@ -198,7 +198,7 @@ To try the above example, we will create a crate in which to experiment with thi
 code.
 
 
-## Verifying with KLEE (and `cargo-verify`)
+## Verifying with KLEE (and cargo-verify)
 
 To verify the program using propverify, we use the `cargo-verify` script to
 compile the program and verify the program using KLEE
@@ -285,7 +285,7 @@ We can get a slighly better understanding of this low-level API by modifying
 the example a little.
 
 
-### Emulating `#[should_panic]`
+### Emulating #[should_panic]
 
 As a first variation, let's restore the original error and add a call to
 `expect`:
@@ -395,6 +395,8 @@ that this is an expected failure.
 [RVT git repo]:                   {{site.gitrepo}}/
 [compatibility-test]:             {{site.gitrepo}}blob/main/compatibility-test/src
 [demos/simple/ffi directory]:     {{site.gitrepo}}blob/main/demos/simple/ffi
+[demos/simple/annotations/src/main.rs]:  {{site.gitrepo}}blob/main/demos/simple/annotations/src/main.rs
+[demos/simple/annotations/verify.sh]:    {{site.gitrepo}}blob/main/demos/simple/annotations/verify.sh
 [CONTRIBUTING]:                   {{site.gitrepo}}blob/main/CONTRIBUTING.md
 [LICENSE-APACHE]:                 {{site.gitrepo}}blob/main/LICENSE-APACHE
 [LICENSE-MIT]:                    {{site.gitrepo}}blob/main/LICENSE-MIT

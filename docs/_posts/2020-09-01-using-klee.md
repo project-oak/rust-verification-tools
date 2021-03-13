@@ -41,8 +41,8 @@ As a running example, we will use the same example
 that we used to explain [how to use the verification-annotations
 crate][Using verification-annotations].
 
-This code is in `demos/simple/klee` and the shell commands in this
-file are in `demos/simple/klee/verify.sh`.
+This code is in [demos/simple/klee/src/main.rs] and the shell commands in this
+file are in [demos/simple/klee/verify.sh].
 
 ``` rust
 use verification_annotations as verifier;
@@ -335,6 +335,8 @@ klee --output-dir=kleeout --warnings-only-to-file --exit-on-error \
 
 [RVT git repo]:                   {{site.gitrepo}}/
 [cargo-verify source]:            {{site.gitrepo}}blob/main/cargo-verify/
+[demos/simple/klee/src/main.rs]:  {{site.gitrepo}}blob/main/demos/simple/klee/src/main.rs
+[demos/simple/klee/verify.sh]:    {{site.gitrepo}}blob/main/demos/simple/klee/verify.sh
 [compatibility-test]:             {{site.gitrepo}}blob/main/compatibility-test/src
 [demos/simple/ffi directory]:     {{site.gitrepo}}blob/main/demos/simple/ffi/
 [CONTRIBUTING]:                   {{site.gitrepo}}blob/main/CONTRIBUTING.md

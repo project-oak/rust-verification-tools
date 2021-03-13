@@ -32,7 +32,7 @@ In this note, we shall do the following to check this code
 1. verify the crate using propverify and cargo-verify
 1. verify the crate using propverify and Crux-mir
 
-### Workaround for `compilation error`
+### Workaround for "compilation error"
 
 Before we really get started...
 The `cargo-verify` tool sometimes gets confused by previous compilations.
@@ -96,7 +96,7 @@ EOF
 ```
 
 
-## Fuzzing with `proptest`
+## Fuzzing with proptest
 
 Since proptest is a normal library, we can fuzz the
 program using `cargo test`.
@@ -117,7 +117,7 @@ We have deliberately chosen ranges that are large enough that
 the current version of proptest is unlikely to find the bug.)
 
 
-## Verifying with `propverify` using `cargo-verify`
+## Verifying with propverify using cargo-verify
 
 To verify the program using propverify, we use the `cargo-verify` tool to
 compile the program and verify the program using one of the verification
@@ -212,7 +212,7 @@ test result: ok. 1 passed; 0 failed
 VERIFICATION_RESULT: VERIFIED
 ```
 
-## Verifying with `propverify` using Crux-mir
+## Verifying with propverify using Crux-mir
 
 [The following does not run in docker at present]
 
