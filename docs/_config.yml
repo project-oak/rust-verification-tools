@@ -3,6 +3,7 @@ title: Rust Verification Tools
 author: Google Research
 baseurl: "/rust-verification-tools"
 gitrepo: https://github.com/project-oak/rust-verification-tools/
+show_excerpts: true
 
 header_pages:
   - about.md

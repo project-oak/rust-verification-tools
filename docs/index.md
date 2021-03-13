@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: home
 regenerate: true
 ---
 
@@ -12,23 +12,6 @@ code for your own tools.
 
 <a class="github-fork-ribbon" href="{{site.gitrepo}}" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a>
 
-----------------
-<br>
-
-<div class="posts">
-  {% for post in site.posts %}
-    <article class="post">
-
-      <h2><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h2>
-
-      <div class="entry">
-        {{ post.excerpt }}
-      </div>
-
-      <a href="{{ site.baseurl }}{{ post.url }}" class="read-more">Read More</a>
-    </article>
-  {% endfor %}
-</div>
 
 [CC-rs crate]:                    https://github.com/alexcrichton/cc-rs/
 [Cargo build scripts]:            https://doc.rust-lang.org/cargo/reference/build-scripts.html
