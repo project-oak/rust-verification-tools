@@ -56,7 +56,7 @@ fn main() {
         eprintln!("Test values: a = {}, b = {}", a, b);
     }
     let r = a*b;
-    verifier::assert!(1 <= r && r <= 1000000);
+    verifier::assert!(1 <= r && r < 1000000);
 }
 ```
 
@@ -347,6 +347,4 @@ klee --output-dir=kleeout --warnings-only-to-file --exit-on-error \
 [Install Crux]:                   {{site.baseurl}}{% post_url 2020-09-07-install-crux %}
 [Using ARGV]:                     {{site.baseurl}}{% post_url 2020-09-09-using-argv %}
 [Using FFI]:                      {{site.baseurl}}{% post_url 2020-12-11-using-ffi %}
-
-[RVT installation]:               {{site.baseurl}}{% link installation.md %}
 

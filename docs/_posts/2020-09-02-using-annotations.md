@@ -406,5 +406,3 @@ that this is an expected failure.
 [Using ARGV]:                     {{site.baseurl}}{% post_url 2020-09-09-using-argv %}
 [Using FFI]:                      {{site.baseurl}}{% post_url 2020-12-11-using-ffi %}
 
-[RVT installation]:               {{site.baseurl}}{% link installation.md %}
-

@@ -204,8 +204,6 @@ The task of confirming that the code identified by profiling can be
 [Using ARGV]:                     {{site.baseurl}}{% post_url 2020-09-09-using-argv %}
 [Using FFI]:                      {{site.baseurl}}{% post_url 2020-12-11-using-ffi %}
 
-[RVT installation]:               {{site.baseurl}}{% link installation.md %}
-
 [Measuring coverage]:             http://ccadar.blogspot.com/2020/07/measuring-coverage-achieved-by-symbolic.html
 [KLEE testing CoreUtils]:         https://klee.github.io/tutorials/testing-coreutils/
 [galea:arxiv:2018]:               https://alastairreid.github.io/RelatedWork/papers/galea:arxiv:2018/

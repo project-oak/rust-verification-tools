@@ -7,5 +7,3 @@ gitrepo: https://github.com/project-oak/rust-verification-tools/
 header_pages:
   - about.md
   - tools.md
-  - installation.md
-
