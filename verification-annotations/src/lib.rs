@@ -41,7 +41,7 @@ macro_rules! verifier_assume {
 
 #[macro_export]
 macro_rules! verifier_unreachable {
-    () => { $crate::assert!(false, "unreachable assertion was reached"); };
+    () => { $crate::report_error("unreachable assertion was reached"); };
 }
 
 // At the moment, the cargo-verify script does not support
