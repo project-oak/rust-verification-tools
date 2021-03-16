@@ -474,7 +474,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
         .arg(runtime)
         .arg(&bc_file)
         .args(&c_files)
-        .output_info(&opt)?;
+        .output_info(&opt, 3)?;
     bc_file = new_bc_file;
 
     if opt.backend == Backend::Seahorn {
@@ -572,7 +572,7 @@ fn compile(opt: &Opt, package: &str, target: &str) -> CVResult<(PathBuf, Vec<Pat
     cmd.arg(format!("--target={}", target))
         .args(vec!["-v"; opt.verbose])
         .envs(get_build_envs(&opt)?)
-        .output_info(&opt)?;
+        .output_info(&opt, 0)?;
     // .env("PATH", ...)
 
     // Find the target directory
@@ -613,7 +613,7 @@ fn compile(opt: &Opt, package: &str, target: &str) -> CVResult<(PathBuf, Vec<Pat
             if opt.tests || !opt.test.is_empty() {
                 Err("  FAILED: Use --tests with library crates")?
             } else {
-                Err(format!("  FAILED: Test {} compilation error", &package))?
+                Err(format!("  FAILED: Test {} unable to find the right bitcode file - should you have used --tests?", &package))?
             }
         }
         _ => {
@@ -664,7 +664,7 @@ fn patch_llvm(opt: &Opt, options: &[&str], bcfile: &Path, new_bcfile: &Path) -> 
         .arg(new_bcfile)
         .args(options)
         .args(vec!["-v"; opt.verbose])
-        .output_info(&opt)?;
+        .output_info(&opt, 3)?;
     Ok(())
 }
 
@@ -688,7 +688,7 @@ fn mangle_functions(
     let (stdout, _) = Command::new("llvm-nm")
         .arg("--defined-only")
         .arg(bcfile)
-        .output_info(&opt)?;
+        .output_info(&opt, 4)?;
 
     let rs: Vec<(String, String)> = stdout
         .lines()

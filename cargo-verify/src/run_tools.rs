@@ -6,27 +6,28 @@ use crate::*;
 
 /// Trait for wrapping `std::process::Command::output()` with logging.
 pub trait OutputInfo {
-    fn output_info(&mut self, opt: &Opt) -> CVResult<(String, String)> {
-        self.output_info_helper(&opt, |v| String::from(from_utf8(v).expect("not UTF-8")), false)
+    fn output_info(&mut self, opt: &Opt, lvl: usize) -> CVResult<(String, String)> {
+        self.output_info_helper(&opt, lvl, |v| String::from(from_utf8(v).expect("not UTF-8")), false)
             .map(|(stdout, stderr, _)| (stdout, stderr))
     }
 
-    fn latin1_output_info(&mut self, opt: &Opt) -> CVResult<(String, String)> {
-        self.output_info_helper(&opt, utils::from_latin1, false)
+    fn latin1_output_info(&mut self, opt: &Opt, lvl: usize) -> CVResult<(String, String)> {
+        self.output_info_helper(&opt, lvl, utils::from_latin1, false)
             .map(|(stdout, stderr, _)| (stdout, stderr))
     }
 
-    fn output_info_ignore_exit(&mut self, opt: &Opt) -> CVResult<(String, String, bool)> {
-        self.output_info_helper(&opt, |v| String::from(from_utf8(v).expect("not UTF-8")), true)
+    fn output_info_ignore_exit(&mut self, opt: &Opt, lvl: usize) -> CVResult<(String, String, bool)> {
+        self.output_info_helper(&opt, lvl, |v| String::from(from_utf8(v).expect("not UTF-8")), true)
     }
 
-    fn latin1_output_info_ignore_exit(&mut self, opt: &Opt) -> CVResult<(String, String, bool)> {
-        self.output_info_helper(&opt, utils::from_latin1, true)
+    fn latin1_output_info_ignore_exit(&mut self, opt: &Opt, lvl: usize) -> CVResult<(String, String, bool)> {
+        self.output_info_helper(&opt, lvl, utils::from_latin1, true)
     }
 
     fn output_info_helper(
         &mut self,
         opt: &Opt,
+        lvl: usize,
         trans: impl Fn(&[u8]) -> String,
         ignore_exit: bool,
     ) -> CVResult<(String, String, bool)>;
@@ -36,6 +37,7 @@ impl OutputInfo for Command {
     fn output_info_helper(
         &mut self,
         opt: &Opt,
+        lvl: usize,
         trans: impl Fn(&[u8]) -> String,
         ignore_exit: bool,
     ) -> CVResult<(String, String, bool)> {
@@ -48,10 +50,10 @@ impl OutputInfo for Command {
         let output = self.output()?;
 
         let stdout = trans(&output.stdout);
-        info_lines("STDOUT: ", stdout.lines());
+        info_lines(&opt, lvl, "STDOUT: ", stdout.lines());
 
         let stderr = trans(&output.stderr);
-        info_lines("STDERR: ", stderr.lines());
+        info_lines(&opt, lvl, "STDERR: ", stderr.lines());
 
         if !ignore_exit && !output.status.success() {
             match output.status.code() {
@@ -161,9 +163,9 @@ fn add_to_script(cmd: &Command, opt: &Opt) -> CVResult<()> {
 }
 
 /// Print each line of `Lines` using `info!`, prefixed with `prefix`.
-pub fn info_lines(prefix: &str, lines: Lines) {
+pub fn info_lines(opt: &Opt, lvl: usize, prefix: &str, lines: Lines) {
     for l in lines {
-        info!("{}{}", prefix, l);
+        info_at!(&opt, lvl, "{}{}", prefix, l);
     }
 }
 
@@ -174,7 +176,7 @@ pub fn clean(opt: &Opt) {
         .arg("clean")
         .arg("--manifest-path")
         .arg(&opt.cargo_toml)
-        .output_info_ignore_exit(&opt)
+        .output_info_ignore_exit(&opt, 4)
         .ok(); // Discarding the error on purpose.
 }
 
@@ -225,7 +227,7 @@ pub fn get_default_host(opt: &Opt) -> CVResult<String> {
     }
 
     Ok(cmd
-        .output_info(&opt)?
+        .output_info(&opt, 4)?
         .0
         .lines()
         .find_map(|l| l.strip_prefix("Default host:").and_then(|l| Some(l.trim())))
@@ -245,7 +247,7 @@ pub fn count_symbols(opt: &Opt, bcfile: &Path, fs: &[&str]) -> CVResult<usize> {
 
     let mut cmd = Command::new("llvm-nm");
     cmd.arg("--defined-only").arg(bcfile);
-    let (stdout, _) = cmd.output_info(&opt)?;
+    let (stdout, _) = cmd.output_info(&opt, 4)?;
 
     let count = stdout
         .lines()
@@ -287,7 +289,7 @@ pub fn list_tests(opt: &Opt, target: &str) -> CVResult<Vec<String>> {
 
     // TODO: Python ignores bad exit codes
     let tests = cmd
-        .output_info(&opt)?
+        .output_info(&opt, 3)?
         .0
         .lines()
         .filter_map(|l| {

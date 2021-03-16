@@ -41,7 +41,7 @@ pub fn run(opt: &Opt) -> CVResult<Status> {
         cmd.arg("--").args(&opt.args);
     }
 
-    match cmd.output_info_ignore_exit(&opt) {
+    match cmd.output_info_ignore_exit(&opt, 2) {
         Err(e) => {
             warn!("Proptest failed '{:?}'", e);
             Ok(Status::Error)
