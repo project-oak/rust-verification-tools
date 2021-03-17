@@ -502,7 +502,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
         .arg(runtime)
         .arg(&bc_file)
         .args(&c_files)
-        .output_info(&opt, 3)?;
+        .latin1_output_info(&opt, 3)?;
     bc_file = new_bc_file;
 
     if opt.backend == Backend::Seahorn {
