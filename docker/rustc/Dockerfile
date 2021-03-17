@@ -7,7 +7,7 @@ WORKDIR ${USER_HOME}
 
 # Fetch rustc
 ENV RUSTC_DIR=${USER_HOME}/rust
-ARG RUSTFLAGS_STAGE_NOT_0="-Cembed-bitcode=yes"
+ARG RUSTFLAGS_STAGE_NOT_0="-Cembed-bitcode=yes -Ctarget-feature=-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2"
 ARG RUSTC_VERSION
 RUN git clone --no-checkout https://github.com/rust-lang/rust.git ${RUSTC_DIR}
 RUN cd ${RUSTC_DIR} \
