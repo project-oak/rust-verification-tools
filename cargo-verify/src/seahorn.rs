@@ -112,7 +112,7 @@ fn run(opt: &Opt, name: &str, entry: &str, bcfile: &Path, out_dir: &Path) -> CVR
         .arg(&bcfile);
     // .args(&opt.args)
 
-    let (stdout, stderr, _) = cmd.output_info_ignore_exit(&opt, 2)?;
+    let (stdout, stderr, _) = cmd.output_info_ignore_exit(&opt, 3)?;
 
     // We scan stderr for:
     // 1. Indications of the expected output (eg from #[should_panic])

@@ -12,6 +12,7 @@ use std::{
     collections::HashSet,
     error, fmt,
     fs::{self, File, OpenOptions},
+    io::{self, Write},
     path::{Path, PathBuf},
     process::{exit, Command},
     str::from_utf8,
@@ -19,6 +20,7 @@ use std::{
     time::Instant,
 };
 
+use ansi_term::Colour;
 use cargo_metadata::{CargoOpt, MetadataCommand};
 use glob::glob;
 use lazy_static::lazy_static;
@@ -124,6 +126,10 @@ pub struct Opt {
     #[structopt(short, long, parse(from_occurrences))]
     verbose: usize,
 
+    /// Display one character per test instead of one line
+    #[structopt(short, long)]
+    quiet: bool,
+
     // script_arg is used for holding the CL option. After parsing, if the user
     // specified a script, a `File` will be opened for writing, wrapped in a
     // `Mutex` to allow concurrent jobs to write to it, and put in the `script`
@@ -187,6 +193,10 @@ type CVResult<T> = Result<T, Box<dyn error::Error>>;
 
 /// Parse the command line and make sure it makes sense.
 fn process_command_line() -> CVResult<Opt> {
+    // Normal mode is verbosity 1, quiet is 0
+    // (This appears early so that info_at! can be used)
+    opt.verbose = if opt.quiet { 0 } else { opt.verbose + 1 };
+
     // cargo-verify can be called directly, or by placing it on the `PATH` and
     // calling it through `cargo` (i.e. `cargo verify ...`.
     let mut args: Vec<_> = std::env::args().collect();
@@ -236,7 +246,7 @@ fn process_command_line() -> CVResult<Opt> {
                 assert!(proptest::check_install());
                 Backend::Proptest
             };
-            println!("Using {} as backend", backend);
+            info_at!(&opt, 1, "Using {} as backend", backend);
             backend
         }
     };
@@ -287,16 +297,16 @@ fn main() -> CVResult<()> {
     }
 
     let package = get_meta_package_name(&opt)?;
-    info_at!(&opt, 1, "Checking {}", &package);
+    info_at!(&opt, 2, "Checking {}", &package);
 
     let status = match opt.backend {
         Backend::Proptest => {
-            info_at!(&opt, 1, "  Invoking cargo run with proptest backend");
+            info_at!(&opt, 2, "  Invoking cargo run with proptest backend");
             proptest::run(&opt)
         }
         _ => {
             let target = get_default_host(&opt)?;
-            info_at!(&opt, 4, "target: {}", target);
+            info_at!(&opt, 5, "target: {}", target);
             verify(&opt, &package, &target)
         }
     }
@@ -319,14 +329,14 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
 
     // Compile and link the patched file using LTO to generate the entire
     // application in a single LLVM file
-    info_at!(&opt, 1, "  Building {} for verification", package);
+    info_at!(&opt, 2, "  Building {} for verification", package);
     let bcfile = build(&opt, &package, &target)?;
 
     // Get the functions we need to verify, and their mangled names.
     let tests = if opt.tests || !opt.test.is_empty() {
         // If using the --tests or --test flags, generate a list of tests and
         // their mangled names.
-        info_at!(&opt, 3, "  Getting list of tests in {}", &package);
+        info_at!(&opt, 4, "  Getting list of tests in {}", &package);
         let mut tests = list_tests(&opt, &target)?;
         if !opt.test.is_empty() {
             tests = tests
@@ -369,10 +379,10 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
         .collect();
 
     #[rustfmt::skip]
-    info_at!(&opt, 1, "  Checking {}",
+    info_at!(&opt, 2, "  Checking {}",
              tests.iter().cloned().unzip::<_, _, Vec<_>, Vec<_>>().0.join(", ")
     );
-    info_at!(opt, 4, "Mangled: {:?}", tests);
+    info_at!(opt, 5, "Mangled: {:?}", tests);
 
     // For each test function, we run the backend and sift through its
     // output to generate an appropriate status string.
@@ -412,14 +422,15 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
 
     let end = Instant::now();
 
+    // Note use of \n to end line of results in --quiet mode
     println!(
-        "test result: {:#}. {} passed; {} failed",
+        "\ntest result: {:#}. {} passed; {} failed",
         status, passes, fails
     );
 
-    info_at!(&opt, 1, "Build {:.3}s", before_verifier.duration_since(beginning).as_secs_f32());
-    info_at!(&opt, 1, "Verify {:.3}s", end.duration_since(before_verifier).as_secs_f32());
-    info_at!(&opt, 1, "Total {:.3}s", end.duration_since(beginning).as_secs_f32());
+    info_at!(&opt, 2, "Build {:.3}s", before_verifier.duration_since(beginning).as_secs_f32());
+    info_at!(&opt, 2, "Verify {:.3}s", end.duration_since(before_verifier).as_secs_f32());
+    info_at!(&opt, 2, "Total {:.3}s", end.duration_since(beginning).as_secs_f32());
 
     Ok(status)
 }
@@ -438,7 +449,24 @@ fn verifier_run(opt: &Opt, bcfile: &Path, name: &str, entry: &str) -> Status {
         Status::Unknown
     });
 
-    println!("test {} ... {:#}", name, status);
+    let mut stdout = io::stdout();
+    if opt.quiet {
+        let s = match status {
+            Status::Unknown => Colour::Yellow.paint("?"),
+            Status::Verified => Colour::Green.paint("."),
+            Status::Error => Colour::Red.paint("F"),
+            Status::AssertFailed => Colour::Red.paint("A"),
+            Status::OutOfBounds => Colour::Red.paint("B"),
+            Status::Overflow => Colour::Red.paint("O"),
+            Status::Panic => Colour::Red.paint("P"),
+            Status::Reachable => Colour::Red.paint("R"),
+            Status::Timeout => Colour::Red.paint("T"),
+        };
+        write!(stdout, "{}", s).unwrap();
+    } else {
+        writeln!(stdout, "test {} ... {:#}", name, status).unwrap();
+    }
+    stdout.flush().unwrap();
     status
 }
 
@@ -456,7 +484,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
     let runtime = PathBuf::from(&runtime);
     info_at!(
         &opt,
-        3,
+        4,
         "  Linking {}, {} and [{}] to produce {}",
         bc_file.to_string_lossy(),
         runtime.to_string_lossy(),
@@ -478,7 +506,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
     bc_file = new_bc_file;
 
     if opt.backend == Backend::Seahorn {
-        info_at!(&opt, 1, "  Patching LLVM file for Seahorn");
+        info_at!(&opt, 2, "  Patching LLVM file for Seahorn");
         let new_bc_file = add_pre_ext(&bc_file, "patch-sea");
         patch_llvm(&opt, &["--seahorn"], &bc_file, &new_bc_file)?;
         bc_file = new_bc_file;
@@ -487,7 +515,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
     // todo: This is probably useful with all verifiers - but
     // making it KLEE-only until we have a chance to test it.
     if opt.backend == Backend::Klee {
-        info_at!(&opt, 1, "  Patching LLVM file for initializers and feature tests");
+        info_at!(&opt, 2, "  Patching LLVM file for initializers and feature tests");
         let new_bc_file = add_pre_ext(&bc_file, "patch-init-feat");
         patch_llvm(
             &opt,
@@ -572,12 +600,12 @@ fn compile(opt: &Opt, package: &str, target: &str) -> CVResult<(PathBuf, Vec<Pat
     cmd.arg(format!("--target={}", target))
         .args(vec!["-v"; opt.verbose])
         .envs(get_build_envs(&opt)?)
-        .output_info(&opt, 0)?;
+        .output_info(&opt, 1)?;
     // .env("PATH", ...)
 
     // Find the target directory
     // (This may not be inside the crate if using workspaces)
-    info_at!(&opt, 4, "  Getting target directory");
+    info_at!(&opt, 5, "  Getting target directory");
     let target_dir = get_meta_target_directory(&opt)?;
 
     // {target_dir}/{target}/debug/deps/{package}*.bc
@@ -664,7 +692,7 @@ fn patch_llvm(opt: &Opt, options: &[&str], bcfile: &Path, new_bcfile: &Path) -> 
         .arg(new_bcfile)
         .args(options)
         .args(vec!["-v"; opt.verbose])
-        .output_info(&opt, 3)?;
+        .output_info(&opt, 4)?;
     Ok(())
 }
 
@@ -679,7 +707,7 @@ fn mangle_functions(
 
     info_at!(
         &opt,
-        4,
+        5,
         "    Looking up {:?} in {}",
         names,
         bcfile.to_string_lossy()
@@ -688,7 +716,7 @@ fn mangle_functions(
     let (stdout, _) = Command::new("llvm-nm")
         .arg("--defined-only")
         .arg(bcfile)
-        .output_info(&opt, 4)?;
+        .output_info(&opt, 5)?;
 
     let rs: Vec<(String, String)> = stdout
         .lines()
@@ -717,7 +745,7 @@ fn mangle_functions(
         })
         .collect();
 
-    info_at!(&opt, 4, "      Found {:?}", rs);
+    info_at!(&opt, 5, "      Found {:?}", rs);
 
     // TODO: this doesn't look right:
     // missing = set(paths) - paths.keys()

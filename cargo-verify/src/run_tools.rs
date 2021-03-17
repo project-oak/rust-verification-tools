@@ -171,12 +171,12 @@ pub fn info_lines(opt: &Opt, lvl: usize, prefix: &str, lines: Lines) {
 
 /// Run `cargo clean`.
 pub fn clean(opt: &Opt) {
-    info_at!(&opt, 1, "Running `cargo clean`");
+    info_at!(&opt, 2, "Running `cargo clean`");
     Command::new("cargo")
         .arg("clean")
         .arg("--manifest-path")
         .arg(&opt.cargo_toml)
-        .output_info_ignore_exit(&opt, 4)
+        .output_info_ignore_exit(&opt, 5)
         .ok(); // Discarding the error on purpose.
 }
 
@@ -227,7 +227,7 @@ pub fn get_default_host(opt: &Opt) -> CVResult<String> {
     }
 
     Ok(cmd
-        .output_info(&opt, 4)?
+        .output_info(&opt, 5)?
         .0
         .lines()
         .find_map(|l| l.strip_prefix("Default host:").and_then(|l| Some(l.trim())))
@@ -239,7 +239,7 @@ pub fn get_default_host(opt: &Opt) -> CVResult<String> {
 pub fn count_symbols(opt: &Opt, bcfile: &Path, fs: &[&str]) -> CVResult<usize> {
     info_at!(
         &opt,
-        4,
+        5,
         "    Counting symbols {:?} in {}",
         fs,
         bcfile.to_string_lossy()
@@ -247,7 +247,7 @@ pub fn count_symbols(opt: &Opt, bcfile: &Path, fs: &[&str]) -> CVResult<usize> {
 
     let mut cmd = Command::new("llvm-nm");
     cmd.arg("--defined-only").arg(bcfile);
-    let (stdout, _) = cmd.output_info(&opt, 4)?;
+    let (stdout, _) = cmd.output_info(&opt, 5)?;
 
     let count = stdout
         .lines()
@@ -255,7 +255,7 @@ pub fn count_symbols(opt: &Opt, bcfile: &Path, fs: &[&str]) -> CVResult<usize> {
         .filter(|l| l.len() == 3 && l[1] == "T" && fs.iter().any(|f| f == &l[2]))
         .count();
 
-    info_at!(&opt, 4, "    Found {} functions", count);
+    info_at!(&opt, 5, "    Found {} functions", count);
     Ok(count)
 }
 
@@ -289,7 +289,7 @@ pub fn list_tests(opt: &Opt, target: &str) -> CVResult<Vec<String>> {
 
     // TODO: Python ignores bad exit codes
     let tests = cmd
-        .output_info(&opt, 3)?
+        .output_info(&opt, 4)?
         .0
         .lines()
         .filter_map(|l| {
