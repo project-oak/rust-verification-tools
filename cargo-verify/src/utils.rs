@@ -22,7 +22,7 @@ use std::{
 macro_rules! info_at {
     ($opt:expr, $lvl:expr, $($arg:tt)+) => ({
         let lvl = $lvl;
-        if lvl <= $opt.verbose {
+        if lvl <= $opt.verbosity {
             println!($($arg)+);
         }
     });

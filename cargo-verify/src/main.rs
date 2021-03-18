@@ -130,6 +130,10 @@ pub struct Opt {
     #[structopt(short, long)]
     quiet: bool,
 
+    // combined result of --verbose and --quiet options
+    #[structopt(skip)]
+    verbosity: Verbosity,
+
     // script_arg is used for holding the CL option. After parsing, if the user
     // specified a script, a `File` will be opened for writing, wrapped in a
     // `Mutex` to allow concurrent jobs to write to it, and put in the `script`
@@ -191,12 +195,50 @@ impl fmt::Display for Status {
 
 type CVResult<T> = Result<T, Box<dyn error::Error>>;
 
+/// Verbosity levels
+#[derive(Debug, PartialEq, Eq, PartialOrd, Copy, Clone)]
+pub enum Verbosity {
+    /// Give minimal information needed to understand tool
+    /// Test results are indicated by a single character
+    Quiet,
+
+    /// Default verbosity (no --verbosity flags)
+    /// Announce major commands/steps
+    Normal,
+
+    /// Output for -v
+    /// Announce major commands/steps
+    /// Show execution time
+    /// (This is primarily for users of the tool to give a little more
+    /// insight into what is happening)
+    Informative,
+
+    /// Output for -vv
+    /// Show actual commands executed and output for major commands/steps
+    /// (This _might_ be useful to users if commands fail confusingly
+    /// but is mostly for developers of this tool)
+    Major,
+
+    /// Output for -vvv
+    /// Show actual commands executed and output for minor commands/steps
+    /// (This is primarily for developers of this tool)
+    Minor,
+
+    /// Output for -vvvv
+    /// Show actual commands executed and output for all commands/steps
+    /// no matter how trivial
+    /// (This is primarily for developers of this tool)
+    Trivial,
+}
+
+impl Default for Verbosity {
+    fn default() -> Self {
+        Verbosity::Normal
+    }
+}
+
 /// Parse the command line and make sure it makes sense.
 fn process_command_line() -> CVResult<Opt> {
-    // Normal mode is verbosity 1, quiet is 0
-    // (This appears early so that info_at! can be used)
-    opt.verbose = if opt.quiet { 0 } else { opt.verbose + 1 };
-
     // cargo-verify can be called directly, or by placing it on the `PATH` and
     // calling it through `cargo` (i.e. `cargo verify ...`.
     let mut args: Vec<_> = std::env::args().collect();
@@ -207,6 +249,19 @@ fn process_command_line() -> CVResult<Opt> {
     }
     let mut opt = Opt::from_iter(args.into_iter());
     // let mut opt = Opt::from_args();
+
+    // Set verbosity early so that info_at! can be used
+    opt.verbosity = if opt.quiet {
+        Verbosity::Quiet
+    } else {
+        match opt.verbose {
+            0 => Verbosity::Normal,
+            1 => Verbosity::Informative,
+            2 => Verbosity::Major,
+            3 => Verbosity::Minor,
+            _ => Verbosity::Trivial,
+        }
+    };
 
     if let Some(script) = &opt.script_arg {
         fs::remove_file(script).unwrap_or(());
@@ -246,7 +301,7 @@ fn process_command_line() -> CVResult<Opt> {
                 assert!(proptest::check_install());
                 Backend::Proptest
             };
-            info_at!(&opt, 1, "Using {} as backend", backend);
+            info_at!(&opt, Verbosity::Normal, "Using {} as backend", backend);
             backend
         }
     };
@@ -297,16 +352,16 @@ fn main() -> CVResult<()> {
     }
 
     let package = get_meta_package_name(&opt)?;
-    info_at!(&opt, 2, "Checking {}", &package);
+    info_at!(&opt, Verbosity::Informative, "Checking {}", &package);
 
     let status = match opt.backend {
         Backend::Proptest => {
-            info_at!(&opt, 2, "  Invoking cargo run with proptest backend");
+            info_at!(&opt, Verbosity::Informative, "  Invoking cargo run with proptest backend");
             proptest::run(&opt)
         }
         _ => {
             let target = get_default_host(&opt)?;
-            info_at!(&opt, 5, "target: {}", target);
+            info_at!(&opt, Verbosity::Trivial, "target: {}", target);
             verify(&opt, &package, &target)
         }
     }
@@ -329,14 +384,14 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
 
     // Compile and link the patched file using LTO to generate the entire
     // application in a single LLVM file
-    info_at!(&opt, 2, "  Building {} for verification", package);
+    info_at!(&opt, Verbosity::Informative, "  Building {} for verification", package);
     let bcfile = build(&opt, &package, &target)?;
 
     // Get the functions we need to verify, and their mangled names.
     let tests = if opt.tests || !opt.test.is_empty() {
         // If using the --tests or --test flags, generate a list of tests and
         // their mangled names.
-        info_at!(&opt, 4, "  Getting list of tests in {}", &package);
+        info_at!(&opt, Verbosity::Minor, "  Getting list of tests in {}", &package);
         let mut tests = list_tests(&opt, &target)?;
         if !opt.test.is_empty() {
             tests = tests
@@ -379,10 +434,10 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
         .collect();
 
     #[rustfmt::skip]
-    info_at!(&opt, 2, "  Checking {}",
+    info_at!(&opt, Verbosity::Informative, "  Checking {}",
              tests.iter().cloned().unzip::<_, _, Vec<_>, Vec<_>>().0.join(", ")
     );
-    info_at!(opt, 5, "Mangled: {:?}", tests);
+    info_at!(opt, Verbosity::Trivial, "Mangled: {:?}", tests);
 
     // For each test function, we run the backend and sift through its
     // output to generate an appropriate status string.
@@ -428,9 +483,9 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
         status, passes, fails
     );
 
-    info_at!(&opt, 2, "Build {:.3}s", before_verifier.duration_since(beginning).as_secs_f32());
-    info_at!(&opt, 2, "Verify {:.3}s", end.duration_since(before_verifier).as_secs_f32());
-    info_at!(&opt, 2, "Total {:.3}s", end.duration_since(beginning).as_secs_f32());
+    info_at!(&opt, Verbosity::Informative, "Build {:.3}s", before_verifier.duration_since(beginning).as_secs_f32());
+    info_at!(&opt, Verbosity::Informative, "Verify {:.3}s", end.duration_since(before_verifier).as_secs_f32());
+    info_at!(&opt, Verbosity::Informative, "Total {:.3}s", end.duration_since(beginning).as_secs_f32());
 
     Ok(status)
 }
@@ -484,7 +539,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
     let runtime = PathBuf::from(&runtime);
     info_at!(
         &opt,
-        4,
+        Verbosity::Minor,
         "  Linking {}, {} and [{}] to produce {}",
         bc_file.to_string_lossy(),
         runtime.to_string_lossy(),
@@ -502,11 +557,11 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
         .arg(runtime)
         .arg(&bc_file)
         .args(&c_files)
-        .latin1_output_info(&opt, 3)?;
+        .latin1_output_info(&opt, Verbosity::Major)?;
     bc_file = new_bc_file;
 
     if opt.backend == Backend::Seahorn {
-        info_at!(&opt, 2, "  Patching LLVM file for Seahorn");
+        info_at!(&opt, Verbosity::Major, "  Patching LLVM file for Seahorn");
         let new_bc_file = add_pre_ext(&bc_file, "patch-sea");
         patch_llvm(&opt, &["--seahorn"], &bc_file, &new_bc_file)?;
         bc_file = new_bc_file;
@@ -515,7 +570,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
     // todo: This is probably useful with all verifiers - but
     // making it KLEE-only until we have a chance to test it.
     if opt.backend == Backend::Klee {
-        info_at!(&opt, 2, "  Patching LLVM file for initializers and feature tests");
+        info_at!(&opt, Verbosity::Major, "  Patching LLVM file for initializers and feature tests");
         let new_bc_file = add_pre_ext(&bc_file, "patch-init-feat");
         patch_llvm(
             &opt,
@@ -598,14 +653,14 @@ fn compile(opt: &Opt, package: &str, target: &str) -> CVResult<(PathBuf, Vec<Pat
     // proc_macros.
     // FIXME: "=="?
     cmd.arg(format!("--target={}", target))
-        .args(vec!["-v"; opt.verbose])
+        .args(vec!["-v"; opt.verbose.saturating_sub(1)])
         .envs(get_build_envs(&opt)?)
-        .output_info(&opt, 1)?;
+        .output_info(&opt, Verbosity::Normal)?;
     // .env("PATH", ...)
 
     // Find the target directory
     // (This may not be inside the crate if using workspaces)
-    info_at!(&opt, 5, "  Getting target directory");
+    info_at!(&opt, Verbosity::Trivial, "  Getting target directory");
     let target_dir = get_meta_target_directory(&opt)?;
 
     // {target_dir}/{target}/debug/deps/{package}*.bc
@@ -692,7 +747,7 @@ fn patch_llvm(opt: &Opt, options: &[&str], bcfile: &Path, new_bcfile: &Path) -> 
         .arg(new_bcfile)
         .args(options)
         .args(vec!["-v"; opt.verbose])
-        .output_info(&opt, 4)?;
+        .output_info(&opt, Verbosity::Minor)?;
     Ok(())
 }
 
@@ -707,7 +762,7 @@ fn mangle_functions(
 
     info_at!(
         &opt,
-        5,
+        Verbosity::Trivial,
         "    Looking up {:?} in {}",
         names,
         bcfile.to_string_lossy()
@@ -716,7 +771,7 @@ fn mangle_functions(
     let (stdout, _) = Command::new("llvm-nm")
         .arg("--defined-only")
         .arg(bcfile)
-        .output_info(&opt, 5)?;
+        .output_info(&opt, Verbosity::Trivial)?;
 
     let rs: Vec<(String, String)> = stdout
         .lines()
@@ -745,7 +800,7 @@ fn mangle_functions(
         })
         .collect();
 
-    info_at!(&opt, 5, "      Found {:?}", rs);
+    info_at!(&opt, Verbosity::Trivial, "      Found {:?}", rs);
 
     // TODO: this doesn't look right:
     // missing = set(paths) - paths.keys()
