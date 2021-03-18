@@ -178,7 +178,7 @@ fn run(
         .arg(bcfile)
         .args(&opt.args)
         // .current_dir(&opt.crate_dir);
-        .latin1_output_info_ignore_exit(&opt, 3)?;
+        .latin1_output_info_ignore_exit(&opt, Verbosity::Major)?;
 
     // We scan stderr for:
     // 1. Indications of the expected output (eg from #[should_panic])
@@ -319,7 +319,7 @@ fn replay_klee(opt: &Opt, name: &str, ktest: &Path) -> CVResult<()> {
 
     // Note that we do not treat this as an error, because
     // the interesting case for replay is when KLEE had found an error.
-    let (stdout, stderr, _success) = cmd.output_info_ignore_exit(&opt, 3)?;
+    let (stdout, stderr, _success) = cmd.output_info_ignore_exit(&opt, Verbosity::Major)?;
 
     for line in stdout.lines().chain(stderr.lines()) {
         println!("{}", line);
