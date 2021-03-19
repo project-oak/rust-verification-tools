@@ -78,39 +78,46 @@ fn importance(line: &str, expect: &Option<&str>, name: &str) -> i8 {
 /// Run Seahorn and analyse its output.
 fn run(opt: &Opt, name: &str, entry: &str, bcfile: &Path, out_dir: &Path) -> CVResult<Status> {
     let mut cmd = Command::new("sea");
-    cmd.args(&["bpf",
-               // The following was extracted from `sea yama -y VCC/seahorn/sea_base.yaml`
-               "-O3",
-               "--inline",
-               "--enable-loop-idiom",
-               "--enable-indvar",
-               "--no-lower-gv-init-struct",
-               "--externalize-addr-taken-functions",
-               "--no-kill-vaarg",
-               "--with-arith-overflow=true",
-               "--horn-unify-assumes=true",
-               "--horn-gsa",
-               "--no-fat-fns=bcmp,memcpy,assert_bytes_match,ensure_linked_list_is_allocated,sea_aws_linked_list_is_valid",
-               "--dsa=sea-cs-t",
-               "--devirt-functions=types",
-               "--bmc=opsem",
-               "--horn-vcgen-use-ite",
-               "--horn-vcgen-only-dataflow=true",
-               "--horn-bmc-coi=true",
-               "--sea-opsem-allocator=static",
-               "--horn-explicit-sp0=false",
-               "--horn-bv2-lambdas",
-               "--horn-bv2-simplify=true",
-               "--horn-bv2-extra-widemem",
-               "--horn-stats=true",
-               "--keep-temps",
-    ]);
 
-    cmd.arg(OsString::from("--temp-dir=").append(out_dir))
-        .arg(String::from("--entry=") + entry)
-        .args(&opt.backend_flags)
-        .arg(&bcfile);
-    // .args(&opt.args)
+    let user_flags: Vec<_> = opt.backend_flags.iter().map(|flag| {
+        backends_common::format_flag(&flag, &entry, &bcfile, &out_dir)
+    }).collect::<Result<_,_>>()?;
+
+    if ! opt.replace_backend_flags {
+        cmd.args(&["bpf",
+                   // The following was extracted from `sea yama -y VCC/seahorn/sea_base.yaml`
+                   "-O3",
+                   "--inline",
+                   "--enable-loop-idiom",
+                   "--enable-indvar",
+                   "--no-lower-gv-init-struct",
+                   "--externalize-addr-taken-functions",
+                   "--no-kill-vaarg",
+                   "--with-arith-overflow=true",
+                   "--horn-unify-assumes=true",
+                   "--horn-gsa",
+                   "--no-fat-fns=bcmp,memcpy,assert_bytes_match,ensure_linked_list_is_allocated,sea_aws_linked_list_is_valid",
+                   "--dsa=sea-cs-t",
+                   "--devirt-functions=types",
+                   "--bmc=opsem",
+                   "--horn-vcgen-use-ite",
+                   "--horn-vcgen-only-dataflow=true",
+                   "--horn-bmc-coi=true",
+                   "--sea-opsem-allocator=static",
+                   "--horn-explicit-sp0=false",
+                   "--horn-bv2-lambdas",
+                   "--horn-bv2-simplify=true",
+                   "--horn-bv2-extra-widemem",
+                   "--horn-stats=true",
+                   "--keep-temps",
+        ])
+            .arg(OsString::from("--temp-dir=").append(out_dir))
+            .arg(String::from("--entry=") + entry)
+            .args(user_flags)
+            .arg(&bcfile);
+    } else {
+        cmd.args(user_flags);
+    }
 
     let (stdout, stderr, _) = cmd.output_info_ignore_exit(&opt, Verbosity::Major)?;
 

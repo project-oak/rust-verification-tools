@@ -85,9 +85,13 @@ pub struct Opt {
     #[structopt(skip = Backend::Klee)] // the initial value has no meaning, it will be overwritten
     backend: Backend,
 
-    /// Extra verification flags
-    #[structopt(long, number_of_values = 1, use_delimiter = true)]
+    /// Comma separated list of flags to pass to the verification backend ("{entry}" is replaced with the mangled entry function name; "{file}" is replaced with the LLVM-IR file; "{output_dir}" is replaced with the output directory), also see --replace-backend-flags
+    #[structopt(long, value_name = "FLAGS", number_of_values = 1, use_delimiter = true)]
     backend_flags: Vec<String>,
+
+    /// Use the value of '--backend-flags' to replace the hard-coded flags, instead of appending it to them
+    #[structopt(long)]
+    replace_backend_flags: bool,
 
     /// Space or comma separated list of features to activate
     #[structopt(long, value_name = "FEATURES", number_of_values = 1, use_delimiter = true)]

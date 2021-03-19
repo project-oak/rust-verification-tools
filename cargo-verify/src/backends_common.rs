@@ -6,9 +6,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::path::Path;
+
 use lazy_static::lazy_static;
 use log::info;
 use regex::Regex;
+use serde::Serialize;
+use tinytemplate::TinyTemplate;
+
+use crate::CVResult;
 
 /// Detect lines that match #[should_panic(expected = ...)] string.
 pub fn is_expected_panic(line: &str, expect: &Option<&str>, name: &str) -> bool {
@@ -45,4 +51,27 @@ pub fn is_expected_panic(line: &str, expect: &Option<&str>, name: &str) -> bool 
     }
 
     false
+}
+
+#[derive(Serialize)]
+struct FormatFlagContext<'a> {
+    entry: &'a str,
+    file: &'a str,
+    output_dir: &'a str,
+}
+
+/// Format a user provided backend argument by replacing Handlebars with the appropriate values.
+pub fn format_flag(flag: &str, entry: &str, bcfile: &Path, out_dir: &Path) -> CVResult<String> {
+    let mut template = TinyTemplate::new();
+    template.add_template("flag", flag)?;
+
+    let context = FormatFlagContext {
+        entry,
+        file: &bcfile.to_string_lossy(),
+        output_dir: &out_dir.to_string_lossy(),
+    };
+
+    let res = template.render("flag", &context)?;
+
+    Ok(res)
 }
