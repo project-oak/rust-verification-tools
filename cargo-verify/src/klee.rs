@@ -161,8 +161,14 @@ fn run(
     bcfile: &Path,
     out_dir: &Path,
 ) -> CVResult<(Status, HashMap<String, isize>)> {
-    let (_, stderr, _) = Command::new("klee")
-        .args(&[
+    let mut cmd = Command::new("klee");
+
+    let user_flags: Vec<_> = opt.backend_flags.iter().map(|flag| {
+        backends_common::format_flag(&flag, &entry, &bcfile, &out_dir)
+    }).collect::<Result<_,_>>()?;
+
+    if ! opt.replace_backend_flags {
+        cmd.args(&[
             "--exit-on-error",
             "--entry-point",
             entry,
@@ -172,13 +178,16 @@ fn run(
             "--silent-klee-assume",
             "--disable-verify", // workaround https://github.com/klee/klee/issues/937
         ])
-        .arg("--output-dir")
-        .arg(out_dir)
-        .args(&opt.backend_flags)
-        .arg(bcfile)
-        .args(&opt.args)
-        // .current_dir(&opt.crate_dir);
-        .latin1_output_info_ignore_exit(&opt, Verbosity::Major)?;
+            .arg("--output-dir")
+            .arg(out_dir)
+            .args(user_flags)
+            .arg(bcfile)
+            .args(&opt.args);
+    } else {
+        cmd.args(user_flags);
+    }
+
+    let (_, stderr, _) = cmd.latin1_output_info_ignore_exit(&opt, Verbosity::Major)?;
 
     // We scan stderr for:
     // 1. Indications of the expected output (eg from #[should_panic])
