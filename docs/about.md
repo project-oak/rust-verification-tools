@@ -101,12 +101,15 @@ Here's the basics of getting started with our tools.
    [the proptest book][PropTest book].)
 
 
-## Articles
+## Articles: Our goals and plans
 
 - We wrote a paper about our vision for Rust verification "[Towards making formal methods normal: meeting developers where they are][HATRA 2020]"
   about tool usability,
   the vision of building on developers existing comfort and familiarity with testing and fuzzing,
   and the challenges of getting adoption of formal verification in large organizations.
+
+
+## Articles: Using our tools and libraries
 
 - [Using the `propverify` library to verify Rust programs][Using PropVerify]
 
@@ -119,6 +122,19 @@ Here's the basics of getting started with our tools.
   We also recommend reading
   [the proptest book][PropTest book]
   that thoroughly explains and documents the `proptest` API that `propverify` is based on.
+
+- [Profiling Rust verification][Profiling Rust]
+
+  Formal verification tools push up against Leino's
+  "decidability ceiling": taking the risk of trying
+  to solve undecidable problems in order to create more powerful tools.
+  The cost of this is that sometimes the verifier will "blow up"
+  on some part of your program.
+
+  This article is about finding the problem code so that you
+  can try to fix it.
+
+## Articles: Under the hood
 
 - [Using the `verification-annotations` crate][Using verification-annotations]
 
@@ -166,16 +182,13 @@ Here's the basics of getting started with our tools.
   This article describes how to arrange that the C code
   is compiled to LLVM instead of x86/Arm machine code.
 
-- [Profiling Rust verification][Profiling Rust]
+- [Verifying hand-vectorized Rust code][Hand vectorized Rust]
 
-  Formal verification tools push up against Leino's
-  "decidability ceiling": taking the risk of trying
-  to solve undecidable problems in order to create more powerful tools.
-  The cost of this is that sometimes the verifier will "blow up"
-  on some part of your program.
+  Verification tools don't support every intrinsic function for every
+  architecture: so they may reject hand-vectorized code.
 
-  This article is about finding the problem code so that you
-  can try to fix it.
+  This article describes how to bypass hand vectorized code in portable
+  libraries that provide an unoptimized fallback path.
 
 
 ## License
@@ -281,4 +294,5 @@ See [the contribution instructions][CONTRIBUTING] for further details.
 [Using ARGV]:                     {{site.baseurl}}{% post_url 2020-09-09-using-argv %}
 [Using FFI]:                      {{site.baseurl}}{% post_url 2020-12-11-using-ffi %}
 [Profiling Rust]:                 {{site.baseurl}}{% post_url 2021-03-12-profiling-rust %}
+[Hand vectorized Rust]:           {{site.baseurl}}{% post_url 2021-03-20-verifying-vectorized-code %}
 
