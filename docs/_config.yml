@@ -5,6 +5,13 @@ baseurl: "/rust-verification-tools"
 gitrepo: https://github.com/project-oak/rust-verification-tools/
 show_excerpts: true
 
+kramdown:
+   # fix ugly emoji for footnote backlink
+   # footnote_backlink: '&#x21A9;' # arrow with round hook (ugly default)
+   # footnote_backlink: '&#x21A2;' # arrow
+   # footnote_backlink: '&#x2B0F;' # arrow with square hook
+   footnote_backlink: '&#x293E;' # clockwise semi-circular arrow
+
 header_pages:
   - about.md
   - tools.md
