@@ -14,4 +14,8 @@ cargo-verify ${FLAGS} -v -v -v --manifest-path=demos/simple/argv/Cargo.toml -- f
 cargo verify ${FLAGS} --tests --manifest-path=demos/bottlenecks/merging/Cargo.toml --backend-flags=--use-merge
 cargo verify ${FLAGS} --tests --manifest-path=demos/bottlenecks/regex/Cargo.toml
 
+# Test the --backend-flags and --replace-backend-flags options.
+# Note the use of handlebars and passing args to main (foo foo).
+cargo-verify ${FLAGS} --backend-flags='--exit-on-error,--entry-point,{entry},--libc=klee,--silent-klee-assume,--disable-verify,--output-dir,{output_dir},{file},foo,foo' --replace-backend-flags -v -v -v --script run.sh --manifest-path=demos/simple/argv/Cargo.toml
+
 echo Regression test successful
