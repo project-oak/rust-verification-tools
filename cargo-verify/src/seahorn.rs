@@ -77,9 +77,9 @@ fn importance(line: &str, expect: &Option<&str>, name: &str) -> i8 {
 
 /// Run Seahorn and analyse its output.
 fn run(opt: &Opt, name: &str, entry: &str, bcfile: &Path, out_dir: &Path) -> CVResult<Status> {
-    let verify_common_dir = match &opt.verify_common_dir {
+    let verify_common_dir = match &opt.seahorn_verify_c_common_dir {
         Some(verify_common_dir) => verify_common_dir,
-        None => Err("The '--verify_common_dir' option is missing")?,
+        None => Err("The '--seahorn-verify-c-common-dir' option is missing")?,
     };
 
     let mut cmd = Command::new("sea");

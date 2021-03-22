@@ -28,9 +28,9 @@ sudo docker build \
   --build-arg=MINISAT_VERSION="37158a35c62d448b3feccfa83006266e12e5acb7" \
   --build-arg=RUSTC_VERSION="1.46.0" \
   --build-arg=STP_VERSION="2.3.3" \
+  --build-arg=SEAHORN_VERIFY_C_COMMON_VERSION="70129bf47c421d8283785a8fb13cdb216424ef91" \
   --build-arg=SEAHORN_VERSION="ccdc529f81a02e9236ffa00ff57eef4487f0fc9a" \
   --build-arg=UCLIBC_VERSION="klee_uclibc_v1.2" \
-  --build-arg=VERIFY_COMMON_VERSION="70129bf47c421d8283785a8fb13cdb216424ef91" \
   --build-arg=YICES_VERSION="2.6.2" \
   --build-arg=Z3_VERSION="4.8.7" \
   . 1>&2
