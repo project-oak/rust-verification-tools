@@ -37,9 +37,7 @@ pub fn abort() -> ! {
 ///
 /// Any paths found must satisfy this assumption.
 pub fn assume(pred: bool) {
-    if ! pred {
-        unsafe { __VERIFIER_assume(0); }
-    }
+    unsafe { __VERIFIER_assume(pred as i32); }
 }
 
 /// Reject the current execution path with a verification success.
