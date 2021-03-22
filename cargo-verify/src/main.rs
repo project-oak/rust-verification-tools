@@ -395,6 +395,8 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
     info_at!(&opt, Verbosity::Informative, "  Building {} for verification", package);
     let bcfile = build(&opt, &package, &target)?;
 
+    info_at!(&opt, Verbosity::Informative, "  Generated binary {}", bcfile.to_string_lossy());
+
     // Get the functions we need to verify, and their mangled names.
     let tests = if opt.tests || !opt.test.is_empty() {
         // If using the --tests or --test flags, generate a list of tests and
