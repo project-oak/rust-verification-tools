@@ -94,8 +94,8 @@ pub struct Opt {
     replace_backend_flags: bool,
 
     /// Specifiy the location of 'verify_c_common'
-    #[structopt(long, value_name = "PATH", env = "VERIFY_COMMON_DIR")]
-    verify_common_dir: Option<String>,
+    #[structopt(long, value_name = "PATH", env = "SEAHORN_VERIFY_C_COMMON_DIR")]
+    seahorn_verify_c_common_dir: Option<String>,
 
     /// Space or comma separated list of features to activate
     #[structopt(long, value_name = "FEATURES", number_of_values = 1, use_delimiter = true)]
