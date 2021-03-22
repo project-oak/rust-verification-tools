@@ -62,6 +62,7 @@ fn importance(line: &str, expect: &Option<&str>, name: &str) -> i8 {
         1
     } else if line.starts_with("Warning: Externalizing function:")
         || line.starts_with("Warning: not lowering an initializer for a global struct:")
+        || (line.starts_with("Warning: found") && line.ends_with("possible reads of undefined values"))
     {
         4
     } else if backends_common::is_expected_panic(&line, &expect, &name) || line == "unsat" {
