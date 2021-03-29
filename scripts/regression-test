@@ -5,6 +5,7 @@ set -e
 readonly FLAGS="--backend=klee --verbose --clean"
 (cd demos/simple/annotations; ./verify.sh)
 (cd demos/simple/klee; ./verify.sh)
+(cd demos/simple/seahorn; ./verify.sh)
 (cd demos/simple/errors; ./verify.sh)
 cargo-verify ${FLAGS} --tests --manifest-path=verification-annotations/Cargo.toml
 cargo-verify ${FLAGS} --tests --manifest-path=compatibility-test/Cargo.toml
