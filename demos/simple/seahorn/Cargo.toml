@@ -1,0 +1,13 @@
+[package]
+name = "try-seahorn"
+version = "0.1.0"
+authors = [""]
+edition = "2018"
+
+[dependencies]
+verification-annotations = { path="/home/rust-verification-tools/verification-annotations" }
+# serde = { version = "1.0", features = ["derive"] }
+
+[features]
+# cargo-verify expects the feature `verifier-<backend>`
+verifier-seahorn = ["verification-annotations/verifier-seahorn"]
