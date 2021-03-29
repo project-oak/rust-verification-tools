@@ -27,7 +27,7 @@ and the `cargo-verify` script
 as described [here][Using PropVerify].
 This note describes how to use the KLEE directly
 in case you wonder how `cargo-verify` works or want
-to add support for a different tool.6
+to add support for a different tool.
 This is going to be a fairly low-level description and most
 people will be happier not knowing how the sausage is made.
 (Since there are so many low-level details, there is a risk
@@ -64,8 +64,8 @@ The Rust compiler and KLEE are in the Dockerfile so start the Docker image
 by running
 
 ``` shell
-cd demos/simple/klee
 docker/run
+cd demos/simple/klee
 ```
 
 All remaining commands in this file will be run in this docker
