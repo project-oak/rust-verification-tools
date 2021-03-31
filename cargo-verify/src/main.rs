@@ -609,7 +609,15 @@ fn get_build_envs(opt: &Opt) -> CVResult<Vec<(String, String)>> {
         "-Coverflow-checks=yes",
         "-Cno-vectorize-loops", // KLEE does not support vector intrinisics
         "-Cno-vectorize-slp",
-        "-Ctarget-feature=-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2",
+
+        // We used to compile with -mmx,-sse,-sse2
+        // That cause linking errors during LTO because SSE2 affects the calling convention
+        // so, as a compromise, we only disable sse3 and later.
+        "-Ctarget-feature=-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2",
+        // We enable soft-float to compensate for disabling SSE2 while building the
+        // standard libraries.
+        "-Csoft-float=yes",
+
         // use clang to link with LTO - to handle calls to C libraries
         "-Clinker-plugin-lto",
         "-Clinker=clang-10",
