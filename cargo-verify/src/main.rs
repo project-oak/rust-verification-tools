@@ -617,7 +617,6 @@ fn get_build_envs(opt: &Opt) -> CVResult<Vec<(String, String)>> {
         "-Clto", // Generate linked bitcode for entire crate
         "-Cembed-bitcode=yes",
         "--emit=llvm-bc",
-        // Any value except 0 seems to work
         "--cfg=verify", // Select verification versions of libraries
         // "-Ccodegen-units=1",     // Optimize a bit more?
         "-Zpanic_abort_tests", // Panic abort is simpler
