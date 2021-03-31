@@ -105,6 +105,15 @@ pub struct Opt {
     #[structopt(short, long)]
     clean: bool,
 
+    /// Build LLVM bitcode file and save to "PATH" instead of
+    /// running verifier on it.
+    #[structopt(
+        short, long,
+        value_name = "PATH",
+        parse(from_os_str),
+    )]
+    output: Option<PathBuf>,
+
     /// Verify all tests instead of 'main'
     #[structopt(short, long)]
     tests: bool,
@@ -396,6 +405,12 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
     let bcfile = build(&opt, &package, &target)?;
 
     info_at!(&opt, Verbosity::Informative, "  Generated binary {}", bcfile.to_string_lossy());
+
+    if let Some(output) = &opt.output {
+        std::fs::copy(bcfile, output)?;
+        info_at!(&opt, Verbosity::Informative, "Wrote binary to {}", output.to_string_lossy());
+        return Ok(Status::Verified)
+    }
 
     // Get the functions we need to verify, and their mangled names.
     let tests = if opt.tests || !opt.test.is_empty() {
