@@ -15,7 +15,5 @@ Check that the blog builds and looks ok:
 
 ``` shell
 # cd docs
-bundle exec jekyll serve
+bundle exec jekyll serve -o -I -l
 ```
-
-and point your browser to [here](http://127.0.0.1:4000/rust-verification-tools/).
