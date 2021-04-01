@@ -4,25 +4,24 @@ title: "Using Seahorn"
 permalink: /using-seahorn/
 ---
 
-(This post borrows heavily from the [Using KLEE] post)
 
 [SeaHorn] is an automated analysis framework for [LLVM]-based languages.
-The master branch of [SeaHorn] uses [LLVM] 5.0 at the moment, which is not
-compatible with [rustc] (the Rust compiler).
-We therefore use the [dev10] branch of [SeaHorn] instead, which supports [LLVM]
-10.
+For users [SeaHorn] provides a push-button verification tool, and for
+researchers its modular design provides an extensible and customizable
+framework for experimenting with new software verification techniques.
+In contrast to [KLEE] (see previous [post][Using KLEE]) which uses symbolic
+execution, [SeaHorn] uses software model checking and abstract interpretation.
+This, we hope, will provide better results in some cases.
 
-To verify a Rust program using SeaHorn we will:
+In this post we will do a walk-through example of using [SeaHorn] to verify a
+Rust program.
+We will:
 1. Compile the program to generate bitcode (LLVM IR);
 1. Run cvt-patch-llvm on the bitcode;
 1. Run SeaHorn on the patched bitcode; and
 1. Run SeaHorn again to produce a trace of the bug.
 
-
-
-<!-- With minor variations, it should be possible to adapt the basic steps of -->
-<!-- compiling Rust programs to generate LLVM for use with other LLVM-based -->
-<!-- verification tools. -->
+(This post borrows heavily from the [Using KLEE] post)
 
 _Note:
 The recommended way to use [SeaHorn] is with the `propverify` library and the
@@ -35,10 +34,6 @@ happier not knowing how the sausage is made.
 to update this document so you may have to [use the source][cargo-verify source].)_
 
 ## A small test program
-
-<!-- As a running example, we will use the same example that we used to explain  -->
-<!-- [how to use KLEE][Using KLEE], which is the same example that we used to explain  -->
-<!-- [how to use the verification-annotations crate][Using verification-annotations]. -->
 
 This code is in [demos/simple/seahorn/src/main.rs] and the shell commands in this
 file are in [demos/simple/seahorn/verify.sh].
@@ -148,12 +143,27 @@ At least for simple cases, we can refer to both files as
 
 Having built a bitcode file containing the program and all the libraries that it
 depends on, we now need to fix a few things in the bitcode file to make it
-suitable for [SeaHorn].
-This includes deleting the `main` function rustc added, replacing panic handling
-(calling `__VERIFIER_error` instead), and removing the body of `_eprint` and
-`_print` (the internal implementations of the printing macros).
+suitable for [SeaHorn]:
+* Delete the `main` function rustc added.
+In the LLVM IR code that the Rust compiler generates the `main` function from
+main.rs is renamed to something like
+`_ZN11try_seahorn4main17h8733453d83f64f5aE`.
+The entry point to the LLVM IR code is a new `main` function that does some
+initialisation and then calls the original main function.
+This initialisation is not handled very well by [SeaHorn] at the moment, so we
+just delete the `main` function and tell [SeaHorn] the entry point is the
+original main function with the mangled name.
+Note that it is not enough to just tell [SeaHorn] to use the mangled name as the
+entry point, we also need to delete `main`, otherwise [SeaHorn] gets confused.
+* Remove the body of `_eprint` and `_print`.
+Those two functions are the internal implementations of Rust's std printing
+macros.
+[SeaHorn] can't handle those functions at the moment.
+* Replace panic handling.
+Instead of the regular panic handling we call `__VERIFIER_error` which [SeaHorn]
+will report as an error (if reachable).
 
-The `rvt-patch-llvm` tool can do all this for us:
+The `rvt-patch-llvm` tool can do all that for us:
 
 ``` shell
 rvt-patch-llvm -o try_seahorn.patch.bc --seahorn -vv target/debug/deps/try_seahorn-*.bc
@@ -212,9 +222,26 @@ As [SeaHorn] is an LLVM-based tool, the trace is an LLVM IR trace.
 Moreover, [SeaHorn] does a few transformations and optimisations to the program,
 and the trace is over the resulting program.
 Fortunately, [SeaHorn] preserves some debug information that allows it to print
-source code line-numbers along the trace.
+source code line-numbers along the trace (in Cyan).
 
-Scroll up the trace until you find this:
+The end of the trace is usually code from rust/src/libcore/fmt/mod.rs that
+handles the formatting for a print function that reports the assertion that
+failed.
+Scroll up the trace until you find the first line-number that is from main.rs.
+This should be the line where the assertion that failed is.
+In this case it is "[src/main.rs:10]".
+To find the value of `r` that caused the assertion to fail, keep scrolling up
+until you find "[src/main.rs:9]" (the line where `r` is assigned its value):
+
+``` shell
+  %_18.0.i.i = extractvalue { i32, i1 } %_9, 0, !dbg !180
+  %_18.0.i.i (0xf4240:bv(32)) [src/main.rs:9]
+  r = _18.0.i.i (0xf4240:bv(32))
+```
+
+This violates the `r < 1000000` part of the assertion (0xf4240 is 1000000).
+If you keep scrolling up you can also find the values that were assigned to `a`
+and `b`:
 
 ``` shell
   [...]
@@ -230,16 +257,11 @@ enter: default
   [...]
 ```
 
-in this piece of the trace you can see that both `a` and `b` are assigned the
-value 1000, which results in `r` being assigned 0xf4240 (1000000):
-
-``` shell
-  %_18.0.i.i = extractvalue { i32, i1 } %_9, 0, !dbg !180
-  %_18.0.i.i (0xf4240:bv(32)) [src/main.rs:9]
-  r = _18.0.i.i (0xf4240:bv(32))
-```
-
-This violates the `r < 1000000` part of the assertion.
+Unfortunately, [SeaHorn] reports a line number from the verification-annotations
+crate for those assignments.
+In general, you can look for calls to `__VERIFIER_nondet_<type>` in the trace to
+find the concrete values [SeaHorn] picked for
+`verifer_nondet`/`abstract_value`/`symbolic`.
 
 ## Handling larger programs
 
