@@ -17,7 +17,7 @@ In this post we will do a walk-through example of using [SeaHorn] to verify a
 Rust program.
 We will:
 1. Compile the program to generate bitcode (LLVM IR);
-1. Run cvt-patch-llvm on the bitcode;
+1. Run rvt-patch-llvm on the bitcode;
 1. Run SeaHorn on the patched bitcode; and
 1. Run SeaHorn again to produce a trace of the bug.
 
