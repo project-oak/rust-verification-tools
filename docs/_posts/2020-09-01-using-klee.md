@@ -4,6 +4,7 @@ title: "Using KLEE"
 permalink: /using-klee/
 ---
 
+![KLEE logo](https://klee.github.io/images/klee.svg){: style="float: left; width: 10%; padding: 1%"}
 One of the most straightforward and most solid automatic verification tools is the [KLEE]
 symbolic execution tool that can be used to search for bugs in programs.
 KLEE was originally developed for C but, because [KLEE] and the Rust compiler

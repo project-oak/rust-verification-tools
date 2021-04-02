@@ -4,6 +4,7 @@ title: "Using command-line arguments ('argv')"
 permalink: /using-argv/
 ---
 
+![LLVM logo](https://www.llvm.org/img/DragonSmall.png){: style="float: left; width: 10%; padding: 1%"}
 One important difference between C and Rust is that the C main function expects
 to be given a list of command line arguments via `argc`/`argv` function
 parameters while Rust programs access their command line arguments via the

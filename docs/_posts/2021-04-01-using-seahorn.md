@@ -4,7 +4,7 @@ title: "Using Seahorn"
 permalink: /using-seahorn/
 ---
 
-
+![SeaHorn logo](https://seahorn.github.io/images/seahorn-logo.png){: style="float: left; width: 10%; padding: 1%"}
 [SeaHorn] is an automated analysis framework for [LLVM]-based languages.
 For users [SeaHorn] provides a push-button verification tool, and for
 researchers its modular design provides an extensible and customizable

@@ -3,6 +3,7 @@ layout: post
 title: "Profiling Rust verification"
 ---
 
+![KLEE logo](https://klee.github.io/images/klee.svg){: style="float: left; width: 10%; padding: 1%"}
 Automatic formal verification is usually pushing up against what Leino calls ["the
 decidability ceiling"][leino:informatics:2001]: pushing the tools beyond what
 they can be guaranteed to solve in some reasonable time, taking the risk that

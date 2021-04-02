@@ -4,6 +4,7 @@ title: "Using the `verification-annotations` crate"
 permalink: /using-annotations/
 ---
 
+![Rust logo](https://www.rust-lang.org/static/images/rust-logo-blk.svg){: style="float: left; width: 10%; padding: 1%"}
 Our tools for verifying Rust programs are based on the `verification-annotations` API
 that provides a common API for multiple tools to use.
 While we recommend that you use the [higher-level `propverify` library][using propverify]

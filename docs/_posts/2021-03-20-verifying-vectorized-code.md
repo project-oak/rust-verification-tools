@@ -3,6 +3,7 @@ layout: post
 title: Verifying hand-vectorized Rust code
 ---
 
+![Rust logo](https://www.rust-lang.org/static/images/rust-logo-blk.svg){: style="float: left; width: 10%; padding: 1%"}
 One of the major themes in our work on Rust verification is
 eliminating verification obstacles: things that mean that you
 can't even run a verification tool on your code.

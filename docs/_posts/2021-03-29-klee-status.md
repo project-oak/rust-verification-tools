@@ -3,6 +3,7 @@ layout: post
 title: Rust/KLEE status update
 ---
 
+![KLEE logo](https://klee.github.io/images/klee.svg){: style="float: left; width: 10%; padding: 1%"}
 A lot of [our work on Rust formal verification][RVT git repo] is based on [LLVM] based tools
 and, in particular, the [KLEE] symbolic execution tool that can be used
 to find bugs and to generate high coverage testsuites.

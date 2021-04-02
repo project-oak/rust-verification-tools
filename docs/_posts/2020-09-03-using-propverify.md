@@ -4,6 +4,7 @@ title: "Using the `propverify` library to verify Rust programs"
 permalink: /using-propverify/
 ---
 
+![Rust logo](https://www.rust-lang.org/static/images/rust-logo-blk.svg){: style="float: left; width: 10%; padding: 1%"}
 The goal of the tools and library in this repository is to let you verify
 interesting things about non-trivial programs.
 Unfortunately, interesting/non-trivial programs are too large for introducing
