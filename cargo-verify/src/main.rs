@@ -293,6 +293,9 @@ fn process_command_line() -> CVResult<Opt> {
     opt.backend = match opt.backend_arg {
         // Check if the backend that was specified on the CL is installed.
         Some(Backend::Proptest) => {
+            if opt.output.is_some() {
+                Err("backend proptest does not support --output")?;
+            }
             assert!(proptest::check_install());
             Backend::Proptest
         }
@@ -404,12 +407,12 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
     info_at!(&opt, Verbosity::Informative, "  Building {} for verification", package);
     let bcfile = build(&opt, &package, &target)?;
 
-    info_at!(&opt, Verbosity::Informative, "  Generated binary {}", bcfile.to_string_lossy());
+    info_at!(&opt, Verbosity::Informative, "  Generated LLVM bitcode file {}", bcfile.to_string_lossy());
 
     if let Some(output) = &opt.output {
         std::fs::copy(bcfile, output)?;
-        info_at!(&opt, Verbosity::Informative, "Wrote binary to {}", output.to_string_lossy());
-        return Ok(Status::Verified)
+        info_at!(&opt, Verbosity::Informative, "Wrote LLVM bitcode file to {}", output.to_string_lossy());
+        exit(0) // return immediately, do not print status
     }
 
     // Get the functions we need to verify, and their mangled names.
