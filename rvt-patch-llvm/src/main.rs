@@ -8,6 +8,7 @@
 
 use log::info;
 use regex::Regex;
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -45,15 +46,19 @@ struct Opt {
     output: PathBuf,
 
     /// Eliminate feature tests
-    #[structopt(short, long)]
+    #[structopt(long)]
     features: bool,
 
     /// Call initializers from main
-    #[structopt(short, long)]
+    #[structopt(long)]
     initializers: bool,
 
+    /// Substitute function calls for SIMD intrinsic operations
+    #[structopt(long)]
+    intrinsics: bool,
+
     /// SeaHorn preparation (conflicts with --initializers)
-    #[structopt(short, long, conflicts_with = "initializers")]
+    #[structopt(long, conflicts_with = "initializers")]
     seahorn: bool,
 
     /// Increase message verbosity
@@ -99,6 +104,29 @@ fn main() {
 
     if opt.initializers {
         handle_initializers(&context, &mut module);
+    }
+
+    if opt.intrinsics {
+        // intrinsics
+        let is = get_function(&module, |name| name.starts_with("llvm.x86"));
+
+        // simd_emulation functions
+        let rs = get_function(&module, |name| name.starts_with("llvm_x86"));
+        let rs: HashMap<&str, FunctionValue> = rs.iter().filter_map(|f| f.get_name().to_str().ok().map(|nm| (nm, *f))).collect();
+
+        info!("Found simd_emulation functions {:?}", rs.keys());
+
+        for i in is {
+            let i_name = i.get_name();
+            let r_name = i_name.to_str().expect("valid UTF8 symbol name");
+            let r_name: String= r_name.replace(".", "_");
+            if let Some(r) = rs.get(r_name.as_str()) {
+                info!("Replacing intrinsic {:?} with {}", i_name, r_name);
+                i.replace_all_uses_with(*r);
+            } else {
+                info!("Did not find replacement for {:?}", i_name);
+            }
+        }
     }
 
     if opt.seahorn {
