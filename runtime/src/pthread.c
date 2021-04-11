@@ -1,4 +1,4 @@
-// Copyright 2020-2021 The Propverify authors
+// Copyright 2021 The Rust verification tools Authors
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
