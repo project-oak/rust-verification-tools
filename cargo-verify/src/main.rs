@@ -562,15 +562,20 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
     // build scripts
     let new_bc_file = add_pre_ext(&bc_file, "link");
     let rvt_dir = std::env::var("RVT_DIR")?;
-    let backend_lc = format!("{}", opt.backend).to_lowercase();
-    let runtime = format!("{}/runtime/rvt-{}.bc", rvt_dir, backend_lc);
-    let runtime = PathBuf::from(&runtime);
+    let rvt_dir = PathBuf::from(rvt_dir);
+    let runtime = rvt_dir.clone()
+        .append("runtime")
+        .append(format!("rvt-{}.bc", opt.backend.to_string().to_lowercase()));
+    let simd_emulation = rvt_dir.clone()
+        .append("simd_emulation")
+        .append("simd_emulation.bc");
     info_at!(
         &opt,
         Verbosity::Minor,
-        "  Linking {}, {} and [{}] to produce {}",
+        "  Linking {}, {}, {} and [{}] to produce {}",
         bc_file.to_string_lossy(),
         runtime.to_string_lossy(),
+        simd_emulation.to_string_lossy(),
         c_files
             .iter()
             .map(|p| p.to_string_lossy())
@@ -583,6 +588,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
         .arg("-o")
         .arg(&new_bc_file)
         .arg(runtime)
+        .arg(simd_emulation)
         .arg(&bc_file)
         .args(&c_files)
         .latin1_output_info(&opt, Verbosity::Major)?;
@@ -598,11 +604,11 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
     // todo: This is probably useful with all verifiers - but
     // making it KLEE-only until we have a chance to test it.
     if opt.backend == Backend::Klee {
-        info_at!(&opt, Verbosity::Major, "  Patching LLVM file for initializers and feature tests");
+        info_at!(&opt, Verbosity::Major, "  Patching LLVM file for initializers, feature tests, and SIMD");
         let new_bc_file = add_pre_ext(&bc_file, "patch-init-feat");
         patch_llvm(
             &opt,
-            &["--initializers", "--features"],
+            &["--initializers", "--features", "--intrinsics"],
             &bc_file,
             &new_bc_file,
         )?;
@@ -628,7 +634,7 @@ fn get_build_envs(opt: &Opt) -> CVResult<Vec<(String, String)>> {
         "-Coverflow-checks=yes",
         "-Cno-vectorize-loops", // KLEE does not support vector intrinisics
         "-Cno-vectorize-slp",
-        "-Ctarget-feature=-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2",
+        "-Ctarget-feature=-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2",
         // use clang to link with LTO - to handle calls to C libraries
         "-Clinker-plugin-lto",
         "-Clinker=clang-10",
