@@ -1,15 +1,5 @@
 FROM rvt_stp:latest
 
-# Temporary patch until we update base
-# Install python2 - because uclibc needs it
-USER root
-ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get --yes update \
-  && apt-get install --no-install-recommends --yes \
-  python \
-  # Cleanup
-  && apt-get clean
-
 ARG USERNAME
 
 WORKDIR ${USER_HOME}

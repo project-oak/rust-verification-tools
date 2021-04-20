@@ -51,6 +51,7 @@ RUN apt-get --yes update \
     argparse \
     colored \
     lit \
+    pyyaml \
     tabulate \
     termcolor \
     toml \
