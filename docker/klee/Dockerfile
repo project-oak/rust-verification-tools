@@ -1,17 +1,8 @@
-FROM rvt_stp:latest
-
-# Temporary patch until we update base
-# Install python2 - because uclibc needs it
-USER root
-ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get --yes update \
-  && apt-get install --no-install-recommends --yes \
-  python \
-  # Cleanup
-  && apt-get clean
+FROM rvt_solvers:latest
 
 ARG USERNAME
 
+USER root
 WORKDIR ${USER_HOME}
 COPY build_googletest .
 COPY build_klee .
@@ -25,5 +16,9 @@ ENV GTEST_DIR=${USER_HOME}/googletest-release-${GTEST_VERSION}
 RUN sh build_googletest
 
 ARG UCLIBC_VERSION
+
+ARG LLVM_VERSION
+ENV LLVM_VERSION=${LLVM_VERSION}
+
 ARG KLEE_VERSION
 RUN sh build_klee

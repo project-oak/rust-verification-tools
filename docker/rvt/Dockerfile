@@ -6,37 +6,16 @@ ARG USERNAME=user-name-goes-here
 ARG USER_UID=1000
 ARG USER_GID=${USER_UID}
 
-# Directory we mount RVT repo in
-ENV RVT_DIR=/home/rust-verification-tools
-
-# The following replicates code in base_Dockerfile and
-# can be deleted next time I do a full rebuild of the images
-USER root
-RUN apt-get install -y sudo libffi-dev
-RUN echo "${USERNAME}  ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-
 # Switch to USERNAME and install tools / set environment
 USER ${USERNAME}
 WORKDIR ${USER_HOME}
 ENV USER=${USERNAME}
 
+ENV PATH="${PATH}:${USER_HOME}/bin"
+ENV PATH="${PATH}:${USER_HOME}/.cargo/bin"
+
 # Install rustup
-ENV PATH="${USER_HOME}/.cargo/bin:${PATH}"
-RUN curl --location https://sh.rustup.rs > /tmp/rustup \
-  && sh /tmp/rustup -y --default-toolchain=none \
-  && rustup --version \
-  && rm /tmp/rustup
-
-ENV PATH="${RUSTC_DIR}/build/x86_64-unknown-linux-gnu/stage1-tools-bin:${PATH}"
-ENV PATH="${RUSTC_DIR}/build/x86_64-unknown-linux-gnu/llvm/bin:${PATH}"
-ENV PATH="${USER_HOME}/.cargo/bin:${PATH}"
-ENV PATH="$PATH:${RVT_DIR}/scripts"
-ENV PATH="$PATH:${RVT_DIR}/scripts/bin"
-ENV PATH="$PATH:${USER_HOME}/bin"
-
-# Install the toolchain that we built
-RUN rustup toolchain link stage1 ${RUSTC_DIR}/build/x86*/stage1 \
-  && rustup default stage1
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 # Install the nightly toolchain - we use it to build some of our tools.
 # We do not set it as the default though because we want to use the
@@ -44,24 +23,31 @@ RUN rustup toolchain link stage1 ${RUSTC_DIR}/build/x86*/stage1 \
 # and, in particular, we have to use a version of rustc that uses LLVM-10.
 RUN rustup toolchain install nightly
 
-# Build LLVM file patcher by first copying the source into this image
-# and then building it.
-#
-# Note that before invoking docker-build, you need to arrange that the
-# source is a symlink to the actual source directory.
-#
-# Note too that this is installed in ~/bin but that if you explicitly rebuild
-# it in a docker session, then it will go into ${RVT_DIR}/scripts/bin
-#
-# There seems to be no way around this complex collection of hacks.
-COPY --chown=${USER_UID}:${USER_GID} ./rvt-patch-llvm ${USER_HOME}/rvt-patch-llvm
-RUN cargo install --root=${USER_HOME} --path=${USER_HOME}/rvt-patch-llvm
+# Version of rustc that our tools support
+# This is the default
+ARG RUSTC_VERSION
+ENV RUSTC_VERSION=${RUSTC_VERSION}
+RUN echo Installing ${RUSTC_VERSION}
+RUN rustup toolchain install ${RUSTC_VERSION} --profile=minimal
+RUN rustup default ${RUSTC_VERSION}
 
-# Build cargo-verify too
-COPY --chown=${USER_UID}:${USER_GID} ./cargo-verify ${USER_HOME}/cargo-verify
-RUN cargo +nightly install --root=${USER_HOME} --path=${USER_HOME}/cargo-verify
+# Prebuild all the tools and libraries
+# Note that we can't mount RVT_DIR while we do this - so we have to make
+# a copy and build from there. (Which is pretty hacky)
+ENV RVT_DIR=${USER_HOME}/rvt_dir
+RUN mkdir ${RVT_DIR}
+COPY --chown=${USER_UID}:${USER_GID} . ${RVT_DIR}
+WORKDIR ${RVT_DIR}
+RUN ${RVT_DIR}/docker/init
+RUN rm -r ${RVT_DIR}
+
+# Directory we mount RVT repo in
+# Note that this overrides value we just built
+ENV RVT_DIR=/home/rust-verification-tools
+
+ENV PATH="${PATH}:${RVT_DIR}/scripts"
+ENV PATH="${PATH}:${RVT_DIR}/scripts/bin"
 
 # Create a bashrc file
 RUN echo "export PATH=\"${PATH}\"" >> ${USER_HOME}/.bashrc \
   && echo "ulimit -c0" >> ${USER_HOME}/.bashrc
-

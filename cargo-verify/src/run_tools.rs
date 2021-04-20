@@ -271,7 +271,7 @@ pub fn count_symbols(opt: &Opt, bcfile: &Path, fs: &[&str]) -> CVResult<usize> {
         bcfile.to_string_lossy()
     );
 
-    let mut cmd = Command::new("llvm-nm");
+    let mut cmd = Command::new(format!("llvm-nm-{}", opt.llvm_version));
     cmd.arg("--defined-only").arg(bcfile);
     let (stdout, _) = cmd.output_info(&opt, Verbosity::Trivial)?;
 

@@ -97,6 +97,15 @@ pub struct Opt {
     #[structopt(long, value_name = "PATH", env = "SEAHORN_VERIFY_C_COMMON_DIR")]
     seahorn_verify_c_common_dir: Option<String>,
 
+    /// Which LLVM version to use (e.g., 10 or 11)
+    #[structopt(
+        long,
+        value_name = "VERSION",
+        env = "LLVM_VERSION",
+        default_value = "10"
+    )]
+    llvm_version: String,
+
     /// Space or comma separated list of features to activate
     #[structopt(
         long,
@@ -623,7 +632,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
         new_bc_file.to_string_lossy()
     );
     // Link multiple bitcode files together.
-    Command::new("llvm-link")
+    Command::new(format!("llvm-link-{}", opt.llvm_version))
         .arg("-o")
         .arg(&new_bc_file)
         .arg(runtime)
@@ -680,8 +689,8 @@ fn get_build_envs(opt: &Opt) -> CVResult<Vec<(String, String)>> {
         "-Ctarget-feature=-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2",
         // use clang to link with LTO - to handle calls to C libraries
         "-Clinker-plugin-lto",
-        "-Clinker=clang-10",
-        "-Clink-arg=-fuse-ld=lld",
+        format!("-Clinker=clang-{}", opt.llvm_version).as_str(),
+        format!("-Clink-arg=-fuse-ld=lld-{}", opt.llvm_version).as_str(),
     ]
     .join(" ");
 
@@ -705,7 +714,7 @@ fn get_build_envs(opt: &Opt) -> CVResult<Vec<(String, String)>> {
         (String::from("RUSTFLAGS"), rustflags),
         (String::from("CRATE_CC_NO_DEFAULTS"), String::from("true")),
         (String::from("CFLAGS"), String::from("-flto=thin")),
-        (String::from("CC"), String::from("clang-10")),
+        (String::from("CC"), format!("clang-{}", opt.llvm_version)),
     ])
 }
 
@@ -848,7 +857,7 @@ fn mangle_functions(
         bcfile.to_string_lossy()
     );
 
-    let (stdout, _) = Command::new("llvm-nm")
+    let (stdout, _) = Command::new(format!("llvm-nm-{}", opt.llvm_version))
         .arg("--defined-only")
         .arg(bcfile)
         .output_info(&opt, Verbosity::Trivial)?;

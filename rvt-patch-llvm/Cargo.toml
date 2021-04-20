@@ -11,7 +11,9 @@ log  = "0.4"
 stderrlog = "0.5"
 structopt = "0.3"
 regex = "0.2"
-# inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm10-0"] }
-# inkwell = { features = ["llvm10-0"] }
-inkwell = { git = "https://github.com/alastairreid/inkwell", features = ["llvm10-0"] }
-# inkwell = { path = "../../inkwell", features = ["llvm10-0"] }
+
+inkwell = { git = "https://github.com/alastairreid/inkwell" }
+
+[features]
+llvm10 = ["inkwell/llvm10-0"]
+llvm11 = ["inkwell/llvm11-0"]

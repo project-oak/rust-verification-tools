@@ -5,12 +5,13 @@ set -e
 export RUSTFLAGS="-Clto -Cembed-bitcode=yes --emit=llvm-bc $RUSTFLAGS"
 export RUSTFLAGS="--cfg=verify $RUSTFLAGS"
 export RUSTFLAGS="-Warithmetic-overflow -Coverflow-checks=yes $RUSTFLAGS"
-export RUSTFLAGS="-Zpanic_abort_tests -Cpanic=abort $RUSTFLAGS"
+# export RUSTFLAGS="-Zpanic_abort_tests $RUSTFLAGS"
+export RUSTFLAGS="-Cpanic=abort $RUSTFLAGS"
 
 # optional for this simple example
 export RUSTFLAGS="-Copt-level=1 $RUSTFLAGS"
 export RUSTFLAGS="-Cno-vectorize-loops -Cno-vectorize-slp $RUSTFLAGS"
-export RUSTFLAGS="-Ctarget-feature=-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2 $RUSTFLAGS"
+export RUSTFLAGS="-Ctarget-feature=-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2 $RUSTFLAGS"
 
 cargo clean
 cargo build --features=verifier-klee

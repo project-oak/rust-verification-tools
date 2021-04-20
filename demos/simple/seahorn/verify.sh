@@ -13,12 +13,13 @@ export RUSTFLAGS="-Zpanic_abort_tests -Cpanic=abort $RUSTFLAGS"
 # export RUSTFLAGS="-Cno-vectorize-loops -Cno-vectorize-slp $RUSTFLAGS"
 # export RUSTFLAGS="-Ctarget-feature=-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2 $RUSTFLAGS"
 
+cargo clean
 cargo build --features=verifier-seahorn
 
 rvt-patch-llvm -o try_seahorn.patch.bc --seahorn -vv target/debug/deps/try_seahorn-*.bc
 
 # Find the mangled main function
-MAIN="$(llvm-nm --defined-only try_seahorn.patch.bc | grep main | cut -d ' ' -f3)"
+MAIN="$(llvm-nm-${LLVM_VERSION} --defined-only try_seahorn.patch.bc | grep main | cut -d ' ' -f3)"
 
 # verify using SeaHorn
 rm -rf seaout

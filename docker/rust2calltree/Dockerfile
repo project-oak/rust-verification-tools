@@ -7,6 +7,7 @@ ARG USER_UID=1000
 ARG USER_GID=${USER_UID}
 
 # Install more packages
+# We don't install this in base because they are HUGE and optional
 USER root
 RUN apt-get --yes update \
   && apt-get install --no-install-recommends --yes \
@@ -19,6 +20,3 @@ RUN apt-get --yes update \
 USER ${USERNAME}
 WORKDIR ${USER_HOME}
 ENV USER=${USERNAME}
-
-COPY --chown=${USER_UID}:${USER_GID} ./rust2calltree ${USER_HOME}/rust2calltree
-RUN cargo install --root=${USER_HOME} --path=${USER_HOME}/rust2calltree
