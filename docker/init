@@ -5,12 +5,10 @@ set -e
 # Build libraries
 make -C ${RVT_DIR}/runtime TGT=klee
 make -C ${RVT_DIR}/runtime TGT=seahorn
-
-# The following will generate warnings - these are harmless
 make -C ${RVT_DIR}/simd_emulation
 
 # Build tools
 mkdir -p ${USER_HOME}/bin
 cargo +nightly install --root=${USER_HOME} --path=${RVT_DIR}/rust2calltree
-cargo +nightly install --root=${USER_HOME} --path=${RVT_DIR}/rvt-patch-llvm
+cargo +nightly install --features=llvm${LLVM_VERSION} --root=${USER_HOME} --path=${RVT_DIR}/rvt-patch-llvm
 cargo +nightly install --root=${USER_HOME} --path=${RVT_DIR}/cargo-verify

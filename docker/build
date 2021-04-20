@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
 
+echo To build LLVM11 version, use 'env LLVM11=yes docker/build'
+
 set -e
-
-# Before building the docker image, we ensure that the
-# rvt-patch-llvm source code will be available when building rvt
-# by copying it into a subdirectory of docker/rvt.
-# (Note that it is not sufficient to use a symlink - you actually
-# have to make a copy. I hate Docker so much right now.)
-cargo clean --manifest-path rvt-patch-llvm/Cargo.toml
-rm -rf docker/rvt/rvt-patch-llvm
-cp -a `pwd`/rvt-patch-llvm docker/rvt/rvt-patch-llvm
-
-# Copy cargo-verify over
-cargo clean --manifest-path cargo-verify/Cargo.toml
-rm -rf docker/rvt/cargo-verify
-cp -a `pwd`/cargo-verify docker/rvt/cargo-verify
-
-# Copy rust2calltree over
-cargo clean --manifest-path rust2calltree/Cargo.toml
-rm -rf docker/rust2calltree/rust2calltree
-cp -a `pwd`/rust2calltree docker/rust2calltree/rust2calltree
 
 # Build each image
 #
@@ -32,12 +15,15 @@ cp -a `pwd`/rust2calltree docker/rust2calltree/rust2calltree
 # git repos.
 
 (cd docker/base    && ../mkimage rvt_base       Dockerfile)
-(cd docker/rustc   && ../mkimage rvt_rustc      Dockerfile)
-(cd docker/minisat && ../mkimage rvt_minisat    Dockerfile)
-(cd docker/stp     && ../mkimage rvt_stp        Dockerfile)
+(cd docker/solvers && ../mkimage rvt_solvers    Dockerfile)
 (cd docker/klee    && ../mkimage rvt_klee       Dockerfile)
-(cd docker/z3      && ../mkimage rvt_z3         Dockerfile)
-(cd docker/yices   && ../mkimage rvt_yices      Dockerfile)
 (cd docker/seahorn && ../mkimage rvt_seahorn    Dockerfile)
-(cd docker/rvt     && ../mkimage rvt            Dockerfile)
+
+# This does not run in a subdirectory so it will copy everything over.
+# This is really unfortunate but it allows us to run docker/init
+# to prebuild all our scripts/libraries.
+docker/mkimage rvt docker/rvt/Dockerfile
+
+# Optional: verification profiling support
+# Note that this creates a VERY LARGE image including X11, kcachegrind and lots more
 (cd docker/rust2calltree && ../mkimage rvt_r2ct Dockerfile)

@@ -12,11 +12,11 @@ TGT = klee
 # this rule comes first to make sure that it is the default target
 default: rvt-$(TGT).bc
 
-CC = clang-10
+CC = clang-${LLVM_VERSION}
 CFLAGS = -flto=thin
 CFLAGS += -O1
 
-LINK = llvm-link-10
+LINK = llvm-link-${LLVM_VERSION}
 
 C_SRCS := $(wildcard src/*.c)
 OBJS := $(patsubst src/%.c, build_$(TGT)/%.o, $(C_SRCS))
