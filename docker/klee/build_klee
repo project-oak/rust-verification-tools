@@ -2,8 +2,6 @@
 
 set -e
 
-LLVM_VERSION=10
-
 readonly LLVMCC=`which clang-${LLVM_VERSION}`
 readonly LLVMCXX=`which clang++-${LLVM_VERSION}`
 readonly LLVM_CONFIG=`which llvm-config-${LLVM_VERSION}`

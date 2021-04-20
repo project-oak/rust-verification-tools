@@ -1,6 +1,8 @@
 FROM rvt_yices:latest
 
 ARG USERNAME
+ARG LLVM_VERSION=10
+ENV LLVM_VERSION=${LLVM_VERSION}
 
 WORKDIR ${USER_HOME}
 COPY build_googletest .

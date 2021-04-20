@@ -97,6 +97,10 @@ pub struct Opt {
     #[structopt(long, value_name = "PATH", env = "SEAHORN_VERIFY_C_COMMON_DIR")]
     seahorn_verify_c_common_dir: Option<String>,
 
+    /// Which LLVM version to use (e.g., 10 or 11)
+    #[structopt(long, value_name = "VERSION", env = "LLVM_VERSION", default_value = "10")]
+    llvm_version: String,
+
     /// Space or comma separated list of features to activate
     #[structopt(long, value_name = "FEATURES", number_of_values = 1, use_delimiter = true)]
     features: Vec<String>,
@@ -584,7 +588,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
         new_bc_file.to_string_lossy()
     );
     // Link multiple bitcode files together.
-    Command::new("llvm-link-10")
+    Command::new(format!("llvm-link-{}", opt.llvm_version))
         .arg("-o")
         .arg(&new_bc_file)
         .arg(runtime)
@@ -801,7 +805,7 @@ fn mangle_functions(
         bcfile.to_string_lossy()
     );
 
-    let (stdout, _) = Command::new("llvm-nm-10")
+    let (stdout, _) = Command::new(format!("llvm-nm-{}", opt.llvm_version))
         .arg("--defined-only")
         .arg(bcfile)
         .output_info(&opt, Verbosity::Trivial)?;
