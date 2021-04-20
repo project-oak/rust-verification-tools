@@ -5,8 +5,6 @@ set -e
 # Build libraries
 make -C ${RVT_DIR}/runtime TGT=klee
 make -C ${RVT_DIR}/runtime TGT=seahorn
-
-# The following will generate warnings - these are harmless
 make -C ${RVT_DIR}/simd_emulation
 
 # Build tools

@@ -10,6 +10,9 @@ RUN apt-get --yes update \
   clang-10 \
   clang-format-10 \
   clang-tools-10 \
+  clang-11 \
+  clang-format-11 \
+  clang-tools-11 \
   gcc-multilib \
   g++-7-multilib \
   cmake \
@@ -31,6 +34,9 @@ RUN apt-get --yes update \
   libgmpxx4ldbl \
   lld-10 \
   llvm-10 \
+  llvm-10-dev \
+  llvm-11 \
+  llvm-11-dev \
   ncurses-doc \
   ninja-build \
   perl \

@@ -7,6 +7,7 @@ ARG USER_UID=1000
 ARG USER_GID=${USER_UID}
 
 # Install more packages
+# We don't install this in base because they are HUGE and optional
 USER root
 RUN apt-get --yes update \
   && apt-get install --no-install-recommends --yes \

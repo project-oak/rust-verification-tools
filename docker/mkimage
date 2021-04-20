@@ -26,7 +26,8 @@ sudo docker build \
   --build-arg=GTEST_VERSION="1.7.0" \
   --build-arg=KLEE_VERSION="c51ffcd377097ee80ec9b0d6f07f8ea583a5aa1d" \
   --build-arg=MINISAT_VERSION="37158a35c62d448b3feccfa83006266e12e5acb7" \
-  --build-arg=RUSTC_VERSION="1.46.0" \
+  --build-arg=RUSTC_VERSION="nightly-2020-08-27" \
+  --build-arg=RUSTC_VERSION="nightly-2020-08-03" \
   --build-arg=STP_VERSION="2.3.3" \
   --build-arg=SEAHORN_VERIFY_C_COMMON_VERSION="70129bf47c421d8283785a8fb13cdb216424ef91" \
   --build-arg=SEAHORN_VERSION="ccdc529f81a02e9236ffa00ff57eef4487f0fc9a" \

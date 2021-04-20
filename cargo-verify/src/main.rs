@@ -584,7 +584,7 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
         new_bc_file.to_string_lossy()
     );
     // Link multiple bitcode files together.
-    Command::new("llvm-link")
+    Command::new("llvm-link-10")
         .arg("-o")
         .arg(&new_bc_file)
         .arg(runtime)
@@ -801,7 +801,7 @@ fn mangle_functions(
         bcfile.to_string_lossy()
     );
 
-    let (stdout, _) = Command::new("llvm-nm")
+    let (stdout, _) = Command::new("llvm-nm-10")
         .arg("--defined-only")
         .arg(bcfile)
         .output_info(&opt, Verbosity::Trivial)?;

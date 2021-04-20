@@ -1,4 +1,4 @@
-FROM rvt_yices:latest
+FROM rvt_klee:latest
 
 USER root
 

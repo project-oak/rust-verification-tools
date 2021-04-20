@@ -2,9 +2,11 @@
 
 set -e
 
-readonly LLVMCC=`which clang-10`
-readonly LLVMCXX=`which clang++-10`
-readonly LLVM_CONFIG=`ls ${RUSTC_DIR}/build/x86_*/llvm/bin/llvm-config`
+LLVM_VERSION=10
+
+readonly LLVMCC=`which clang-${LLVM_VERSION}`
+readonly LLVMCXX=`which clang++-${LLVM_VERSION}`
+readonly LLVM_CONFIG=`which llvm-config-${LLVM_VERSION}`
 
 git clone https://github.com/klee/klee-uclibc.git
 cd klee-uclibc
@@ -22,6 +24,7 @@ cd build
 cmake \
   -DCMAKE_INSTALL_PREFIX=/usr \
   -DENABLE_SOLVER_STP=ON \
+  -DENABLE_SOLVER_Z3=ON \
   -DENABLE_KLEE_UCLIBC=ON \
   -DENABLE_POSIX_RUNTIME=ON \
   -DKLEE_UCLIBC_PATH="${UCLIBC_DIR}" \

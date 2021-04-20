@@ -1,4 +1,4 @@
-FROM rvt_klee:latest
+FROM rvt_stp:latest
 
 USER root
 RUN mkdir /home/z3
