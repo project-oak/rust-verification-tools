@@ -31,8 +31,8 @@ RUN mkdir ${SEAHORN_DIR}/build \
      -DCMAKE_INSTALL_PREFIX=run \
      # -DCMAKE_BUILD_TYPE="Debug" \
      -DCMAKE_BUILD_TYPE="Release" \
-     -DCMAKE_CXX_COMPILER="clang++-${LVM_VERSION}" \
-     -DCMAKE_C_COMPILER="clang-${LVM_VERSION}" \
+     -DCMAKE_CXX_COMPILER="clang++-${LLVM_VERSION}" \
+     -DCMAKE_C_COMPILER="clang-${LLVM_VERSION}" \
      -DZ3_ROOT=${Z3_DIR} \
      -DYICES2_HOME="/home/yices/yices-${YICES_VERSION}" \
      -DSEA_ENABLE_LLD="ON" \
