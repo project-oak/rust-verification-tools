@@ -34,7 +34,7 @@ RUN mkdir ${SEAHORN_DIR}/build \
      -DSEA_ENABLE_LLD="ON" \
      -GNinja \
      -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
-     -DLLVM_DIR=${RUSTC_DIR}/build/x86_64-unknown-linux-gnu/llvm/lib/cmake/llvm \
+     -DLLVM_DIR=/usr/lib/llvm-${LLVM_VERSION}/lib/cmake/llvm \
      ..
 
 RUN cd seahorn/build && cmake --build . --target extra  && cmake ..
