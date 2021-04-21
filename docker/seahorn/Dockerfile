@@ -9,6 +9,7 @@ WORKDIR /home/seahorn
 
 ARG SEAHORN_VERIFY_C_COMMON_VERSION
 ARG SEAHORN_VERSION
+ARG LLVM_VERSION
 ARG YICES_VERSION
 
 # cargo-verify relies on this variable to find the yaml files
@@ -30,8 +31,8 @@ RUN mkdir ${SEAHORN_DIR}/build \
      -DCMAKE_INSTALL_PREFIX=run \
      # -DCMAKE_BUILD_TYPE="Debug" \
      -DCMAKE_BUILD_TYPE="Release" \
-     -DCMAKE_CXX_COMPILER="clang++-10" \
-     -DCMAKE_C_COMPILER="clang-10" \
+     -DCMAKE_CXX_COMPILER="clang++-${LVM_VERSION}" \
+     -DCMAKE_C_COMPILER="clang-${LVM_VERSION}" \
      -DZ3_ROOT=${Z3_DIR} \
      -DYICES2_HOME="/home/yices/yices-${YICES_VERSION}" \
      -DSEA_ENABLE_LLD="ON" \

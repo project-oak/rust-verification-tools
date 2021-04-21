@@ -1,4 +1,4 @@
-FROM rvt_rustc:latest
+FROM rvt_base:latest
 
 USER root
 RUN mkdir /home/minisat

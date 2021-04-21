@@ -33,6 +33,7 @@ RUN apt-get --yes update \
   libgmp-dev \
   libgmpxx4ldbl \
   lld-10 \
+  lld-11 \
   llvm-10 \
   llvm-10-dev \
   llvm-11 \

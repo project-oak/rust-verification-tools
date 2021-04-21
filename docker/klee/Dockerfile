@@ -1,9 +1,8 @@
-FROM rvt_yices:latest
+FROM rvt_rustc:latest
 
 ARG USERNAME
-ARG LLVM_VERSION=10
-ENV LLVM_VERSION=${LLVM_VERSION}
 
+USER root
 WORKDIR ${USER_HOME}
 COPY build_googletest .
 COPY build_klee .
@@ -15,6 +14,9 @@ WORKDIR ${USER_HOME}
 ARG GTEST_VERSION
 ENV GTEST_DIR=${USER_HOME}/googletest-release-${GTEST_VERSION}
 RUN sh build_googletest
+
+ARG LLVM_VERSION
+ENV LLVM_VERSION=${LLVM_VERSION}
 
 ARG KLEE_VERSION
 RUN sh build_klee

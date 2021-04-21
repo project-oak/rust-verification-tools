@@ -1,4 +1,4 @@
-FROM rvt_base:latest
+FROM rvt_yices:latest
 
 ARG USERNAME
 

@@ -10,5 +10,5 @@ make -C ${RVT_DIR}/simd_emulation
 # Build tools
 mkdir -p ${USER_HOME}/bin
 cargo +nightly install --root=${USER_HOME} --path=${RVT_DIR}/rust2calltree
-cargo +nightly install --root=${USER_HOME} --path=${RVT_DIR}/rvt-patch-llvm
+cargo +nightly install --features=llvm${LLVM_VERSION} --root=${USER_HOME} --path=${RVT_DIR}/rvt-patch-llvm
 cargo +nightly install --root=${USER_HOME} --path=${RVT_DIR}/cargo-verify
