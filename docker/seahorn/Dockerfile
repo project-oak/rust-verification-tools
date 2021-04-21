@@ -1,11 +1,7 @@
 FROM rvt_klee:latest
 
-USER root
-
-RUN pip3 install pyyaml
-
-RUN mkdir /home/seahorn
-WORKDIR /home/seahorn
+USER ${USERNAME}
+WORKDIR ${USER_HOME}
 
 ARG SEAHORN_VERIFY_C_COMMON_VERSION
 ARG SEAHORN_VERSION
@@ -13,13 +9,13 @@ ARG LLVM_VERSION
 ARG YICES_VERSION
 
 # cargo-verify relies on this variable to find the yaml files
-ENV SEAHORN_VERIFY_C_COMMON_DIR=/home/seahorn/verify-c-common
+ENV SEAHORN_VERIFY_C_COMMON_DIR=${USER_HOME}/verify-c-common
 
 RUN git clone --no-checkout https://github.com/seahorn/verify-c-common.git ${SEAHORN_VERIFY_C_COMMON_DIR} \
   && cd ${SEAHORN_VERIFY_C_COMMON_DIR} \
   && git checkout ${SEAHORN_VERIFY_C_COMMON_VERSION}
 
-ENV SEAHORN_DIR=/home/seahorn/seahorn
+ENV SEAHORN_DIR=${USER_HOME}/seahorn
 
 RUN git clone --no-checkout https://github.com/seahorn/seahorn.git ${SEAHORN_DIR} \
   && cd ${SEAHORN_DIR} \
