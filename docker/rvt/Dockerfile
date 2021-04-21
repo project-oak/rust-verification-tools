@@ -42,7 +42,7 @@ RUN rustup default ${RUSTC_VERSION}
 #
 # There seems to be no way around this complex collection of hacks.
 COPY --chown=${USER_UID}:${USER_GID} ./rvt-patch-llvm ${USER_HOME}/rvt-patch-llvm
-RUN cargo install --root=${USER_HOME} --path=${USER_HOME}/rvt-patch-llvm
+RUN cargo install --features=llvm${LLVM_VERSION} --root=${USER_HOME} --path=${USER_HOME}/rvt-patch-llvm
 
 # Build cargo-verify too
 COPY --chown=${USER_UID}:${USER_GID} ./cargo-verify ${USER_HOME}/cargo-verify
