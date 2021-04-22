@@ -13,7 +13,7 @@ RUSTC ?= rustc
 RSFLAGS = --emit=llvm-bc --crate-type=lib -O -Ctarget-feature=+sse2
 RSFLAGS += --edition=2018
 
-LINK = llvm-link-10
+LINK = llvm-link-${LLVM_VERSION}
 
 RS_SRCS := $(wildcard src/*.rs)
 RS_OBJS := $(patsubst src/%.rs, build/%.bc, $(RS_SRCS))
