@@ -108,10 +108,18 @@ fn main() {
 
     if opt.intrinsics {
         // intrinsics
-        let is = get_function(&module, |name| name.starts_with("llvm.x86"));
+        fn simd_intrinsic(name: &str) -> bool {
+            name.starts_with("llvm.x86")
+                || name.starts_with("llvm.experimental.vector")
+        }
+        let is = get_function(&module, simd_intrinsic);
 
         // simd_emulation functions
-        let rs = get_function(&module, |name| name.starts_with("llvm_x86"));
+        fn simd_emulation(name: &str) -> bool {
+            name.starts_with("llvm_x86")
+                || name.starts_with("llvm_experimental.vector")
+        }
+        let rs = get_function(&module, simd_emulation);
         let rs: HashMap<&str, FunctionValue> = rs.iter().filter_map(|f| f.get_name().to_str().ok().map(|nm| (nm, *f))).collect();
 
         info!("Found simd_emulation functions {:?}", rs.keys());
