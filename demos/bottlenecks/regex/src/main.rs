@@ -16,7 +16,7 @@
 ///    strings very short to keep execution time reasonable.
 
 use regex::Regex;
-use verification_annotations as verifier;
+use verification_annotations::verifier;
 
 fn main() {
     println!("Hello, world!");

@@ -112,7 +112,7 @@ values of `a` are not legal. For example, you might create a unicode character
 like this:
 
 ```
-let a : u32 = verifier::AbstractValue::abstract_value();
+let a = u32::abstract_value();
 let b = match std::char::from_u32(a) {
     Some(r) => r,
     None => verifier::reject(),
@@ -146,11 +146,11 @@ This code is in [demos/simple/annotations/src/main.rs] and the shell commands in
 file are in [demos/simple/annotations/verify.sh].
 
 ```
-use verification_annotations as verifier;
+use verification_annotations::prelude::*;
 
 fn t1() {
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
+    let a = u32::abstract_value();
+    let b = u32::abstract_value();
     verifier::assume(1 <= a && a <= 1000);
     verifier::assume(1 <= b && b <= 1000);
     #[cfg(not(crux))]
@@ -291,13 +291,13 @@ As a first variation, let's restore the original error and add a call to
 `expect`:
 
 ```
-use verification_annotations as verifier;
+use verification_annotations::prelude::*;
 
 #[test]
 fn main() {
     verifier::expect(Some("assertion failed"));
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
+    let a = u32::abstract_value();
+    let b = u32::abstract_value();
     verifier::assume(1 <= a && a <= 1000);
     verifier::assume(1 <= b && b <= 1000);
     if verifier::is_replay() {
@@ -332,13 +332,13 @@ For example, we might allow larger values for `a` and `b` or we might
 just delete the assumptions.
 
 ```
-use verification_annotations as verifier;
+use verification_annotations::prelude::*;
 
 #[test]
 fn t1() {
     // verifier::expect(Some("overflow"));
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
+    let a = u32::abstract_value();
+    let b = u32::abstract_value();
     verifier::assume(1 <= a && a <= 1000000);
     verifier::assume(1 <= b && b <= 1000000);
     if verifier::is_replay() {

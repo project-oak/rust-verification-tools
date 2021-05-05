@@ -1,12 +1,14 @@
 #! /usr/bin/env bash
 
 set -e
+set -x
 
-readonly FLAGS="--backend=klee --verbose --clean"
 (cd demos/simple/annotations; ./verify.sh)
 (cd demos/simple/klee; ./verify.sh)
 (cd demos/simple/seahorn; ./verify.sh)
 (cd demos/simple/errors; ./verify.sh)
+
+readonly FLAGS="--backend=klee --verbose --clean"
 cargo-verify ${FLAGS} --tests --manifest-path=verification-annotations/Cargo.toml
 cargo-verify ${FLAGS} --tests --manifest-path=compatibility-test/Cargo.toml
 cargo-verify ${FLAGS} --tests --manifest-path=demos/bottlenecks/bornholt2018-1/Cargo.toml
@@ -14,6 +16,7 @@ cargo-verify ${FLAGS} --tests --manifest-path=demos/simple/ffi/Cargo.toml
 cargo-verify ${FLAGS} -v -v -v --manifest-path=demos/simple/argv/Cargo.toml -- foo foo
 cargo verify ${FLAGS} --tests --manifest-path=demos/bottlenecks/merging/Cargo.toml --backend-flags=--use-merge
 cargo verify ${FLAGS} --tests --manifest-path=demos/bottlenecks/regex/Cargo.toml
+cargo-verify ${FLAGS} --tests --manifest-path=demos/simple/string/Cargo.toml
 
 # Test the --backend-flags and --replace-backend-flags options.
 # Note the use of handlebars and passing args to main (foo foo).

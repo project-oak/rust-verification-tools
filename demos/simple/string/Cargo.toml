@@ -1,0 +1,22 @@
+[package]
+name = "string"
+version = "0.1.0"
+authors = ["Shaked Flur <sflur@google.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+regex = "1"
+
+[target.'cfg(verify)'.dependencies]
+propverify = { path="/home/rust-verification-tools/propverify" }
+verification-annotations = { path = "/home/rust-verification-tools/verification-annotations" }
+
+[target.'cfg(not(verify))'.dependencies]
+proptest = { version = "*" }
+
+[features]
+verifier-klee = ["propverify/verifier-klee", "verification-annotations/verifier-klee"]
+verifier-crux = ["propverify/verifier-crux"]
+verifier-seahorn = ["propverify/verifier-seahorn"]

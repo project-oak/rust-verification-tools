@@ -98,14 +98,14 @@ macro_rules! assert {
 
 #[macro_export]
 macro_rules! assert_eq {
-    ($left:expr, $right:expr) => { $crate::assert!(($left) == ($right)); };
+    ($left:expr, $right:expr) => { $crate::verifier::assert!(($left) == ($right)); };
     // ($left:expr, $right:expr,) => { ... };
     // ($left:expr, $right:expr, $($arg:tt)+) => { ... };
 }
 
 #[macro_export]
 macro_rules! assert_ne {
-    ($left:expr, $right:expr) => { $crate::assert!(($left) != ($right)); };
+    ($left:expr, $right:expr) => { $crate::verifier::assert!(($left) != ($right)); };
     // ($left:expr, $right:expr,) => { ... };
     // ($left:expr, $right:expr, $($arg:tt)+) => { ... };
 }

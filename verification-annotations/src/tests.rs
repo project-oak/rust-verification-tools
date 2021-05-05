@@ -2,9 +2,9 @@
 // Several variations on a theme to test failing variants
 ////////////////////////////////////////////////////////////////
 
-use crate as verifier;
+use crate::prelude::*;
 
-use crate::assert;
+use crate::verifier::assert;
 
 #[cfg_attr(not(feature = "verifier-crux"), test)]
 #[cfg_attr(feature = "verifier-crux", crux_test)]
