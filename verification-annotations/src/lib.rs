@@ -9,39 +9,49 @@
 #![feature(cstring_from_vec_with_nul)]
 
 // Traits for creating symbolic/abstract values
-mod traits;
-pub use crate::traits::*;
+pub mod traits;
+pub mod verifier;
 
-#[cfg(feature = "verifier-klee")]
-mod klee;
-#[cfg(feature = "verifier-klee")]
-pub use crate::klee::*;
+pub mod utils {
+    pub trait UnwrapOrReject {
+        type Wrapped;
+        fn unwrap_or_reject(self) -> Self::Wrapped;
+    }
 
-#[cfg(feature = "verifier-crux")]
-pub extern crate crucible;
-#[cfg(feature = "verifier-crux")]
-mod crux;
-#[cfg(feature = "verifier-crux")]
-pub use crate::crux::*;
+    impl<T, E> UnwrapOrReject for Result<T, E> {
+        type Wrapped = T;
+        fn unwrap_or_reject(self) -> Self::Wrapped {
+            match self {
+                Ok(x) => x,
+                Err(_) => crate::verifier::reject(),
+            }
+        }
+    }
 
-#[cfg(feature = "verifier-seahorn")]
-mod seahorn;
-#[cfg(feature = "verifier-seahorn")]
-pub use crate::seahorn::*;
+    impl<T> UnwrapOrReject for Option<T> {
+        type Wrapped = T;
+        fn unwrap_or_reject(self) -> Self::Wrapped {
+            match self {
+                Some(x) => x,
+                None => crate::verifier::reject(),
+            }
+        }
+    }
 
-#[macro_export]
-macro_rules! verifier_assert {
-    ($cond:expr) => { $crate::assert!($cond); };
 }
 
-#[macro_export]
-macro_rules! verifier_assume {
-    ($cond:expr) => { $crate::assume!($cond); };
-}
+// `use verfication_annotations::prelude::*`
+pub mod prelude {
+    pub use crate::traits::*;
+    pub use crate::verifier;
+    pub use crate::utils::*;
 
-#[macro_export]
-macro_rules! verifier_unreachable {
-    () => { $crate::report_error("unreachable assertion was reached"); };
+    // Macros
+    pub use crate::verifier::assert as verifier_assert;
+    pub use crate::verifier::assert_eq as verifier_assert_eq;
+    pub use crate::verifier::assert_ne as verifier_assert_ne;
+    pub use crate::verifier::assume as verifier_assume;
+    pub use crate::verifier::unreachable as verifier_unreachable;
 }
 
 // At the moment, the cargo-verify script does not support

@@ -46,11 +46,11 @@ This code is in [demos/simple/klee/src/main.rs] and the shell commands in this
 file are in [demos/simple/klee/verify.sh].
 
 ``` rust
-use verification_annotations as verifier;
+use verification_annotations::prelude::*;
 
 fn main() {
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
+    let a = u32::abstract_value();
+    let b = u32::abstract_value();
     verifier::assume(1 <= a && a <= 1000);
     verifier::assume(1 <= b && b <= 1000);
     if verifier::is_replay() {

@@ -51,9 +51,12 @@ pub mod prelude {
             pub use crate::strategy::{u128, u16, u32, u64, u8, usize};
             #[cfg(feature = "float")] pub use crate::strategy::{f32, f64};
         }
+
+        pub use crate::strategy::string;
     }
 
-    pub use crate::strategy::verifier;
+    pub use verification_annotations;
+    pub use verification_annotations::verifier;
 
     pub use verifier::assert as prop_assert;
     pub use verifier::assert_eq as prop_assert_eq;

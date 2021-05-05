@@ -13,7 +13,7 @@
 //
 // For some (limited) amount of compatibility, we implement all three
 
-use crate::assume;
+use crate::verifier::assume;
 
 /// Create a non-deterministic value with the same type as the argument
 ///

@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-pub use verification_annotations as verifier;
+use verification_annotations::prelude::*;
 
 use std::boxed::Box;
 use std::marker::PhantomData;
@@ -339,10 +339,7 @@ pub mod char {
         type Value = char;
         fn value(&self) -> Self::Value {
             let c : u32 = verifier::AbstractValue::abstract_value();
-            match std::char::from_u32(c) {
-                Some(r) => r,
-                None => verifier::reject(),
-            }
+            std::char::from_u32(c).unwrap_or_reject()
         }
     }
     impl Arbitrary for char {
@@ -489,10 +486,7 @@ impl<S: Strategy, F: Fn(S::Value) -> Option<T>, T: std::fmt::Debug> Strategy for
     type Value = T;
     fn value(&self) -> Self::Value {
         let val = self.source.value();
-        match (self.fun)(val) {
-            Some(r) => r,
-            None => verifier::reject(),
-        }
+        (self.fun)(val).unwrap_or_reject()
     }
 }
 
@@ -839,6 +833,47 @@ impl<S: Strategy> Strategy for VecStrategy<S>
 
 pub fn vec<S: Strategy>(element: S, size: usize) -> VecStrategy<S> {
     VecStrategy { element, size }
+}
+
+pub mod string {
+    use super::*;
+
+    #[derive(Clone, Copy, Debug)]
+    pub struct Any(usize);
+    // pub const ANY: Any = Any();
+    impl Strategy for Any {
+        type Value = String;
+        fn value(&self) -> Self::Value {
+            let length = self.0;
+            let bytes = verifier::verifier_nondet_bytes(length);
+            String::from_utf8(bytes).unwrap_or_reject()
+        }
+    }
+    // impl Arbitrary for String {
+    //     type Strategy = Any;
+    //     fn arbitrary() -> Self::Strategy { ANY }
+    // }
+    pub fn arbitrary(length: usize) -> Any {
+        Any(length)
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    pub struct AnyAscii(usize);
+    impl Strategy for AnyAscii {
+        type Value = String;
+        fn value(&self) -> Self::Value {
+            let length = self.0;
+            let bytes = verifier::verifier_nondet_bytes(length);
+            for i in 0..length {
+                verifier::assume(bytes[i] != 0u8);
+                verifier::assume(bytes[i].is_ascii());
+            }
+            String::from_utf8(bytes).unwrap_or_reject()
+        }
+    }
+    pub fn arbitrary_ascii(length: usize) -> AnyAscii {
+        AnyAscii(length)
+    }
 }
 
 #[derive(Clone, Copy, Debug)]

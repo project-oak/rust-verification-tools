@@ -10,7 +10,6 @@
 // FFI wrapper for SeaHorn symbolic execution tool
 /////////////////////////////////////////////////////////////////
 
-use std::default::Default;
 use std::convert::TryInto;
 
 pub use crate::traits::*;
@@ -127,88 +126,12 @@ macro_rules! make_nondet_ne_bytes {
 make_nondet_ne_bytes!(u128);
 make_nondet_ne_bytes!(i128);
 
-
 impl VerifierNonDet for bool {
     fn verifier_nondet(self) -> Self {
         let c = u8::verifier_nondet(0u8);
         assume(c == 0 || c == 1);
         c == 1
     }
-}
-
-impl <T: VerifierNonDet + Default> AbstractValue for T {
-    fn abstract_value() -> Self {
-        Self::verifier_nondet(Self::default())
-    }
-}
-
-impl <T: VerifierNonDet + Default> Symbolic for T {
-    fn symbolic(_desc: &'static str) -> Self {
-        Self::verifier_nondet(Self::default())
-    }
-}
-
-#[macro_export]
-macro_rules! assert {
-    ($cond:expr,) => { $crate::assert!($cond) };
-    ($cond:expr) => { $crate::assert!($cond, "assertion failed: {}", stringify!($cond)) };
-    ($cond:expr, $($arg:tt)+) => {{
-        if ! $cond {
-            let message = format!($($arg)+);
-            eprintln!("VERIFIER: panicked at '{}', {}:{}:{}",
-                      message,
-                      std::file!(), std::line!(), std::column!());
-            $crate::abort();
-        }
-    }}
-}
-
-#[macro_export]
-macro_rules! assert_eq {
-    ($left:expr, $right:expr) => {{
-        let left = $left;
-        let right = $right;
-        $crate::assert!(
-            left == right,
-            "assertion failed: `(left == right)` \
-             \n  left: `{:?}`,\n right: `{:?}`",
-            left,
-            right)
-    }};
-    ($left:expr, $right:expr, $fmt:tt $($arg:tt)*) => {{
-        let left = $left;
-        let right = $right;
-        $crate::assert!(
-            left == right,
-            concat!(
-                "assertion failed: `(left == right)` \
-                 \n  left: `{:?}`, \n right: `{:?}`: ", $fmt),
-            left, right $($arg)*);
-    }};
-}
-
-#[macro_export]
-macro_rules! assert_ne {
-    ($left:expr, $right:expr) => {{
-        let left = $left;
-        let right = $right;
-        $crate::assert!(
-            left != right,
-            "assertion failed: `(left != right)` \
-             \n  left: `{:?}`,\n right: `{:?}`",
-            left,
-            right)
-    }};
-    ($left:expr, $right:expr, $fmt:tt $($arg:tt)*) => {{
-        let left = $left;
-        let right = $right;
-        $crate::assert!(
-            left != right,
-            concat!(
-                "assertion failed: `(left != right)` \
-                 \n  left: `{:?}`, \n right: `{:?}`: ", $fmt),
-            left, right $($arg)*);
-    }};
 }
 
 /////////////////////////////////////////////////////////////////
