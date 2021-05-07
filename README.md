@@ -17,7 +17,7 @@ either form of verification.
 
 We aim to add other backends in the near future.
 
-In addition, [we document](docs/README.md) how the tools we wrote work
+In addition, [we document](docs/about.md) how the tools we wrote work
 in case you are porting a verification tool for use with Rust.
 (In particular, we describe how to generate LLVM bitcode files that can
 be used with LLVM-based verification tools.)
@@ -47,12 +47,7 @@ be used with LLVM-based verification tools.)
 TL;DR
 
 1. Install
-   [Rust](docs/install-rust.md)
-   and
-   [KLEE](docs/install-klee.md)
-
-   (Warning: these installation instructions are quite complicated,
-   poorly tested and may be missing steps.)
+   For installation with Docker, see the Usage section of [our main docs](docs/about.md).
 
 2. Fuzz some examples with proptest
 
@@ -75,7 +70,7 @@ TL;DR
 
    No tests should fail.
 
-4. Read [the propverify intro](docs/using-propverify.md) for an example
+4. Read [the propverify intro](docs/_posts/2020-09-03-using-propverify.md) for an example
    of fuzzing with `proptest` and verifying with `propverify`.
 
 5. Read [the proptest book](https://altsysrq.github.io/proptest-book/intro.html)
@@ -85,15 +80,7 @@ TL;DR
    (Many of these examples are taken from or based on examples in
    [the proptest book](https://altsysrq.github.io/proptest-book/intro.html).)
 
-There is also [some limited documentation](docs/README.md) of how this works.
-
-
-## Installation
-
-- [Overall installation instructions](docs/installation.md)
-  - [Instructions for building Rust libraries](docs/install-rust.md)
-  - [Instructions for installing KLEE](docs/install-klee.md)
-
+There is also [some limited documentation](docs/about.md) of how this works.
 
 ## License
 
