@@ -24,5 +24,6 @@ ARG GTEST_VERSION
 ENV GTEST_DIR=${USER_HOME}/googletest-release-${GTEST_VERSION}
 RUN sh build_googletest
 
+ARG UCLIBC_VERSION
 ARG KLEE_VERSION
 RUN sh build_klee

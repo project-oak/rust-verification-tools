@@ -8,6 +8,7 @@ readonly LLVM_CONFIG=`ls ${RUSTC_DIR}/build/x86_*/llvm/bin/llvm-config`
 
 git clone https://github.com/klee/klee-uclibc.git
 cd klee-uclibc
+git checkout ${UCLIBC_VERSION}
 readonly UCLIBC_DIR=`pwd`
 ./configure --make-llvm-lib --with-cc="${LLVMCC}" --with-llvm-config="${LLVM_CONFIG}"
 make -j 4
