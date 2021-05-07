@@ -10,6 +10,12 @@ jobs:
     name: Format
     runs-on: ubuntu-latest
     steps:
+      - name: Install correct nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly-2021-05-07
+            override: true
+            components: rustfmt
       - uses: actions/checkout@v2
       - name: Format Rust code
-        run: git ls-files | grep 'rs$' | xargs rustfmt +nightly --check
+        run: git ls-files | grep 'rs$' | xargs rustfmt +nightly-2021-05-07 --check
