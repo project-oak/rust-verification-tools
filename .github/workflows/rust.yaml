@@ -12,4 +12,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Format Rust code
-        run: git ls-files | grep 'rs$' | xargs rustfmt --check
+        run: git ls-files | grep 'rs$' | xargs rustfmt +nightly --check
