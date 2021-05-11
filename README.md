@@ -17,11 +17,10 @@ either form of verification.
 
 We aim to add other backends in the near future.
 
-In addition, [we document](docs/about.md) how the tools we wrote work
+In addition, [we document](https://project-oak.github.io/rust-verification-tools/about.html) how the tools we wrote work
 in case you are porting a verification tool for use with Rust.
 (In particular, we describe how to generate LLVM bitcode files that can
 be used with LLVM-based verification tools.)
-
 
 ## Tools and libraries
 
@@ -41,13 +40,12 @@ be used with LLVM-based verification tools.)
   library or using `propverify`.
   Used to check that proptest and propverify are compatible with each other.
 
-
 ## Usage
 
 TL;DR
 
 1. Install
-   For installation with Docker, see the Usage section of [our main docs](docs/about.md).
+   For installation with Docker, see the Usage section of [our main docs](https://project-oak.github.io/rust-verification-tools/about.html).
 
 2. Fuzz some examples with proptest
 
@@ -70,7 +68,7 @@ TL;DR
 
    No tests should fail.
 
-4. Read [the propverify intro](docs/_posts/2020-09-03-using-propverify.md) for an example
+4. Read [the propverify intro](https://project-oak.github.io/rust-verification-tools/using-propverify/) for an example
    of fuzzing with `proptest` and verifying with `propverify`.
 
 5. Read [the proptest book](https://altsysrq.github.io/proptest-book/intro.html)
@@ -80,7 +78,7 @@ TL;DR
    (Many of these examples are taken from or based on examples in
    [the proptest book](https://altsysrq.github.io/proptest-book/intro.html).)
 
-There is also [some limited documentation](docs/about.md) of how this works.
+There is also [some limited documentation](https://project-oak.github.io/rust-verification-tools/about.html) of how this works.
 
 ## License
 
@@ -92,7 +90,6 @@ Licensed under either of
   http://opensource.org/licenses/MIT)
 
 at your option.
-
 
 ## Acknowledgements
 
@@ -109,7 +106,6 @@ and
 the [Hypothesis](https://hypothesis.works/) fuzzing/property testing library for Python.
 (`proptest` also acknowledges `regex_generate` – but we have not yet implemented
 regex strategies for this library.)
-
 
 ## Known limitations
 
@@ -131,7 +127,6 @@ We would like the `propverify` library and the `cargo-verify` script
 to work with as many Rust verification tools as possible
 and we welcome pull requests to add support.
 We expect that this will require design/interface changes.
-
 
 ### Contribution
 
