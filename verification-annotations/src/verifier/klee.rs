@@ -219,7 +219,8 @@ macro_rules! coherent {
 /// this terminates because get_concrete_value terminates this path
 /// if there are no further solutions.
 pub fn concretize<T>(x: T) -> T
-    where T: VerifierNonDet + Eq + Copy
+where
+    T: VerifierNonDet + Eq + Copy,
 {
     loop {
         let s = T::get_concrete_value(x);
@@ -235,9 +236,10 @@ pub fn concretize<T>(x: T) -> T
 /// In most cases, this results in an incomplete exploration because there may
 /// be more possible solutions than we explore.
 pub fn sample<T>(samples: usize, x: T) -> T
-    where T: VerifierNonDet + Eq + Copy
+where
+    T: VerifierNonDet + Eq + Copy,
 {
-    for _i in 0..samples-1 {
+    for _i in 0..samples - 1 {
         let s = T::get_concrete_value(x);
         if s == x {
             return s;
@@ -265,7 +267,7 @@ pub fn expect_raw(msg: &str) {
 pub fn expect(msg: Option<&str>) {
     match msg {
         None => eprintln!("VERIFIER_EXPECT: should_panic"),
-        Some(msg) => eprintln!("VERIFIER_EXPECT: should_panic(expected = \"{}\")", msg)
+        Some(msg) => eprintln!("VERIFIER_EXPECT: should_panic(expected = \"{}\")", msg),
     }
 }
 

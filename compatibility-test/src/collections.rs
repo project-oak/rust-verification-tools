@@ -16,7 +16,6 @@ use proptest::prelude::*;
 #[cfg(verify)]
 use propverify::prelude::*;
 
-
 proptest! {
     #[test]
     fn binary_heap(v in prop::collection::binary_heap(0..100u32, 5)) {

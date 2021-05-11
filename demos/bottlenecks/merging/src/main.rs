@@ -16,7 +16,6 @@
 ///
 /// Indicating that the original version suffers from a path explosion and generates
 /// more tests, executes more instructions and explores more paths than the merged version.
-
 use verification_annotations::prelude::*;
 
 fn main() {
@@ -75,7 +74,7 @@ fn test_merged() {
     // A loop containing two branches - this will cause a performance problem
     // for conventional symbolic execution.
     for x in a.iter() {
-        verifier::coherent!{{
+        verifier::coherent! {{
             verifier::assume((5..10).contains(x) || (15..20).contains(x))
         }}
     }

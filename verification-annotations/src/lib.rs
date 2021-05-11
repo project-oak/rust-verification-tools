@@ -37,14 +37,13 @@ pub mod utils {
             }
         }
     }
-
 }
 
 // `use verfication_annotations::prelude::*`
 pub mod prelude {
     pub use crate::traits::*;
-    pub use crate::verifier;
     pub use crate::utils::*;
+    pub use crate::verifier;
 
     // Macros
     pub use crate::verifier::assert as verifier_assert;

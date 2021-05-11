@@ -633,7 +633,6 @@ mod vector {
     vector2!(u64, u64x2);
     vector2!(u128, u128x2);
 
-
     // lift a binary operation over vector and scalar
     pub fn lift2_vs_v<F, A, B, R>(f: F, a: A::Vec, b: B) -> R::Vec
     where
@@ -733,10 +732,7 @@ mod vector {
     where
         R: Vector16,
     {
-        R::new(
-            a, a, a, a, a, a, a, a,
-            a, a, a, a, a, a, a, a,
-        )
+        R::new(a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a)
     }
 
     // lift a binary operation over vector and scalar
@@ -792,7 +788,9 @@ mod vector {
         let r13 = f(A::get13(&a), B::get13(&b));
         let r14 = f(A::get14(&a), B::get14(&b));
         let r15 = f(A::get15(&a), B::get15(&b));
-        R::new(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15)
+        R::new(
+            r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15,
+        )
     }
 
     // lift a scalar to a vector
@@ -801,10 +799,9 @@ mod vector {
         R: Vector32,
     {
         R::new(
-            a, a, a, a, a, a, a, a,
-            a, a, a, a, a, a, a, a,
-            a, a, a, a, a, a, a, a,
-            a, a, a, a, a, a, a, a)
+            a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a,
+            a, a, a,
+        )
     }
 
     // lift a binary operation over vector and scalar

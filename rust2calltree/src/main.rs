@@ -52,15 +52,14 @@ fn main() -> Result<()> {
     // Open the input file
     let input = opt.input.to_str().unwrap();
     info!("Reading input from {}", input);
-    let input = File::open(input)
-        .with_context(|| format!("can't open input file '{}'", input))?;
+    let input = File::open(input).with_context(|| format!("can't open input file '{}'", input))?;
     let input = BufReader::new(input);
 
     // Open the output file
     let output = opt.output.to_str().unwrap();
     info!("Writing demangled output to {}", output);
-    let output = File::create(&output)
-        .with_context(|| format!("can't open output file '{}'", output))?;
+    let output =
+        File::create(&output).with_context(|| format!("can't open output file '{}'", output))?;
     let mut output = BufWriter::new(&output);
 
     for line in input.lines() {

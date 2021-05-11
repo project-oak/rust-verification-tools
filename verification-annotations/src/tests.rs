@@ -9,26 +9,28 @@ use crate::verifier::assert;
 #[cfg_attr(not(feature = "verifier-crux"), test)]
 #[cfg_attr(feature = "verifier-crux", crux_test)]
 fn t0() {
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
+    let a: u32 = verifier::AbstractValue::abstract_value();
+    let b: u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
 
     #[cfg(not(any(feature = "verifier-crux", feature = "verifier-seahorn")))]
-    if verifier::is_replay() { eprintln!("Test values: a = {}, b = {}", a, b) }
+    if verifier::is_replay() {
+        eprintln!("Test values: a = {}, b = {}", a, b)
+    }
 
-    let r = a*b;
+    let r = a * b;
     assert!(20 <= r && r <= 56);
 }
 
 #[cfg_attr(not(feature = "verifier-crux"), test)]
 #[cfg_attr(feature = "verifier-crux", crux_test)]
 fn t1() {
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
+    let a: u32 = verifier::AbstractValue::abstract_value();
+    let b: u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
-    let r = a*b;
+    let r = a * b;
     assert!(20 <= r && r <= 56);
 }
 
@@ -38,9 +40,9 @@ fn t2() {
     #[cfg(not(feature = "verifier-crux"))]
     verifier::expect(Some("multiply with overflow"));
 
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
-    let r = a*b;
+    let a: u32 = verifier::AbstractValue::abstract_value();
+    let b: u32 = verifier::AbstractValue::abstract_value();
+    let r = a * b;
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
     assert!(20 <= r && r <= 56);
@@ -52,11 +54,11 @@ fn t3() {
     #[cfg(not(feature = "verifier-crux"))]
     verifier::expect(Some("assertion failed"));
 
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
+    let a: u32 = verifier::AbstractValue::abstract_value();
+    let b: u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
-    let r = a*b;
+    let r = a * b;
     assert!(20 <= r && r < 56);
 }
 
@@ -66,30 +68,30 @@ fn t4() {
     #[cfg(not(feature = "verifier-crux"))]
     verifier::expect(None);
 
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
+    let a: u32 = verifier::AbstractValue::abstract_value();
+    let b: u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
-    let r = a*b;
+    let r = a * b;
     assert!(20 <= r && r < 56);
 }
 
 #[cfg_attr(not(feature = "verifier-crux"), test)]
 #[cfg_attr(feature = "verifier-crux", crux_test)]
 fn t5() {
-    let a : u32 = verifier::AbstractValue::abstract_value();
-    let b : u32 = verifier::AbstractValue::abstract_value();
+    let a: u32 = verifier::AbstractValue::abstract_value();
+    let b: u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(a <= 1000000); // avoid overflow
     verifier::assume(b <= 1000000);
     verifier::assert_eq!(a + b, b + a);
-    verifier::assert_ne!(a, a+1);
+    verifier::assert_ne!(a, a + 1);
 }
 
 // KLEE-only test of get_concrete_value and is_symbolic
 #[cfg(feature = "verifier-klee")]
 #[test]
 fn concrete1() {
-    let a : u32 = verifier::AbstractValue::abstract_value();
+    let a: u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(a <= 100); // avoid overflow
     verifier::assert!(verifier::VerifierNonDet::is_symbolic(a));
 
@@ -112,7 +114,7 @@ fn concrete1() {
 #[cfg(feature = "verifier-klee")]
 #[test]
 fn concrete2() {
-    let a : u32 = verifier::AbstractValue::abstract_value();
+    let a: u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(a <= 10); // limit number of distinct solutions
     verifier::assert!(verifier::VerifierNonDet::is_symbolic(a));
 
@@ -126,7 +128,7 @@ fn concrete2() {
 #[cfg(feature = "verifier-klee")]
 #[test]
 fn concrete3() {
-    let a : u32 = verifier::AbstractValue::abstract_value();
+    let a: u32 = verifier::AbstractValue::abstract_value();
     verifier::assume(a <= 1_000_000_000); // allow a huge number of solutions
     verifier::assert!(verifier::VerifierNonDet::is_symbolic(a));
 
@@ -135,7 +137,6 @@ fn concrete3() {
     verifier::assert!(!verifier::VerifierNonDet::is_symbolic(b));
     verifier::assert!(b <= 1_000_000_000);
 }
-
 
 /// Test of verifier_nondet_bytes
 #[cfg_attr(not(feature = "verifier-crux"), test)]

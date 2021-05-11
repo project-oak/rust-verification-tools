@@ -8,6 +8,6 @@ fn main() {
     if verifier::is_replay() {
         eprintln!("Test values: a = {}, b = {}", a, b);
     }
-    let r = a*b;
+    let r = a * b;
     verifier::assert!(1 <= r && r <= 1000000);
 }

@@ -18,8 +18,8 @@ use propverify::prelude::*;
 
 #[cfg(test)]
 mod test {
-    use core::fmt::Debug;
     use super::*;
+    use core::fmt::Debug;
 
     #[derive(Clone, Debug)]
     struct MyStruct {

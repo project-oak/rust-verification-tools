@@ -14,7 +14,6 @@
 /// 3. A path explosion in the handling of regular expressions.
 ///    At present, this explosion is not fixed and we keep the
 ///    strings very short to keep execution time reasonable.
-
 use regex::Regex;
 use verification_annotations::verifier;
 
@@ -39,7 +38,6 @@ fn regex_ok() {
     let i: u32 = a.parse().unwrap();
     verifier::assert!(i <= 11);
 }
-
 
 /// Test use of regular expressions
 #[cfg_attr(not(feature = "verifier-crux"), test)]

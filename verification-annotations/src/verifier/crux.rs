@@ -12,28 +12,27 @@
 
 use crate::traits::*;
 
-impl <T: AbstractValue> VerifierNonDet for T {
+impl<T: AbstractValue> VerifierNonDet for T {
     fn verifier_nondet(self) -> Self {
         T::abstract_value()
     }
 }
 
-impl <T: crucible::Symbolic> AbstractValue for T {
+impl<T: crucible::Symbolic> AbstractValue for T {
     fn abstract_value() -> Self {
         // We assume the string argument is just for reporting to the user, and
         // doesn't affect the results.
-        let r : T = crucible::Symbolic::symbolic("");
+        let r: T = crucible::Symbolic::symbolic("");
         r
     }
 }
 
-impl <T: crucible::Symbolic + Default> Symbolic for T {
+impl<T: crucible::Symbolic + Default> Symbolic for T {
     fn symbolic(desc: &'static str) -> Self {
-        let r : T = crucible::Symbolic::symbolic(desc);
+        let r: T = crucible::Symbolic::symbolic(desc);
         r
     }
 }
-
 
 /// Assume that condition `cond` is true
 ///
@@ -86,28 +85,32 @@ pub fn expect(_msg: Option<&str>) {
     panic!("not implemented")
 }
 
-
 #[macro_export]
 macro_rules! assert {
     ($cond:expr) => {
-        $crate::crucible::crucible_assert!($cond, "VERIFIER: assertion failed: {}", stringify!($cond));
-    };
-    // ($cond:expr,) => { ... };
-    // ($cond:expr, $($arg:tt)+) => { ... };
+        $crate::crucible::crucible_assert!(
+            $cond,
+            "VERIFIER: assertion failed: {}",
+            stringify!($cond)
+        );
+    }; // ($cond:expr,) => { ... };
+       // ($cond:expr, $($arg:tt)+) => { ... };
 }
 
 #[macro_export]
 macro_rules! assert_eq {
-    ($left:expr, $right:expr) => { $crate::verifier::assert!(($left) == ($right)); };
-    // ($left:expr, $right:expr,) => { ... };
-    // ($left:expr, $right:expr, $($arg:tt)+) => { ... };
+    ($left:expr, $right:expr) => {
+        $crate::verifier::assert!(($left) == ($right));
+    }; // ($left:expr, $right:expr,) => { ... };
+       // ($left:expr, $right:expr, $($arg:tt)+) => { ... };
 }
 
 #[macro_export]
 macro_rules! assert_ne {
-    ($left:expr, $right:expr) => { $crate::verifier::assert!(($left) != ($right)); };
-    // ($left:expr, $right:expr,) => { ... };
-    // ($left:expr, $right:expr, $($arg:tt)+) => { ... };
+    ($left:expr, $right:expr) => {
+        $crate::verifier::assert!(($left) != ($right));
+    }; // ($left:expr, $right:expr,) => { ... };
+       // ($left:expr, $right:expr, $($arg:tt)+) => { ... };
 }
 
 /////////////////////////////////////////////////////////////////

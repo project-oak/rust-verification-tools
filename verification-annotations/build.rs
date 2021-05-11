@@ -15,7 +15,5 @@ fn main() {
 #[cfg(feature = "verifier-seahorn")]
 fn seahorn() {
     println!("cargo:rerun-if-changed=lib/seahorn.c");
-    cc::Build::new()
-        .file("lib/seahorn.c")
-        .compile("seahorn");
+    cc::Build::new().file("lib/seahorn.c").compile("seahorn");
 }
