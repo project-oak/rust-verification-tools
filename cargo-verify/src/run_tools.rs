@@ -7,8 +7,13 @@ use crate::*;
 /// Trait for wrapping `std::process::Command::output()` with logging.
 pub trait OutputInfo {
     fn output_info(&mut self, opt: &Opt, lvl: Verbosity) -> CVResult<(String, String)> {
-        self.output_info_helper(&opt, lvl, |v| String::from(from_utf8(v).expect("not UTF-8")), false)
-            .map(|(stdout, stderr, _)| (stdout, stderr))
+        self.output_info_helper(
+            &opt,
+            lvl,
+            |v| String::from(from_utf8(v).expect("not UTF-8")),
+            false,
+        )
+        .map(|(stdout, stderr, _)| (stdout, stderr))
     }
 
     fn latin1_output_info(&mut self, opt: &Opt, lvl: Verbosity) -> CVResult<(String, String)> {
@@ -16,11 +21,24 @@ pub trait OutputInfo {
             .map(|(stdout, stderr, _)| (stdout, stderr))
     }
 
-    fn output_info_ignore_exit(&mut self, opt: &Opt, lvl: Verbosity) -> CVResult<(String, String, bool)> {
-        self.output_info_helper(&opt, lvl, |v| String::from(from_utf8(v).expect("not UTF-8")), true)
+    fn output_info_ignore_exit(
+        &mut self,
+        opt: &Opt,
+        lvl: Verbosity,
+    ) -> CVResult<(String, String, bool)> {
+        self.output_info_helper(
+            &opt,
+            lvl,
+            |v| String::from(from_utf8(v).expect("not UTF-8")),
+            true,
+        )
     }
 
-    fn latin1_output_info_ignore_exit(&mut self, opt: &Opt, lvl: Verbosity) -> CVResult<(String, String, bool)> {
+    fn latin1_output_info_ignore_exit(
+        &mut self,
+        opt: &Opt,
+        lvl: Verbosity,
+    ) -> CVResult<(String, String, bool)> {
         self.output_info_helper(&opt, lvl, utils::from_latin1, true)
     }
 
@@ -111,21 +129,27 @@ fn add_to_script(cmd: &Command, opt: &Opt) -> CVResult<()> {
     match &opt.script {
         None => Ok(()),
         Some(script) => {
-            let cd_str = cmd.get_current_dir().map(|dir| format!("cd '{}'", dir.to_string_lossy()));
-            let envs = cmd.get_envs().map(|(env, val)| {
-                match val {
-                    Some(val) => {
-                        // TODO: escape val properly?
-                        format!("export {}='{}'",
+            let cd_str = cmd
+                .get_current_dir()
+                .map(|dir| format!("cd '{}'", dir.to_string_lossy()));
+            let envs = cmd
+                .get_envs()
+                .map(|(env, val)| {
+                    match val {
+                        Some(val) => {
+                            // TODO: escape val properly?
+                            format!(
+                                "export {}='{}'",
                                 env.to_string_lossy(),
                                 val.to_string_lossy()
-                        )
+                            )
+                        }
+                        None => {
+                            format!("export {}=''", env.to_string_lossy())
+                        }
                     }
-                    None => {
-                        format!("export {}=''", env.to_string_lossy())
-                    }
-                }
-            }).collect::<Vec<_>>();
+                })
+                .collect::<Vec<_>>();
 
             let cmd_str = iter::once(cmd.get_program())
                 .chain(cmd.get_args())
@@ -133,7 +157,9 @@ fn add_to_script(cmd: &Command, opt: &Opt) -> CVResult<()> {
                 .collect::<Vec<_>>()
                 .join(" ");
 
-            let mut file = script.lock().map_err(|_| "Cannot acquire the script lock")?;
+            let mut file = script
+                .lock()
+                .map_err(|_| "Cannot acquire the script lock")?;
 
             let mut indent = 0;
 

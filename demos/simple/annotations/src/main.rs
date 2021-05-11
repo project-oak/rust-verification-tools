@@ -1,7 +1,7 @@
 use verification_annotations::prelude::*;
 
-#[cfg_attr(feature="verifier-crux", crux_test)]
-#[cfg_attr(not(feature="verifier-crux"), test)]
+#[cfg_attr(feature = "verifier-crux", crux_test)]
+#[cfg_attr(not(feature = "verifier-crux"), test)]
 fn t1() {
     let a = u32::abstract_value();
     let b = u32::abstract_value();
@@ -10,6 +10,6 @@ fn t1() {
     if verifier::is_replay() {
         eprintln!("Test values: a = {}, b = {}", a, b);
     }
-    let r = a*b;
+    let r = a * b;
     verifier::assert!(1 <= r && r < 1000000);
 }

@@ -319,14 +319,16 @@ pub mod bool {
     impl Strategy for Any {
         type Value = bool;
         fn value(&self) -> Self::Value {
-            let c : u8 = verifier::AbstractValue::abstract_value();
+            let c: u8 = verifier::AbstractValue::abstract_value();
             verifier::assume(c == 0 || c == 1);
             c == 1
         }
     }
     impl Arbitrary for bool {
         type Strategy = Any;
-        fn arbitrary() -> Self::Strategy { ANY }
+        fn arbitrary() -> Self::Strategy {
+            ANY
+        }
     }
 }
 
@@ -338,13 +340,15 @@ pub mod char {
     impl Strategy for Any {
         type Value = char;
         fn value(&self) -> Self::Value {
-            let c : u32 = verifier::AbstractValue::abstract_value();
+            let c: u32 = verifier::AbstractValue::abstract_value();
             std::char::from_u32(c).unwrap_or_reject()
         }
     }
     impl Arbitrary for char {
         type Strategy = Any;
-        fn arbitrary() -> Self::Strategy { ANY }
+        fn arbitrary() -> Self::Strategy {
+            ANY
+        }
     }
 }
 
@@ -815,8 +819,7 @@ pub struct VecStrategy<S: Strategy> {
     element: S,
     size: usize, // concrete size to be more friendly to concolic/DSE
 }
-impl<S: Strategy> Strategy for VecStrategy<S>
-{
+impl<S: Strategy> Strategy for VecStrategy<S> {
     type Value = Vec<S::Value>;
     fn value(&self) -> Self::Value {
         // Note that choosing a small, symbolic size causes KLEE to complain so

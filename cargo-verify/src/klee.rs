@@ -163,11 +163,13 @@ fn run(
 ) -> CVResult<(Status, HashMap<String, isize>)> {
     let mut cmd = Command::new("klee");
 
-    let user_flags: Vec<_> = opt.backend_flags.iter().map(|flag| {
-        backends_common::format_flag(&flag, &entry, &bcfile, &out_dir)
-    }).collect::<Result<_,_>>()?;
+    let user_flags: Vec<_> = opt
+        .backend_flags
+        .iter()
+        .map(|flag| backends_common::format_flag(&flag, &entry, &bcfile, &out_dir))
+        .collect::<Result<_, _>>()?;
 
-    if ! opt.replace_backend_flags {
+    if !opt.replace_backend_flags {
         cmd.args(&[
             "--exit-on-error",
             "--entry-point",
@@ -178,11 +180,11 @@ fn run(
             "--silent-klee-assume",
             "--disable-verify", // workaround https://github.com/klee/klee/issues/937
         ])
-            .arg("--output-dir")
-            .arg(out_dir)
-            .args(user_flags)
-            .arg(bcfile)
-            .args(&opt.args);
+        .arg("--output-dir")
+        .arg(out_dir)
+        .args(user_flags)
+        .arg(bcfile)
+        .args(&opt.args);
     } else {
         cmd.args(user_flags);
     }
@@ -258,11 +260,7 @@ fn run(
             Status::Unknown
         });
 
-    info!(
-        "Status: '{}' expected: '{:?}'",
-        status,
-        expect
-    );
+    info!("Status: '{}' expected: '{:?}'", status, expect);
 
     // Scan for statistics
     lazy_static! {
@@ -299,8 +297,7 @@ fn replay_klee(opt: &Opt, name: &str, ktest: &Path) -> CVResult<()> {
     let mut cmd = Command::new("cargo");
 
     if opt.tests || !opt.test.is_empty() {
-        cmd.arg("test")
-            .arg("--manifest-path").arg(&opt.cargo_toml);
+        cmd.arg("test").arg("--manifest-path").arg(&opt.cargo_toml);
 
         if !opt.features.is_empty() {
             cmd.arg("--features").arg(opt.features.join(","));
@@ -308,8 +305,7 @@ fn replay_klee(opt: &Opt, name: &str, ktest: &Path) -> CVResult<()> {
 
         cmd.arg(&name).args(&["--", "--nocapture"]);
     } else {
-        cmd.arg("run")
-            .arg("--manifest-path").arg(&opt.cargo_toml);
+        cmd.arg("run").arg("--manifest-path").arg(&opt.cargo_toml);
 
         if !opt.features.is_empty() {
             cmd.arg("--features").arg(opt.features.join(","));

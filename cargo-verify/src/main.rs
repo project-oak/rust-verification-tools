@@ -98,7 +98,12 @@ pub struct Opt {
     seahorn_verify_c_common_dir: Option<String>,
 
     /// Space or comma separated list of features to activate
-    #[structopt(long, value_name = "FEATURES", number_of_values = 1, use_delimiter = true)]
+    #[structopt(
+        long,
+        value_name = "FEATURES",
+        number_of_values = 1,
+        use_delimiter = true
+    )]
     features: Vec<String>,
 
     /// Run `cargo clean` first
@@ -107,11 +112,7 @@ pub struct Opt {
 
     /// Build LLVM bitcode file and save to "PATH" instead of
     /// running verifier on it.
-    #[structopt(
-        short, long,
-        value_name = "PATH",
-        parse(from_os_str),
-    )]
+    #[structopt(short, long, value_name = "PATH", parse(from_os_str))]
     output: Option<PathBuf>,
 
     /// Verify all tests instead of 'main'
@@ -283,10 +284,7 @@ fn process_command_line() -> CVResult<Opt> {
     if let Some(script) = &opt.script_arg {
         fs::remove_file(script).unwrap_or(());
         opt.script = Some(Mutex::new(
-            OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(script)?
+            OpenOptions::new().create(true).append(true).open(script)?,
         ));
     }
 
@@ -376,7 +374,11 @@ fn main() -> CVResult<()> {
 
     let status = match opt.backend {
         Backend::Proptest => {
-            info_at!(&opt, Verbosity::Informative, "  Invoking cargo run with proptest backend");
+            info_at!(
+                &opt,
+                Verbosity::Informative,
+                "  Invoking cargo run with proptest backend"
+            );
             proptest::run(&opt)
         }
         _ => {
@@ -404,14 +406,29 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
 
     // Compile and link the patched file using LTO to generate the entire
     // application in a single LLVM file
-    info_at!(&opt, Verbosity::Informative, "  Building {} for verification", package);
+    info_at!(
+        &opt,
+        Verbosity::Informative,
+        "  Building {} for verification",
+        package
+    );
     let bcfile = build(&opt, &package, &target)?;
 
-    info_at!(&opt, Verbosity::Informative, "  Generated LLVM bitcode file {}", bcfile.to_string_lossy());
+    info_at!(
+        &opt,
+        Verbosity::Informative,
+        "  Generated LLVM bitcode file {}",
+        bcfile.to_string_lossy()
+    );
 
     if let Some(output) = &opt.output {
         std::fs::copy(bcfile, output)?;
-        info_at!(&opt, Verbosity::Informative, "Wrote LLVM bitcode file to {}", output.to_string_lossy());
+        info_at!(
+            &opt,
+            Verbosity::Informative,
+            "Wrote LLVM bitcode file to {}",
+            output.to_string_lossy()
+        );
         exit(0) // return immediately, do not print status
     }
 
@@ -419,7 +436,12 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
     let tests = if opt.tests || !opt.test.is_empty() {
         // If using the --tests or --test flags, generate a list of tests and
         // their mangled names.
-        info_at!(&opt, Verbosity::Minor, "  Getting list of tests in {}", &package);
+        info_at!(
+            &opt,
+            Verbosity::Minor,
+            "  Getting list of tests in {}",
+            &package
+        );
         let mut tests = list_tests(&opt, &target)?;
         if !opt.test.is_empty() {
             tests = tests
@@ -511,9 +533,24 @@ fn verify(opt: &Opt, package: &str, target: &str) -> CVResult<Status> {
         status, passes, fails
     );
 
-    info_at!(&opt, Verbosity::Informative, "Build {:.3}s", before_verifier.duration_since(beginning).as_secs_f32());
-    info_at!(&opt, Verbosity::Informative, "Verify {:.3}s", end.duration_since(before_verifier).as_secs_f32());
-    info_at!(&opt, Verbosity::Informative, "Total {:.3}s", end.duration_since(beginning).as_secs_f32());
+    info_at!(
+        &opt,
+        Verbosity::Informative,
+        "Build {:.3}s",
+        before_verifier.duration_since(beginning).as_secs_f32()
+    );
+    info_at!(
+        &opt,
+        Verbosity::Informative,
+        "Verify {:.3}s",
+        end.duration_since(before_verifier).as_secs_f32()
+    );
+    info_at!(
+        &opt,
+        Verbosity::Informative,
+        "Total {:.3}s",
+        end.duration_since(beginning).as_secs_f32()
+    );
 
     Ok(status)
 }
@@ -563,10 +600,12 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
     let new_bc_file = add_pre_ext(&bc_file, "link");
     let rvt_dir = std::env::var("RVT_DIR")?;
     let rvt_dir = PathBuf::from(rvt_dir);
-    let runtime = rvt_dir.clone()
+    let runtime = rvt_dir
+        .clone()
         .append("runtime")
         .append(format!("rvt-{}.bc", opt.backend.to_string().to_lowercase()));
-    let simd_emulation = rvt_dir.clone()
+    let simd_emulation = rvt_dir
+        .clone()
         .append("simd_emulation")
         .append("simd_emulation.bc");
     info_at!(
@@ -604,7 +643,11 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
     // todo: This is probably useful with all verifiers - but
     // making it KLEE-only until we have a chance to test it.
     if opt.backend == Backend::Klee {
-        info_at!(&opt, Verbosity::Major, "  Patching LLVM file for initializers, feature tests, and SIMD");
+        info_at!(
+            &opt,
+            Verbosity::Major,
+            "  Patching LLVM file for initializers, feature tests, and SIMD"
+        );
         let new_bc_file = add_pre_ext(&bc_file, "patch-init-feat");
         patch_llvm(
             &opt,
@@ -715,7 +758,11 @@ fn compile(opt: &Opt, package: &str, target: &str) -> CVResult<(PathBuf, Vec<Pat
     )?
     .filter_map(Result::ok)
     // Filter only files that have exactly one '.'
-    .filter(|p| p.file_name().map(|f| f.to_string_lossy().matches('.').count() == 1).unwrap_or(false))
+    .filter(|p| {
+        p.file_name()
+            .map(|f| f.to_string_lossy().matches('.').count() == 1)
+            .unwrap_or(false)
+    })
     .filter(|p| count_symbols(&opt, p, &["main", "_main"]).map_or(false, |c| c > 0))
     .collect::<Vec<_>>();
 

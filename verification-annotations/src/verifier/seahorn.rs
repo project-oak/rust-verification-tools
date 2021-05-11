@@ -14,7 +14,7 @@ use std::convert::TryInto;
 
 pub use crate::traits::*;
 
-extern {
+extern "C" {
     fn __VERIFIER_error() -> !;
     fn __VERIFIER_assume(pred: i32);
 }
@@ -29,14 +29,18 @@ fn spanic() -> ! {
 /// In almost all circumstances, `report_error` should
 /// be used instead because it generates an error message.
 pub fn abort() -> ! {
-    unsafe { __VERIFIER_error(); }
+    unsafe {
+        __VERIFIER_error();
+    }
 }
 
 /// Assume that condition `cond` is true
 ///
 /// Any paths found must satisfy this assumption.
 pub fn assume(pred: bool) {
-    unsafe { __VERIFIER_assume(pred as i32); }
+    unsafe {
+        __VERIFIER_assume(pred as i32);
+    }
 }
 
 /// Reject the current execution path with a verification success.
@@ -79,13 +83,15 @@ pub fn expect_raw(msg: &str) {
 pub fn expect(msg: Option<&str>) {
     match msg {
         None => eprintln!("VERIFIER_EXPECT: should_panic"),
-        Some(msg) => eprintln!("VERIFIER_EXPECT: should_panic(expected = \"{}\")", msg)
+        Some(msg) => eprintln!("VERIFIER_EXPECT: should_panic(expected = \"{}\")", msg),
     }
 }
 
 macro_rules! make_nondet {
     ($typ:ty, $ext:ident, $v:expr) => {
-        extern { fn $ext() -> $typ; }
+        extern "C" {
+            fn $ext() -> $typ;
+        }
         impl VerifierNonDet for $typ {
             fn verifier_nondet(self) -> Self {
                 unsafe { $ext() }
@@ -115,7 +121,9 @@ macro_rules! make_nondet_ne_bytes {
             fn verifier_nondet(self) -> Self {
                 let mut bytes = vec![0u8; std::mem::size_of::<$typ>()];
                 for i in 0..bytes.len() {
-                    unsafe { bytes[i] = __VERIFIER_nondet_u8(); }
+                    unsafe {
+                        bytes[i] = __VERIFIER_nondet_u8();
+                    }
                 }
                 Self::from_ne_bytes(bytes[..].try_into().unwrap())
             }

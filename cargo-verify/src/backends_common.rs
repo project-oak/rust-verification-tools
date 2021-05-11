@@ -40,10 +40,7 @@ pub fn is_expected_panic(line: &str, expect: &Option<&str>, name: &str) -> bool 
         } else if let Some(caps) = PANICKED2.captures(line) {
             let message = caps.get(1).unwrap().as_str();
             if message.contains(expect) {
-                info!(
-                    "     {}: Detected expected failure '{}'",
-                    name, message
-                );
+                info!("     {}: Detected expected failure '{}'", name, message);
                 info!("     Error message: {}", line);
                 return true;
             }
@@ -55,8 +52,8 @@ pub fn is_expected_panic(line: &str, expect: &Option<&str>, name: &str) -> bool 
 
 #[derive(Serialize)]
 struct FormatFlagContext<'a> {
-    entry: &'a str,
-    file: &'a str,
+    entry:      &'a str,
+    file:       &'a str,
     output_dir: &'a str,
 }
 

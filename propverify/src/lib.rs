@@ -27,7 +27,7 @@ pub mod prelude {
     pub use crate::strategy::{bool, char};
 
     // Arbitrary trait
-    pub use crate::strategy::{Arbitrary, any};
+    pub use crate::strategy::{any, Arbitrary};
 
     pub mod prop {
         pub use crate::strategy::prop_is_replay;
@@ -47,9 +47,10 @@ pub mod prelude {
             pub use crate::strategy::vec_deque;
         }
         pub mod num {
+            #[cfg(feature = "float")]
+            pub use crate::strategy::{f32, f64};
             pub use crate::strategy::{i128, i16, i32, i64, i8, isize};
             pub use crate::strategy::{u128, u16, u32, u64, u8, usize};
-            #[cfg(feature = "float")] pub use crate::strategy::{f32, f64};
         }
 
         pub use crate::strategy::string;

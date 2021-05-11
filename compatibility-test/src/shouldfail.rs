@@ -2,7 +2,7 @@
 
 mod ranges {
 
-    proptest!{
+    proptest! {
         #[test]
         #[should_panic]
         fn overflow1(

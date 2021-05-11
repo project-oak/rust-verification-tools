@@ -62,7 +62,8 @@ fn importance(line: &str, expect: &Option<&str>, name: &str) -> i8 {
         1
     } else if line.starts_with("Warning: Externalizing function:")
         || line.starts_with("Warning: not lowering an initializer for a global struct:")
-        || (line.starts_with("Warning: found") && line.ends_with("possible reads of undefined values"))
+        || (line.starts_with("Warning: found")
+            && line.ends_with("possible reads of undefined values"))
     {
         4
     } else if backends_common::is_expected_panic(&line, &expect, &name) || line == "unsat" {
@@ -85,11 +86,13 @@ fn run(opt: &Opt, name: &str, entry: &str, bcfile: &Path, out_dir: &Path) -> CVR
 
     let mut cmd = Command::new("sea");
 
-    let user_flags: Vec<_> = opt.backend_flags.iter().map(|flag| {
-        backends_common::format_flag(&flag, &entry, &bcfile, &out_dir)
-    }).collect::<Result<_,_>>()?;
+    let user_flags: Vec<_> = opt
+        .backend_flags
+        .iter()
+        .map(|flag| backends_common::format_flag(&flag, &entry, &bcfile, &out_dir))
+        .collect::<Result<_, _>>()?;
 
-    if ! opt.replace_backend_flags {
+    if !opt.replace_backend_flags {
         cmd.arg("yama")
             .arg("-y")
             .arg(format!("{}/seahorn/sea_base.yaml", verify_common_dir))

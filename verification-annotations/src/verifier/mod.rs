@@ -31,7 +31,7 @@ pub use seahorn::*;
 pub fn verifier_nondet_bytes(n: usize) -> Vec<u8> {
     let mut v: Vec<u8> = Vec::with_capacity(n);
     v.resize_with(n, || VerifierNonDet::verifier_nondet(0u8));
-    return v
+    return v;
 }
 
 /// Allocate a symbolic CString
@@ -58,18 +58,17 @@ pub fn verifier_nondet_ascii_string(n: usize) -> String {
     }
 }
 
-impl <T: VerifierNonDet + Default> AbstractValue for T {
+impl<T: VerifierNonDet + Default> AbstractValue for T {
     fn abstract_value() -> Self {
         Self::verifier_nondet(Self::default())
     }
 }
 
-impl <T: VerifierNonDet + Default> Symbolic for T {
+impl<T: VerifierNonDet + Default> Symbolic for T {
     fn symbolic(_desc: &'static str) -> Self {
         Self::verifier_nondet(Self::default())
     }
 }
-
 
 // Macros
 
@@ -138,7 +137,9 @@ macro_rules! assert_ne {
 
 #[macro_export]
 macro_rules! unreachable {
-    () => { $crate::report_error("unreachable assertion was reached"); };
+    () => {
+        $crate::report_error("unreachable assertion was reached");
+    };
 }
 
 pub use crate::assert;
