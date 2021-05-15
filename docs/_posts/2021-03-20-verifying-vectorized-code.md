@@ -20,6 +20,11 @@ most of them do not -- so if your program uses Aho-Corasick (or
 any crate that depends on it like the [regex crate]), then you won't be
 able to verify your program.
 
+**[Since writing this post, we have realized that the approach described here
+does not work very well. We now favour the much more effective "emulate, don't
+eliminate" approach [described here][Verifying vectorized Rust revisited]:
+using a SIMD emulation library to replace SIMD intrinsics.]**
+
 The solution to this problem lies in the cause of the problem.
 Verification tools don't implement these intrinsics because they
 are not available on all processors.
@@ -155,6 +160,7 @@ portable version of the code and you can verify code that uses hand-vectorized l
 [Using ARGV]:                     {{site.baseurl}}{% post_url 2020-09-09-using-argv %}
 [Using FFI]:                      {{site.baseurl}}{% post_url 2020-12-11-using-ffi %}
 [Profiling Rust]:                 {{site.baseurl}}{% post_url 2021-03-12-profiling-rust %}
+[Verifying vectorized Rust revisited]: {{site.baseurl}}{% post_url 2021-03-20-verifying-vectorized-code %}
 
 [Measuring coverage]:             http://ccadar.blogspot.com/2020/07/measuring-coverage-achieved-by-symbolic.html
 [KLEE testing CoreUtils]:         https://klee.github.io/tutorials/testing-coreutils/
