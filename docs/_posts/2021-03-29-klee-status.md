@@ -22,7 +22,7 @@ As a user of our tools and libraries, what you will mostly see is
   - "cargo-verify" behaves a lot like "cargo test".
 
   - (Most of) how we persuade cargo build to generate bitcode files for KLEE is
-    [described here](https://project-oak.github.io/rust-verification-tools/using-klee/).
+    [described here][Using KLEE].
 
 - Our ["verification-annotations" crate][using verification-annotations] supports almost all of the functions in
   KLEE's intrinsics.
