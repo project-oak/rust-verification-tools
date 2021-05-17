@@ -21,6 +21,9 @@ RUN git clone --no-checkout https://github.com/seahorn/seahorn.git ${SEAHORN_DIR
   && cd ${SEAHORN_DIR} \
   && git checkout ${SEAHORN_VERSION}
 
+# Configure, build and install SeaHorn
+# Afterwards, clean up large files but not configuration files
+# so that RVT developers can easily tweak the configuration and rebuild.
 RUN mkdir ${SEAHORN_DIR}/build \
   && cd ${SEAHORN_DIR}/build \
   && cmake \
@@ -35,16 +38,11 @@ RUN mkdir ${SEAHORN_DIR}/build \
      -GNinja \
      -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
      -DLLVM_DIR=/usr/lib/llvm-${LLVM_VERSION}/lib/cmake/llvm \
-     ..
-
-RUN cd seahorn/build && cmake --build . -j4 --target extra  && cmake ..
-RUN cd seahorn/build && cmake --build . -j4 --target crab  && cmake ..
-RUN cd seahorn/build && cmake --build . -j4 --target install
-
-# Clean up large files
-# We try to leave enough files that rebuilding is easy (in case you
-# want to tweak the configuration and rebuild) while not creating
-# enormous Docker images.
-RUN cd seahorn/build && sudo cmake --build . --target clean && rm -r run
+     .. \
+  && cmake --build . -j4 --target extra \
+  && cmake --build . -j4 --target crab \
+  && cmake .. \
+  && sudo cmake --build . -j4 --target install \
+  && sudo cmake --build . --target clean
 
 ENV PATH="${SEAHORN_DIR}/build/run/bin:$PATH"
