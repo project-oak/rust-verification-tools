@@ -18,7 +18,8 @@ RUN git clone --no-checkout https://github.com/stp/minisat.git \
   && cd build \
   && cmake .. \
   && make -j4 \
-  && sudo make install
+  && sudo make install \
+  && make clean
 
 # Install stp solver
 
@@ -33,7 +34,8 @@ RUN git clone --no-checkout https://github.com/stp/stp.git \
   && cd build \
   && cmake .. \
   && make -j4 \
-  && sudo make install
+  && sudo make install \
+  && make clean
 
 # Install yices solver
 
@@ -45,19 +47,19 @@ RUN curl --location https://yices.csl.sri.com/releases/${YICES_VERSION}/yices-${
   && tar xf yices.tgz \
   && rm yices.tgz \
   && cd "yices-${YICES_VERSION}" \
-  && sudo ./install-yices
+  && sudo ./install-yices \
+  && cd .. \
+  && rm -r "yices-${YICES_VERSION}"
 
 ENV YICES_DIR=${USER_HOME}/yices/yices-${YICES_VERSION}
-
-# Install z3 solver
-
-RUN mkdir ${USER_HOME}/z3
-WORKDIR ${USER_HOME}/z3
 
 # Install the binary version of Z3.
 # (Changing this to build from source would be fine - but slow)
 #
 # The Ubuntu version is a little out of date but that doesn't seem to cause any problems
+
+RUN mkdir ${USER_HOME}/z3
+WORKDIR ${USER_HOME}/z3
 ARG Z3_VERSION
 RUN curl --location https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-ubuntu-16.04.zip > z3.zip \
   && unzip -q z3.zip \
