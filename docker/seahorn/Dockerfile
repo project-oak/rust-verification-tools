@@ -37,9 +37,9 @@ RUN mkdir ${SEAHORN_DIR}/build \
      -DLLVM_DIR=/usr/lib/llvm-${LLVM_VERSION}/lib/cmake/llvm \
      ..
 
-RUN cd seahorn/build && cmake --build . --target extra  && cmake ..
-RUN cd seahorn/build && cmake --build . --target crab  && cmake ..
-RUN cd seahorn/build && cmake --build . --target install
+RUN cd seahorn/build && cmake --build . -j4 --target extra  && cmake ..
+RUN cd seahorn/build && cmake --build . -j4 --target crab  && cmake ..
+RUN cd seahorn/build && cmake --build . -j4 --target install
 
 # Clean up large files
 # We try to leave enough files that rebuilding is easy (in case you
