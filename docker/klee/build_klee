@@ -34,6 +34,6 @@ cmake \
   -DGTEST_SRC_DIR=${GTEST_DIR} \
   ..
 make -j 4
-make check
+# make check
 sudo make install
 make clean

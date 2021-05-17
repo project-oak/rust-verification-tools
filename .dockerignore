@@ -1,0 +1,45 @@
+/.git
+/bin
+/docs
+
+/downloads
+/experiments
+/runtime/build_*
+
+# .dockerignore files differ from .gitignore files in that
+# all filenames implicitly start at the root so we have
+# to replicate the following rules once for every level
+# of the directory hierarchy.
+
+
+*.bc
+*.ll
+*.o
+target
+kleeout*
+klee-out-*
+klee-last
+
+*/*.bc
+*/*.ll
+*/*.o
+*/target
+*/kleeout*
+*/klee-out-*
+*/klee-last
+
+*/*/*.bc
+*/*/*.ll
+*/*/*.o
+*/*/target
+*/*/kleeout*
+*/*/klee-out-*
+*/*/klee-last
+
+*/*/*/*.bc
+*/*/*/*.ll
+*/*/*/*.o
+*/*/*/target
+*/*/*/kleeout*
+*/*/*/klee-out-*
+*/*/*/klee-last
