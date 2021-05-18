@@ -923,7 +923,7 @@ mod vector {
     where
         F: Fn(A) -> R,
         G: Fn(usize, R, R) -> R,
-        A: Vector4,
+        A: Vector2,
         R: Copy,
     {
         let r0 = f(A::get0(&a));
@@ -1178,4 +1178,14 @@ unsafe extern "C" fn llvm_x86_avx2_pshuf_b(a: u8x32, b: u8x32) -> u8x32 {
         r[i] = a[j as usize];
     }
     unsafe { U { arr: r }.intel }
+}
+
+#[no_mangle]
+unsafe extern "C" fn llvm_experimental_vector_reduce_add_v2i64(a: u64x2) -> u64 {
+    lift2_v_s(|x| x, |i, x, y| u64::wrapping_add(x, y), a)
+}
+
+#[no_mangle]
+unsafe extern "C" fn llvm_experimental_vector_reduce_or_v2i64(a: u64x2) -> u64 {
+    lift2_v_s(|x| x, |i, x, y| (x | y), a)
 }
