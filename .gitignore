@@ -1,5 +1,15 @@
+/bin
+/downloads
+/experiments
+/runtime/build
+
 Cargo.lock
 target/
 kleeout/
+klee-out-*
+klee-last
+*.bc
+*.ll
+*.o
 .*un~
 .*swp
