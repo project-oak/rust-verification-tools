@@ -86,8 +86,6 @@ macro_rules! coherent {
 To test these, I wrote a small test to create an array, set each
 element of the array to a symbolic value
 
-**todo: check that this matches the latest version of the test and add a link to the actual code**
-
 ``` rust
 use verification_annotations::prelude::*;
 
@@ -118,12 +116,16 @@ fn test_merged() {
 
 Running this test on KLEE with
 
+``` sh
     cargo verify --backend=klee --tests -vv --backend-flags=--use-merge |& grep 'generated tests'
+```
 
 should result in
 
+```
     test_original: {"generated tests": 1024, "total instructions": 709566, "completed paths": 4093}
     test_merged: {"generated tests": 1, "completed paths": 41, "total instructions": 11852}
+```
 
 Indicating that the original version suffers from a path explosion and generates
 more tests, executes more instructions and explores more paths than the merged version.
