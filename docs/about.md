@@ -43,9 +43,13 @@ Here's the basics of getting started with our tools.
     docker/build
     ```
 
-   This will take several hours to build the Docker images.
+   This will take about 15-20 minutes to build the Docker images.
    The resulting docker image can be run by executing `docker/run`
    which executes a bash shell using the current user in the current directory.
+
+   If building on OSX, you should increase the container memory limit before
+   running `docker/build` using the slider in the Configure:Resources menu.
+   We tested with 8GB but 4GB is probably enough.
 
    If you are unable to use Docker, the best approach is to manually execute
    the commands in the Dockerfiles invoked at the end of the [docker/build script][docker-build].

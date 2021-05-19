@@ -27,6 +27,7 @@ RUN git clone --no-checkout https://github.com/seahorn/seahorn.git ${SEAHORN_DIR
 RUN mkdir ${SEAHORN_DIR}/build \
   && cd ${SEAHORN_DIR}/build \
   && cmake \
+     # -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
      -DCMAKE_INSTALL_PREFIX=run \
      # -DCMAKE_BUILD_TYPE="Debug" \
      -DCMAKE_BUILD_TYPE="Release" \
