@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source $(dirname "$(realpath -s "$0")")/sudo_if_needed.bash
+
 readonly DOCKER_IMAGE_NAME="$1"
 readonly DOCKER_FILE="$2"
 readonly DOCKER_VERSION="latest"
@@ -27,7 +29,7 @@ else
   KLEE_VERSION="c51ffcd377097ee80ec9b0d6f07f8ea583a5aa1d"
 fi
 
-sudo docker build \
+sudo_if_needed docker build \
   --file=${DOCKER_FILE} \
   --cache-from="${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}" \
   --tag="${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}" \
