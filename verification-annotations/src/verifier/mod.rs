@@ -6,7 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#[cfg(feature = "std")]
 use std::default::Default;
+
+#[cfg(feature = "std")]
 use std::ffi::CString;
 
 // Traits for creating symbolic/abstract values
@@ -27,6 +30,7 @@ mod seahorn;
 #[cfg(feature = "verifier-seahorn")]
 pub use seahorn::*;
 
+#[cfg(feature = "std")]
 /// Allocate a symbolic vector of bytes
 pub fn verifier_nondet_bytes(n: usize) -> Vec<u8> {
     let mut v: Vec<u8> = Vec::with_capacity(n);
@@ -34,6 +38,7 @@ pub fn verifier_nondet_bytes(n: usize) -> Vec<u8> {
     return v;
 }
 
+#[cfg(feature = "std")]
 /// Allocate a symbolic CString
 pub fn verifier_nondet_cstring(size_excluding_null: usize) -> CString {
     let mut r = verifier_nondet_bytes(size_excluding_null + 1);
@@ -44,6 +49,7 @@ pub fn verifier_nondet_cstring(size_excluding_null: usize) -> CString {
     unsafe { CString::from_vec_with_nul_unchecked(r) }
 }
 
+#[cfg(feature = "std")]
 /// Allocate a symbolic ASCII String
 /// (ASCII strings avoid the complexity of UTF-8)
 pub fn verifier_nondet_ascii_string(n: usize) -> String {
@@ -58,12 +64,14 @@ pub fn verifier_nondet_ascii_string(n: usize) -> String {
     }
 }
 
+#[cfg(feature = "std")]
 impl<T: VerifierNonDet + Default> AbstractValue for T {
     fn abstract_value() -> Self {
         Self::verifier_nondet(Self::default())
     }
 }
 
+#[cfg(feature = "std")]
 impl<T: VerifierNonDet + Default> Symbolic for T {
     fn symbolic(_desc: &'static str) -> Self {
         Self::verifier_nondet(Self::default())
