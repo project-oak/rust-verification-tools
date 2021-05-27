@@ -12,6 +12,8 @@ keywords = ["klee", "crux", "seahorn", "mir", "verification", "testing"]
 license = "MIT OR Apache-2.0"
 
 [features]
+default = [ "std" ]
+std = []
 verifier-crux = []
 verifier-klee = []
 verifier-seahorn = [ "cc" ]

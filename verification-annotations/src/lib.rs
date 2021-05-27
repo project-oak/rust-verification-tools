@@ -7,11 +7,13 @@
 // except according to those terms.
 
 #![feature(cstring_from_vec_with_nul)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 // Traits for creating symbolic/abstract values
 pub mod traits;
 pub mod verifier;
 
+#[cfg(feature = "std")]
 pub mod utils {
     pub trait UnwrapOrReject {
         type Wrapped;
@@ -42,6 +44,7 @@ pub mod utils {
 // `use verfication_annotations::prelude::*`
 pub mod prelude {
     pub use crate::traits::*;
+    #[cfg(feature = "std")]
     pub use crate::utils::*;
     pub use crate::verifier;
 
@@ -56,5 +59,5 @@ pub mod prelude {
 // At the moment, the cargo-verify script does not support
 // use of a separate test directory so, for now, we put
 // the tests here.
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests;

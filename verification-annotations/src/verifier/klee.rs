@@ -12,11 +12,9 @@
 
 pub use crate::traits::*;
 
-use std::os::raw;
-
 #[link(name = "kleeRuntest")]
 extern "C" {
-    fn klee_make_symbolic(data: *mut raw::c_void, length: usize, name: *const raw::c_char);
+    fn klee_make_symbolic(data: *mut u8, length: usize, name: *const i8);
     fn klee_assume(cond: usize);
     fn klee_abort() -> !;
     fn klee_silent_exit(_ignored: u32) -> !;
@@ -82,8 +80,8 @@ macro_rules! make_verifier_nondet {
             fn verifier_nondet(self) -> Self {
                 let mut r = self;
                 unsafe {
-                    let data = std::mem::transmute(&mut r);
-                    let length = std::mem::size_of::<$typ>();
+                    let data: *mut u8 = &mut r as *mut $typ as *mut u8;
+                    let length = core::mem::size_of::<$typ>();
                     let null = 0 as *const i8;
                     klee_make_symbolic(data, length, null)
                 }
@@ -248,6 +246,7 @@ where
     T::get_concrete_value(x)
 }
 
+#[cfg(feature = "std")]
 /// Reject the current execution with a verification failure
 /// and an error message.
 pub fn report_error(message: &str) -> ! {
@@ -258,11 +257,13 @@ pub fn report_error(message: &str) -> ! {
     abort();
 }
 
+#[cfg(feature = "std")]
 /// Declare that failure is the expected behaviour
 pub fn expect_raw(msg: &str) {
     eprintln!("VERIFIER_EXPECT: {}", msg)
 }
 
+#[cfg(feature = "std")]
 /// Declare that failure is the expected behaviour
 pub fn expect(msg: Option<&str>) {
     match msg {
