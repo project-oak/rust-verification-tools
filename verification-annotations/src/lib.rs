@@ -6,8 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[cfg_attr(feature = "std", cstring_from_vec_with_nul)]
-//
+// #[cfg_attr(feature = "std", cstring_from_vec_with_nul)]
+#![no_std]
+
 // Traits for creating symbolic/abstract values
 pub mod traits;
 pub mod verifier;
