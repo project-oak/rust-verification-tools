@@ -133,6 +133,10 @@ pub struct Opt {
     #[structopt(long, number_of_values = 1, value_name = "TESTNAME")]
     test: Vec<String>,
 
+    /// Build and run this specific binary
+    #[structopt(long, value_name = "NAME")]
+    bin: Option<String>,
+
     // jobs_arg is used for holding the CL option. After parsing, if the user
     // specified a value it will be copied to the `jobs` field below, if the
     // user didn't specify a value, we will use num_cpus, and put it in the
@@ -378,7 +382,10 @@ fn main() -> CVResult<()> {
         clean(&opt);
     }
 
-    let package = get_meta_package_name(&opt)?;
+    let package = match &opt.bin {
+        Some(bin) => bin.clone(),
+        None => get_meta_package_name(&opt)?,
+    };
     info_at!(&opt, Verbosity::Informative, "Checking {}", &package);
 
     let status = match opt.backend {
