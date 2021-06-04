@@ -70,18 +70,21 @@ int pthread_condattr_setclock (pthread_condattr_t *__attr, __clockid_t __clock_i
 
 /***/
 
-static void *specific_value;
+static void *specific_value[1000];
 
 void *pthread_getspecific (pthread_key_t __key) {
-        return specific_value;
+        return specific_value[__key];
 }
 
 int pthread_setspecific (pthread_key_t __key, const void *__pointer) {
-        specific_value = (void*)__pointer;
+        specific_value[__key] = (void*)__pointer;
         return 0;
 }
 
 int pthread_key_create (pthread_key_t *__key, void (*__destr_function) (void *)) {
+        /* Some programs expect value that is not 0, so we'll start from 1 */
+        static pthread_key_t next = 1;
+        *__key = next++;
         return 0;
 }
 
