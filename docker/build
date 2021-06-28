@@ -26,4 +26,4 @@ docker/mkimage rvt docker/rvt/Dockerfile
 
 # Optional: verification profiling support
 # Note that this creates a VERY LARGE image including X11, kcachegrind and lots more
-(cd docker/rust2calltree && ../mkimage rvt_r2ct Dockerfile)
+# (cd docker/rust2calltree && ../mkimage rvt_r2ct Dockerfile)

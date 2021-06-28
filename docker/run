@@ -11,4 +11,4 @@ readonly MOUNT_RVT="type=bind,source=${RVT_SRC},target=${RVT_DST}"
 # based on https://dzone.com/articles/docker-x11-client-via-ssh
 readonly X11="--net=host --env=DISPLAY --volume=$HOME/.Xauthority:/home/$USER/.Xauthority:rw"
 
-sudo_if_needed docker run --rm --mount ${MOUNT_RVT} --mount ${MOUNT_PWD} --workdir ${PWD} ${X11} -it rvt_r2ct:latest "$@"
+sudo_if_needed docker run --rm --mount ${MOUNT_RVT} --mount ${MOUNT_PWD} --workdir ${PWD} ${X11} -it rvt:latest "$@"
