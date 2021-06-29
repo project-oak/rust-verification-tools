@@ -31,7 +31,7 @@ be used with LLVM-based verification tools.)
   an implementation of the [proptest](https://github.com/AltSysrq/proptest)
   library for use with static verification tools.
 
-- `scripts/cargo-verify`: a tool for compiling a crate and
+- `cargo-verify`: a tool for compiling a crate and
   either verifying main/tests or for fuzzing main/tests.
   (Use the `--backend` flag to select which.)
 
@@ -56,15 +56,15 @@ TL;DR
    ```
 
    (You can also use
-   `./scripts/cargo-verify --backend=proptest --verbose compatibility-test`.)
+   `cargo-verify --backend=proptest --verbose`.)
 
    One test should fail – this is correct behaviour.
 
 3. Verify some examples with propverify
 
-   `./scripts/cargo-verify --tests verification-annotations`
+   `cd verification-annotations; cargo-verify --tests`
 
-   `./scripts/cargo-verify --tests compatibility-test`
+   `cd verification-annotations; cargo-verify --tests`
 
    No tests should fail.
 
