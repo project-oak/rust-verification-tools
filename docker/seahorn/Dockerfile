@@ -1,4 +1,4 @@
-FROM rvt_klee:latest
+FROM rvt_rmc:latest
 
 USER ${USERNAME}
 WORKDIR ${USER_HOME}

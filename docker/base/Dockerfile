@@ -38,8 +38,10 @@ RUN apt-get --yes update \
   llvm-10-dev \
   llvm-11 \
   llvm-11-dev \
+  make \
   ncurses-doc \
   ninja-build \
+  libssl-dev \
   perl \
   pkg-config \
   python \

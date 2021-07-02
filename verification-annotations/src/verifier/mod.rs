@@ -22,6 +22,11 @@ mod crux;
 #[cfg(feature = "verifier-crux")]
 pub use crux::*;
 
+#[cfg(feature = "verifier-rmc")]
+mod rmc;
+#[cfg(feature = "verifier-rmc")]
+pub use rmc::*;
+
 #[cfg(feature = "verifier-seahorn")]
 mod seahorn;
 #[cfg(feature = "verifier-seahorn")]

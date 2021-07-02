@@ -17,6 +17,7 @@ set -e
 (cd docker/base    && ../mkimage rvt_base       Dockerfile)
 (cd docker/solvers && ../mkimage rvt_solvers    Dockerfile)
 (cd docker/klee    && ../mkimage rvt_klee       Dockerfile)
+(cd docker/rmc     && ../mkimage rvt_rmc        Dockerfile)
 (cd docker/seahorn && ../mkimage rvt_seahorn    Dockerfile)
 
 # This does not run in a subdirectory so it will copy everything over.

@@ -8,12 +8,13 @@ authors = [
 edition = "2018"
 description = "verification annotation library"
 categories = ["development-tools::testing"]
-keywords = ["klee", "crux", "seahorn", "mir", "verification", "testing"]
+keywords = ["klee", "crux", "rmc", "seahorn", "mir", "verification", "testing"]
 license = "MIT OR Apache-2.0"
 
 [features]
 verifier-crux = []
 verifier-klee = []
+verifier-rmc = []
 verifier-seahorn = [ "cc" ]
 
 [build-dependencies]

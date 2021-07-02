@@ -37,10 +37,13 @@ sudo_if_needed docker build \
   --build-arg=USER_UID="$DOCKER_UID" \
   --build-arg=USER_GID="$DOCKER_GID" \
   --build-arg=UBUNTU_VERSION="20.04" \
+  --build-arg=CBMC_VERSION="5.33.0" \
+  --build-arg=CBMC_VIEWER_VERSION="2.5" \
   --build-arg=GTEST_VERSION="1.7.0" \
   --build-arg=LLVM_VERSION="${LLVM_VERSION}" \
   --build-arg=KLEE_VERSION="${KLEE_VERSION}" \
   --build-arg=MINISAT_VERSION="37158a35c62d448b3feccfa83006266e12e5acb7" \
+  --build-arg=RMC_VERSION="main-153-2021-06-23" \
   --build-arg=RUSTC_VERSION="${RUSTC_VERSION}" \
   --build-arg=STP_VERSION="2.3.3" \
   --build-arg=SEAHORN_VERIFY_C_COMMON_VERSION="70129bf47c421d8283785a8fb13cdb216424ef91" \
