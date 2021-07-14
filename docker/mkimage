@@ -31,7 +31,6 @@ fi
 
 sudo_if_needed docker build \
   --file=${DOCKER_FILE} \
-  --platform="linux/amd64" \
   --cache-from="${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}" \
   --tag="${DOCKER_IMAGE_NAME}:${DOCKER_VERSION}" \
   --build-arg=USERNAME="$DOCKER_USER" \
