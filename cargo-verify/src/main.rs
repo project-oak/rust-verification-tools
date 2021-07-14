@@ -149,6 +149,10 @@ pub struct Opt {
     #[structopt(skip)]
     jobs: usize,
 
+    /// Do not activate the `default` feature
+    #[structopt(long)]
+    no_default_features: bool,
+
     /// Replay to display concrete input values
     #[structopt(short, long, parse(from_occurrences))]
     replay: usize,
@@ -738,6 +742,9 @@ fn compile(opt: &Opt, package: &str, target: &str) -> CVResult<(PathBuf, Vec<Pat
 
     if opt.tests || !opt.test.is_empty() {
         cmd.arg("--tests");
+    }
+    if opt.no_default_features {
+        cmd.arg("--no-default-features");
     }
 
     // The following line is not present because we care about the target It is
