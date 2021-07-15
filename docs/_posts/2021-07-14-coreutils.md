@@ -263,7 +263,14 @@ This needs a couple of minor changes to make it work with Rust.
 2. We need to add the `--disable-verify` flag from above and drop the
    `--optimize` flag to avoid some issues in KLEE.
 
-3. The above code expects you to create a "sandbox" to prevent your
+3. We can omit `--use-cex-cache`, `--switch-type`, `--search` and
+   `--batch-instructions` because those are the default values.
+   But it's worth knowing about them if you want to try non-default settings.
+
+4. We can omit `--write-cov` and `--write-cvcs` unless we want to look
+   at the files that they generate.
+
+5. The above code expects you to create a "sandbox" to prevent your
    application from damaging your system.
    Since we don't think `arch` can do any harm, let's skip that extra
    complication. YOLO!
@@ -271,16 +278,15 @@ This needs a couple of minor changes to make it work with Rust.
 This results in the following command
 
 ```
-klee --disable-verify --simplify-sym-indices --write-cvcs \
---write-cov --output-module --max-memory=1000 --disable-inlining \
---use-forked-solver --use-cex-cache --libc=uclibc --posix-runtime \
---external-calls=all --only-output-states-covering-new \
---max-sym-array-size=4096 --max-solver-time=30s --max-time=60min --watchdog \
---max-memory-inhibit=false --max-static-fork-pct=1 --max-static-solve-pct=1 \
---max-static-cpfork-pct=1 --switch-type=internal --search=random-path \
---search=nurs:covnew --use-batching-search --batch-instructions=10000 \
-./app.bc \
---sym-args 0 1 10 --sym-args 0 2 2 --sym-files 1 8 --sym-stdin 8 --sym-stdout
+klee --disable-verify --simplify-sym-indices \
+  --output-module --max-memory=1000 --disable-inlining \
+  --use-forked-solver --libc=uclibc --posix-runtime \
+  --external-calls=all --only-output-states-covering-new \
+  --max-sym-array-size=4096 --max-solver-time=30s --max-time=60min --watchdog \
+  --max-memory-inhibit=false --max-static-fork-pct=1 --max-static-solve-pct=1 \
+  --max-static-cpfork-pct=1 --use-batching-search --batch-instructions=10000 \
+  ./app.bc \
+  --sym-args 0 1 10 --sym-args 0 2 2 --sym-files 1 8 --sym-stdin 8 --sym-stdout
 ```
 
 This results in warning messages like before followed by a lot of variations
@@ -322,10 +328,11 @@ the `arch` command so let's try some different commands.
 
 (If you want to spend more time with this command, you might investigate the
 contents of the `klee-last` directory. This will now contain lots of files
-with names like `test000037.ktest` and `test000032.cov`.
-You can use `ktest-tool test000037.ktest` to look at the input for this test
-and examine the `.cov` files for a list of file:line pairs of lines covered
-by the tests.)
+with names like `test000037.ktest`.
+You can use `ktest-tool test000037.ktest` to look at the input for this test.
+And, if you want to [see what parts of the code have (not) been hit]({{site.baseurl}}{% post_url 2021-03-12-profiling-rust %}),
+you can also examine `run.istats` using `kcachegrind`
+using [our Rust name demangling tool][rust2calltree].)
 
 
 ## Testing other commands
@@ -351,16 +358,15 @@ EOF
 
 cargo verify -v --clean --bin base64 -o app.bc
 
-klee --disable-verify --simplify-sym-indices --write-cvcs \
---write-cov --output-module --max-memory=1000 --disable-inlining \
---use-forked-solver --use-cex-cache --libc=uclibc --posix-runtime \
---external-calls=all --only-output-states-covering-new \
---max-sym-array-size=4096 --max-solver-time=30s --max-time=60min --watchdog \
---max-memory-inhibit=false --max-static-fork-pct=1 --max-static-solve-pct=1 \
---max-static-cpfork-pct=1 --switch-type=internal --search=random-path \
---search=nurs:covnew --use-batching-search --batch-instructions=10000 \
-./app.bc \
---sym-args 0 1 10 --sym-args 0 2 2 --sym-files 1 8 --sym-stdin 8 --sym-stdout
+klee --disable-verify --simplify-sym-indices \
+  --output-module --max-memory=1000 --disable-inlining \
+  --use-forked-solver --libc=uclibc --posix-runtime \
+  --external-calls=all --only-output-states-covering-new \
+  --max-sym-array-size=4096 --max-solver-time=30s --max-time=60min --watchdog \
+  --max-memory-inhibit=false --max-static-fork-pct=1 --max-static-solve-pct=1 \
+  --max-static-cpfork-pct=1 --use-batching-search --batch-instructions=10000 \
+  ./app.bc \
+  --sym-args 0 1 10 --sym-args 0 2 2 --sym-files 1 8 --sym-stdin 8 --sym-stdout
 ```
 
 When run in `coreutils/src/uu/base64`, this produces a lot of error messages
@@ -414,10 +420,11 @@ Some possible next steps are:
   A simple starting point might just be to pipe the output through `sort -u`
   or to pipe it through `grep -v 'Input with broken encoding'` or similar.
 
-- Explore the coverage reports in the `klee-last/test*.cov` files to understand
+- Explore the coverage information in `klee-last/run.istats` files to understand
   what is being covered and what is not being tested.
   See [this blog
   post](http://ccadar.blogspot.com/2020/07/measuring-coverage-achieved-by-symbolic.html)
+  and [this post]({{site.baseurl}}{% post_url 2021-03-12-profiling-rust %}).
 
 - Use the ktest files in `klee-last/test*.ktest` to generate testcases that
   rerun any errors that you find or that rerun all of the inputs that KLEE
@@ -448,3 +455,4 @@ Enjoy!
 [Rust CoreUtils]:                 https://github.com/uutils/coreutils
 [RVT git repo]:                   {{site.gitrepo}}/
 [SeaHorn]:                        https://seahorn.github.io/
+[rust2calltree]:                  {{site.gitrepo}}tree/main/rust2calltree
