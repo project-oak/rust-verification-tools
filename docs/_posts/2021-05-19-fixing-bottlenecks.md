@@ -3,6 +3,7 @@ layout: post
 title: Fixing bottlenecks in Rust verification
 ---
 
+![KLEE logo](https://klee.github.io/images/klee.svg){: style="float: left; width: 10%; padding: 1%"}
 It is inevitable that automatic verification tools will have performance
 problems because they push up against ["the decidability
 ceiling"][leino:informatics:2001]: trying to solve undecidable problems and
