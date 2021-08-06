@@ -1,4 +1,5 @@
-FROM rvt:latest
+ARG FROM_IMAGE_FOR_RVT_R2CT
+FROM ${FROM_IMAGE_FOR_RVT_R2CT}
 
 # Placeholder args that are expected to be passed in at image build time.
 # See https://code.visualstudio.com/docs/remote/containers-advanced#_creating-a-nonroot-user

@@ -1,10 +1,15 @@
 /.git
+/.github
 /bin
 /docs
 
+/compatibility-test
+/demos
+/docs
 /downloads
 /experiments
 /runtime/build_*
+/verification-annotations
 
 # .dockerignore files differ from .gitignore files in that
 # all filenames implicitly start at the root so we have
