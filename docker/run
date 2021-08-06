@@ -1,14 +1,91 @@
 #!/usr/bin/env bash
 
-source $(dirname "$(realpath -s "$0")")/sudo_if_needed.bash
+arguments=$@
 
-readonly RVT_SRC=$(dirname "$(realpath -s "$0")")/..
-readonly RVT_DST=/home/rust-verification-tools
+function run_rvt() {
+    local run_in_detached_mode
+    run_in_detached_mode="${DETACHED_MODE}"
 
-readonly MOUNT_PWD="type=bind,source=${PWD},target=${PWD}"
-readonly MOUNT_RVT="type=bind,source=${RVT_SRC},target=${RVT_DST}"
+    local help
+    help=''
 
-# based on https://dzone.com/articles/docker-x11-client-via-ssh
-readonly X11="--net=host --env=DISPLAY --volume=$HOME/.Xauthority:/home/$USER/.Xauthority:rw"
+    if [ "${arguments[0]}" == '--help' ];
+    then
+        help='Here are some tips:'
+        arguments=("${arguments[@]:1}")
+    fi
 
-sudo_if_needed docker run --rm --mount ${MOUNT_RVT} --mount ${MOUNT_PWD} --workdir ${PWD} ${X11} -it rvt_r2ct:latest "$@"
+    readonly RVT_SRC=$(dirname "$(realpath -s "$0")")/..
+    readonly RVT_DST=/home/rust-verification-tools
+
+    readonly MOUNT_PWD="type=bind,source=${PWD},target=${PWD}"
+    readonly MOUNT_RVT="type=bind,source=${RVT_SRC},target=${RVT_DST}"
+
+    # based on https://dzone.com/articles/docker-x11-client-via-ssh
+    readonly X11="--net=host --env=DISPLAY --volume=$HOME/.Xauthority:/home/$USER/.Xauthority:rw"
+
+    if [ -n "${help}" ];
+    then
+        echo ''
+        echo "${help}"
+        echo ''
+        echo '*  Mounting an additional directory *'
+        echo ''
+        echo 'A host directory can be bound to /source directory in the container'
+        echo 'by exporting a environment variable e.g.'
+        echo 'export MOUNT_SOURCE=/tmp/project'
+        echo ''
+        echo '*  Running RVT container in detached mode *'
+        echo ''
+        echo 'To run RVT container in detached mode'
+        echo 'DETACHED=true ./docker/run'
+        echo ''
+        echo 'To revert to the base behavior'
+        echo './docker/run'
+        echo ''
+        echo '*  Running RVT container from another image *'
+        echo ''
+        echo 'FROM_IMAGE_FOR_RVT_R2CT=custom-rvt-image:latest ./docker/run'
+        echo ''
+    fi
+
+    local source_mount
+    source_mount=''
+    if [ -n "${MOUNT_SOURCE}" ];
+    then
+        source_mount='--mount "type=bind,source=${MOUNT_SOURCE},target=/source"'
+    fi
+
+    local run_options
+    run_options="-ti "
+    if [ -n "${run_in_detached_mode}" ];
+    then
+        run_options="-d "
+    fi
+
+    if [ -z "${FROM_IMAGE_FOR_RVT_R2CT}" ];
+    then
+        FROM_IMAGE_FOR_RVT_R2CT='rvt_r2ct:latest'
+    fi
+
+    local source_location
+    source_location="$(dirname "$(realpath -s "$0")")"
+
+    local command
+    command="source ${source_location}/sudo_if_needed.bash && \
+    sudo_if_needed docker run --rm ${run_options}\
+        ${source_mount} \
+        --mount ${MOUNT_RVT} \
+        --mount ${MOUNT_PWD} \
+        --workdir ${PWD} ${X11} \
+        ${FROM_IMAGE_FOR_RVT_R2CT} ""${arguments}"
+
+    if [ -n "${DEBUG}" ];
+    then
+        echo 'About to run command:'
+        echo "${command}"
+    fi
+
+    /bin/bash -c "${command}"
+}
+run_rvt
