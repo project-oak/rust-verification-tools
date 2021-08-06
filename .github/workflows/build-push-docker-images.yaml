@@ -1,0 +1,183 @@
+name: Build-Push-Docker-Image
+
+on:
+  push:
+    branches:
+      - build-push-docker-images
+
+jobs:
+  build-push-base-rvt-image:
+
+    name: Build and push RVT base Docker image
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - username: rvt
+            user_uid: 1000
+            user_gid: 1000
+            ubuntu_version: 20.04
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push rvt_base
+        uses: docker/build-push-action@v2.2.2
+        with:
+          context: docker/base
+          push: true
+          build-args: |
+            USERNAME=${{ matrix.username }}
+            USER_UID=${{ matrix.user_uid }}
+            USER_GID=${{ matrix.user_gid }}
+            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
+          cache-from: type=registry,ref=thierrymarianne/contrib-rvt_base:latest
+          cache-to: type=inline
+          tags: |
+            thierrymarianne/contrib-rvt_base:latest
+
+  build-push-rvt-images:
+
+    needs: build-push-base-rvt-image
+
+    name: Build and push RVT solvers, Klee, SeaHorn, Rust2calltree images
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        registry_namespace: ["thierrymarianne/"]
+        image_prefix: [contrib-]
+        username: [rvt]
+        user_uid: [1000]
+        user_gid: [1000]
+        ubuntu_version: [20.04]
+        google_test_version: [1.7.0]
+        minisat_version: [37158a35c62d448b3feccfa83006266e12e5acb7]
+        stp_version: [2.3.3]
+        seahorn_verify_c_common_version: [70129bf47c421d8283785a8fb13cdb216424ef91]
+        seahorn_version: [ccdc529f81a02e9236ffa00ff57eef4487f0fc9a]
+        uclibc_version: [klee_uclibc_v1.2]
+        yices_version: [2.6.2]
+        z3_version: [4.8.7]
+        llvm: [10, 11]
+
+        include:
+          - llvm: 10
+            rustc_version: nightly-2020-08-03
+            klee_version: c51ffcd377097ee80ec9b0d6f07f8ea583a5aa1d
+
+          - llvm: 11
+            rustc_version: nightly-2021-02-20
+            klee_version: abdb0b650b8fce419dc5695e037557708f374021
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push solvers image
+        uses: docker/build-push-action@v2.2.2
+        with:
+          context: ./docker/solvers
+          push: true
+          build-args: |
+            FROM_IMAGE_FOR_SOLVERS=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_base:latest
+            USERNAME=${{ matrix.username }}
+            MINISAT_VERSION=${{ matrix.minisat_version }}
+            STP_VERSION=${{ matrix.stp_version }}
+            YICES_VERSION=${{ matrix.yices_version }}
+            Z3_VERSION=${{ matrix.z3_version }}
+          cache-from: type=registry,ref=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_solvers-llvm-${{ matrix.llvm }}:latest
+          cache-to: type=inline
+          tags: |
+            ${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_solvers-llvm-${{ matrix.llvm }}:latest
+
+      - name: Build and push Klee image
+        uses: docker/build-push-action@v2.2.2
+        with:
+          context: ./docker/klee
+          push: true
+          build-args: |
+            FROM_IMAGE_FOR_KLEE=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_solvers-llvm-${{ matrix.llvm }}:latest
+            USERNAME=${{ matrix.username }}
+            GTEST_VERSION=${{ matrix.google_test_version }}
+            LLVM_VERSION=${{ matrix.llvm }}
+            KLEE_VERSION=${{ matrix.klee_version }}
+            UCLIBC_VERSION=${{ matrix.uclibc_version }}
+          cache-from: type=registry,ref=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_klee-llvm-${{ matrix.llvm }}:latest
+          cache-to: type=inline
+          tags: |
+            ${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_klee-llvm-${{ matrix.llvm }}:latest
+
+      - name: Build and push SeaHorn image
+        uses: docker/build-push-action@v2.2.2
+        with:
+          context: ./docker/seahorn
+          push: true
+          build-args: |
+            FROM_IMAGE_FOR_SEAHORN=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_klee-llvm-${{ matrix.llvm }}:latest
+            USERNAME=${{ matrix.username }}
+            LLVM_VERSION=${{ matrix.llvm }}
+            KLEE_VERSION=${{ matrix.klee_version }}
+            SEAHORN_VERIFY_C_COMMON_VERSION=${{ matrix.seahorn_verify_c_common_version }}
+            SEAHORN_VERSION=${{ matrix.seahorn_version }}
+            YICES_VERSION=${{ matrix.yices_version }}
+          cache-from: type=registry,ref=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_seahorn-llvm-${{ matrix.llvm }}:latest
+          cache-to: type=inline
+          tags: |
+            ${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_seahorn-llvm-${{ matrix.llvm }}:latest
+
+      - name: Build and push rvt image
+        uses: docker/build-push-action@v2.2.2
+        with:
+          context: .
+          file: ./docker/rvt/Dockerfile
+          push: true
+          build-args: |
+            FROM_IMAGE_FOR_RVT=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_seahorn-llvm-${{ matrix.llvm }}:latest
+            USERNAME=${{ matrix.username }}
+            USER_UID=${{ matrix.user_uid }}
+            USER_GID=${{ matrix.user_gid }}
+            RUSTC_VERSION=${{ matrix.rustc_version }}
+          cache-from: type=registry,ref=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt-llvm-${{ matrix.llvm }}:latest
+          cache-to: type=inline
+          tags: |
+            ${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt-llvm-${{ matrix.llvm }}:latest
+
+      - name: Build and push rust2calltree image
+        uses: docker/build-push-action@v2.2.2
+        with:
+          context: ./docker/rust2calltree
+          push: true
+          build-args: |
+            FROM_IMAGE_FOR_RVT_R2CT=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt-llvm-${{ matrix.llvm }}:latest
+            USERNAME=${{ matrix.username }}
+            USER_UID=${{ matrix.user_uid }}
+            USER_GID=${{ matrix.user_gid }}
+          cache-from: type=registry,ref=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_r2ct-llvm-${{ matrix.llvm }}:latest
+          cache-to: type=inline
+          tags: |
+            ${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_r2ct-llvm-${{ matrix.llvm }}:latest
