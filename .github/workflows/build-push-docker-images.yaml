@@ -12,14 +12,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        include:
-          - username: rvt
-            user_uid: 1000
-            user_gid: 1000
-            ubuntu_version: 20.04
-
     steps:
 
       - name: Checkout
@@ -40,10 +32,10 @@ jobs:
           context: docker/base
           push: true
           build-args: |
-            USERNAME=${{ matrix.username }}
-            USER_UID=${{ matrix.user_uid }}
-            USER_GID=${{ matrix.user_gid }}
-            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
+            USERNAME=rvt
+            USER_UID=1000
+            USER_GID=1000
+            UBUNTU_VERSION=20.04
           cache-from: type=registry,ref=thierrymarianne/contrib-rvt_base:latest
           cache-to: type=inline
           tags: |
@@ -61,10 +53,6 @@ jobs:
       matrix:
         registry_namespace: ["thierrymarianne/"]
         image_prefix: [contrib-]
-        username: [rvt]
-        user_uid: [1000]
-        user_gid: [1000]
-        ubuntu_version: [20.04]
         google_test_version: [1.7.0]
         minisat_version: [37158a35c62d448b3feccfa83006266e12e5acb7]
         stp_version: [2.3.3]
@@ -105,7 +93,7 @@ jobs:
           push: true
           build-args: |
             FROM_IMAGE_FOR_SOLVERS=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_base:latest
-            USERNAME=${{ matrix.username }}
+            USERNAME=rvt
             MINISAT_VERSION=${{ matrix.minisat_version }}
             STP_VERSION=${{ matrix.stp_version }}
             YICES_VERSION=${{ matrix.yices_version }}
@@ -122,7 +110,7 @@ jobs:
           push: true
           build-args: |
             FROM_IMAGE_FOR_KLEE=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_solvers-llvm-${{ matrix.llvm }}:latest
-            USERNAME=${{ matrix.username }}
+            USERNAME=rvt
             GTEST_VERSION=${{ matrix.google_test_version }}
             LLVM_VERSION=${{ matrix.llvm }}
             KLEE_VERSION=${{ matrix.klee_version }}
@@ -139,7 +127,7 @@ jobs:
           push: true
           build-args: |
             FROM_IMAGE_FOR_SEAHORN=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_klee-llvm-${{ matrix.llvm }}:latest
-            USERNAME=${{ matrix.username }}
+            USERNAME=rvt
             LLVM_VERSION=${{ matrix.llvm }}
             KLEE_VERSION=${{ matrix.klee_version }}
             SEAHORN_VERIFY_C_COMMON_VERSION=${{ matrix.seahorn_verify_c_common_version }}
@@ -158,9 +146,9 @@ jobs:
           push: true
           build-args: |
             FROM_IMAGE_FOR_RVT=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_seahorn-llvm-${{ matrix.llvm }}:latest
-            USERNAME=${{ matrix.username }}
-            USER_UID=${{ matrix.user_uid }}
-            USER_GID=${{ matrix.user_gid }}
+            USERNAME=rvt
+            USER_UID=1000
+            USER_GID=1000
             RUSTC_VERSION=${{ matrix.rustc_version }}
           cache-from: type=registry,ref=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt-llvm-${{ matrix.llvm }}:latest
           cache-to: type=inline
@@ -174,9 +162,9 @@ jobs:
           push: true
           build-args: |
             FROM_IMAGE_FOR_RVT_R2CT=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt-llvm-${{ matrix.llvm }}:latest
-            USERNAME=${{ matrix.username }}
-            USER_UID=${{ matrix.user_uid }}
-            USER_GID=${{ matrix.user_gid }}
+            USERNAME=rvt
+            USER_UID=1000
+            USER_GID=1000
           cache-from: type=registry,ref=${{ matrix.registry_namespace }}${{ matrix.image_prefix }}rvt_r2ct-llvm-${{ matrix.llvm }}:latest
           cache-to: type=inline
           tags: |
