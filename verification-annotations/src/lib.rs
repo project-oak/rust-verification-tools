@@ -8,6 +8,10 @@
 
 #![feature(cstring_from_vec_with_nul)]
 
+#[cfg(feature = "verifier-mirai")]
+#[macro_use]
+extern crate mirai_annotations;
+
 // Traits for creating symbolic/abstract values
 pub mod traits;
 pub mod verifier;
@@ -51,6 +55,11 @@ pub mod prelude {
     pub use crate::verifier::assert_ne as verifier_assert_ne;
     pub use crate::verifier::assume as verifier_assume;
     pub use crate::verifier::unreachable as verifier_unreachable;
+
+    pub fn assume2(_cond: bool) {
+        postcondition!(_cond);
+    }
+
 }
 
 // At the moment, the cargo-verify script does not support

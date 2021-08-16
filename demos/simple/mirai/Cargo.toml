@@ -1,0 +1,12 @@
+[package]
+name = "try-mirai"
+version = "0.1.0"
+authors = [""]
+edition = "2018"
+
+[dependencies]
+verification-annotations = { path="/home/rust-verification-tools/verification-annotations" }
+mirai-annotations = { version = "1.10.1" }
+
+[features]
+verifier-mirai = ["verification-annotations/verifier-mirai"]

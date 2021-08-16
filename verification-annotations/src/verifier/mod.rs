@@ -27,6 +27,11 @@ mod seahorn;
 #[cfg(feature = "verifier-seahorn")]
 pub use seahorn::*;
 
+#[cfg(feature = "verifier-mirai")]
+mod mirai;
+#[cfg(feature = "verifier-mirai")]
+pub use mirai::*;
+
 /// Allocate a symbolic vector of bytes
 pub fn verifier_nondet_bytes(n: usize) -> Vec<u8> {
     let mut v: Vec<u8> = Vec::with_capacity(n);
