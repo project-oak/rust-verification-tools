@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-// #![feature(cstring_from_vec_with_nul)]
+#![feature(cstring_from_vec_with_nul)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 // Traits for creating symbolic/abstract values
