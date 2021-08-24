@@ -64,14 +64,12 @@ pub fn verifier_nondet_ascii_string(n: usize) -> String {
     }
 }
 
-#[cfg(feature = "std")]
 impl<T: VerifierNonDet + Default> AbstractValue for T {
     fn abstract_value() -> Self {
         Self::verifier_nondet(Self::default())
     }
 }
 
-#[cfg(feature = "std")]
 impl<T: VerifierNonDet + Default> Symbolic for T {
     fn symbolic(_desc: &'static str) -> Self {
         Self::verifier_nondet(Self::default())
