@@ -5,6 +5,7 @@ set -e
 # Build libraries
 make -C ${RVT_DIR}/runtime TGT=klee
 make -C ${RVT_DIR}/runtime TGT=seahorn
+make -C ${RVT_DIR}/runtime TGT=smack
 make -C ${RVT_DIR}/simd_emulation
 
 # Build tools

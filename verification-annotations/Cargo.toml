@@ -17,6 +17,7 @@ std = []
 verifier-crux = []
 verifier-klee = []
 verifier-seahorn = [ "cc" ]
+verifier-smack = [ "cc" ]
 
 [build-dependencies]
 cc = { optional = true, version = "1.0" }

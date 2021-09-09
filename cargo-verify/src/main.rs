@@ -41,6 +41,7 @@ mod klee;
 mod proptest;
 mod run_tools;
 mod seahorn;
+mod smack;
 
 use run_tools::*;
 
@@ -188,6 +189,7 @@ arg_enum! {
         Proptest,
         Klee,
         Seahorn,
+        Smack,
     }
 }
 
@@ -326,6 +328,12 @@ fn process_command_line() -> CVResult<Opt> {
             }
             Backend::Seahorn
         }
+        Some(Backend::Smack) => {
+            if !smack::check_install() {
+                Err("SMACK is not installed")?;
+            }
+            Backend::Smack
+        }
         None => {
             // If the user did not specify a backend, use the first one that we find.
             let backend = if klee::check_install() {
@@ -365,6 +373,16 @@ fn process_command_line() -> CVResult<Opt> {
             }
 
             opt.features.push(String::from("verifier-seahorn"));
+        }
+        Backend::Smack => {
+            if !opt.args.is_empty() {
+                Err("The SMACK backend does not support passing arguments yet.")?;
+            }
+            if opt.replay != 0 {
+                Err("The SMACK backend does not support '--replay' yet.")?;
+            }
+
+            opt.features.push(String::from("verifier-smack"));
         }
         Backend::Klee => {
             opt.features.push(String::from("verifier-klee"));
@@ -581,6 +599,7 @@ fn verifier_run(opt: &Opt, bcfile: &Path, name: &str, entry: &str) -> Status {
     let status = match opt.backend {
         Backend::Klee => klee::verify(&opt, &name, &entry, &bcfile),
         Backend::Seahorn => seahorn::verify(&opt, &name, &entry, &bcfile),
+        Backend::Smack => smack::verify(&opt, &name, &entry, &bcfile),
         Backend::Proptest => unreachable!(),
     }
     .unwrap_or_else(|err| {
@@ -660,6 +679,13 @@ fn build(opt: &Opt, package: &str, target: &str) -> CVResult<PathBuf> {
         bc_file = new_bc_file;
     }
 
+    if opt.backend == Backend::Smack {
+        info_at!(&opt, Verbosity::Major, "  Patching LLVM file for Smack");
+        let new_bc_file = add_pre_ext(&bc_file, "patch-smack");
+        patch_llvm(&opt, &["--smack"], &bc_file, &new_bc_file)?;
+        bc_file = new_bc_file;
+    }
+
     // todo: This is probably useful with all verifiers - but
     // making it KLEE-only until we have a chance to test it.
     if opt.backend == Backend::Klee {
@@ -711,6 +737,14 @@ fn get_build_envs(opt: &Opt) -> CVResult<Vec<(String, String)>> {
         // is not (and cannot be) provided in that library.
         // Defining this symbol allows code that uses is_symbolic to be linked.
         rustflags.push_str(" -Clink-arg=-Wl,--defsym=klee_is_symbolic=0");
+    }
+
+    if opt.backend == Backend::Smack {
+        // Flags for compiling for smack
+        rustflags.push_str(" -Copt-level=0");
+        rustflags.push_str(" -Cno-prepopulate-passes");
+        rustflags.push_str(" -g");
+        rustflags.push_str(" -Cpasses=name-anon-globals");
     }
 
     match std::env::var_os("RUSTFLAGS") {

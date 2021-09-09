@@ -19,3 +19,4 @@ proptest = { version = "*" }
 [features]
 verifier-klee = ["propverify/verifier-klee"]
 verifier-crux = ["propverify/verifier-crux"]
+verifier-smack = ["propverify/verifier-smack"]

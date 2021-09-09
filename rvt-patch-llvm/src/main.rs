@@ -61,6 +61,10 @@ struct Opt {
     #[structopt(long, conflicts_with = "initializers")]
     seahorn: bool,
 
+    /// Smack
+    #[structopt(long)]
+    smack: bool,
+
     /// Increase message verbosity
     #[structopt(short, long, parse(from_occurrences))]
     verbosity: usize,
@@ -143,6 +147,27 @@ fn main() {
 
         handle_panic(&context, &module);
 
+        replace_def_with_dec(
+            &module,
+            &Regex::new(r"^_ZN3std2io5stdio7_eprint17h[a-f0-9]{16}E$").unwrap(),
+        );
+        replace_def_with_dec(
+            &module,
+            &Regex::new(r"^_ZN3std2io5stdio6_print17h[a-f0-9]{16}E$").unwrap(),
+        );
+    }
+
+    if opt.smack {
+        handle_main(&module);
+
+        replace_def_with_dec(
+            &module,
+            &Regex::new(r"^__VERIFIER_(assume|assert)$").unwrap(),
+        );
+        replace_def_with_dec(
+            &module,
+            &Regex::new(r"^__VERIFIER_nondet_[iu]\d+$").unwrap(),
+        );
         replace_def_with_dec(
             &module,
             &Regex::new(r"^_ZN3std2io5stdio7_eprint17h[a-f0-9]{16}E$").unwrap(),

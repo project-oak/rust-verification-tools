@@ -19,7 +19,7 @@ float = []
 verifier-klee = [ "verification-annotations/verifier-klee", "float" ]
 verifier-crux = [ "verification-annotations/verifier-crux" ]
 verifier-seahorn = [ "verification-annotations/verifier-seahorn" ]
-
+verifier-smack = [ "verification-annotations/verifier-smack" ]
 
 [dependencies]
 verification-annotations = { path = "../verification-annotations" }
