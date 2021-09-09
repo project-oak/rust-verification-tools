@@ -20,7 +20,8 @@ readonly DOCKER_USER="${USER:-root}"
 readonly FROM_IMAGE_FOR_SOLVERS=${FROM_IMAGE_FOR_SOLVERS:-rvt_base:latest}
 readonly FROM_IMAGE_FOR_KLEE=${FROM_IMAGE_FOR_KLEE:-rvt_solvers:latest}
 readonly FROM_IMAGE_FOR_SEAHORN=${FROM_IMAGE_FOR_SEAHORN:-rvt_klee:latest}
-readonly FROM_IMAGE_FOR_RVT=${FROM_IMAGE_FOR_RVT:-rvt_seahorn:latest}
+readonly FROM_IMAGE_FOR_SMACK=${FROM_IMAGE_FOR_SMACK:-rvt_seahorn:latest}
+readonly FROM_IMAGE_FOR_RVT=${FROM_IMAGE_FOR_RVT:-rvt_smack:latest}
 readonly FROM_IMAGE_FOR_RVT_R2CT=${FROM_IMAGE_FOR_RVT_R2CT:-rvt:latest}
 
 if [ -v LLVM11 ]; then
@@ -42,6 +43,7 @@ sudo_if_needed docker build \
   --build-arg=FROM_IMAGE_FOR_SOLVERS="$FROM_IMAGE_FOR_SOLVERS" \
   --build-arg=FROM_IMAGE_FOR_KLEE="$FROM_IMAGE_FOR_KLEE" \
   --build-arg=FROM_IMAGE_FOR_SEAHORN="$FROM_IMAGE_FOR_SEAHORN" \
+  --build-arg=FROM_IMAGE_FOR_SMACK="$FROM_IMAGE_FOR_SMACK" \
   --build-arg=FROM_IMAGE_FOR_RVT="$FROM_IMAGE_FOR_RVT" \
   --build-arg=FROM_IMAGE_FOR_RVT_R2CT="$FROM_IMAGE_FOR_RVT_R2CT" \
   --build-arg=USERNAME="$DOCKER_USER" \

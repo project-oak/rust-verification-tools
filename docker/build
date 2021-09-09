@@ -18,6 +18,7 @@ set -e
 (cd docker/solvers && ../mkimage rvt_solvers    Dockerfile)
 (cd docker/klee    && ../mkimage rvt_klee       Dockerfile)
 (cd docker/seahorn && ../mkimage rvt_seahorn    Dockerfile)
+(cd docker/smack   && ../mkimage rvt_smack      Dockerfile)
 
 # This does not run in a subdirectory so it will copy everything over.
 # This is really unfortunate but it allows us to run docker/init

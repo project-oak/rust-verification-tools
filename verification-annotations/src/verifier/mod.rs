@@ -30,6 +30,11 @@ mod seahorn;
 #[cfg(feature = "verifier-seahorn")]
 pub use seahorn::*;
 
+#[cfg(feature = "verifier-smack")]
+mod smack;
+#[cfg(feature = "verifier-smack")]
+pub use smack::*;
+
 #[cfg(feature = "std")]
 /// Allocate a symbolic vector of bytes
 pub fn verifier_nondet_bytes(n: usize) -> Vec<u8> {
@@ -84,10 +89,13 @@ macro_rules! assert {
     ($cond:expr) => { $crate::verifier::assert!($cond, "assertion failed: {}", stringify!($cond)) };
     ($cond:expr, $($arg:tt)+) => {{
         if ! $cond {
-            let message = format!($($arg)+);
-            eprintln!("VERIFIER: panicked at '{}', {}:{}:{}",
-                      message,
-                      std::file!(), std::line!(), std::column!());
+	    #[cfg(not(feature = "verifier-smack"))]
+	    {
+		let message = format!($($arg)+);
+		eprintln!("VERIFIER: panicked at '{}', {}:{}:{}",
+			  message,
+			  std::file!(), std::line!(), std::column!());
+	    }
             $crate::verifier::abort();
         }
     }}

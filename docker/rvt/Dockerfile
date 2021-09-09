@@ -50,5 +50,5 @@ ENV PATH="${PATH}:${RVT_DIR}/scripts"
 ENV PATH="${PATH}:${RVT_DIR}/scripts/bin"
 
 # Create a bashrc file
-RUN echo "export PATH=\"${PATH}\"" >> ${USER_HOME}/.bashrc \
+RUN echo "export PATH=\"${PATH}\":\${PATH}" >> ${USER_HOME}/.bashrc \
   && echo "ulimit -c0" >> ${USER_HOME}/.bashrc

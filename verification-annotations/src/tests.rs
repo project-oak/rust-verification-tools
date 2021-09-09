@@ -14,7 +14,11 @@ fn t0() {
     verifier::assume(4 <= a && a <= 7);
     verifier::assume(5 <= b && b <= 8);
 
-    #[cfg(not(any(feature = "verifier-crux", feature = "verifier-seahorn")))]
+    #[cfg(not(any(
+        feature = "verifier-crux",
+        feature = "verifier-seahorn",
+        feature = "verifier-smack"
+    )))]
     if verifier::is_replay() {
         eprintln!("Test values: a = {}, b = {}", a, b)
     }
