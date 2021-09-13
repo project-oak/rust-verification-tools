@@ -33,6 +33,12 @@ And the [final part][Using KLEE with Rust for Linux (part 3)],
 will return to the questions by creating test harnesses and
 stubs that could be used to check the Rust-for-Linux code for bugs.
 
+I gave a talk about this work at
+[Kangrejos](https://kangrejos.com/)
+on 2021-09-13.
+You can see the slides
+[here]({{site.baseurl}}/images/Kangrejos.pdf).
+
 As with the previous post on [using KLEE with CoreUtils], my goal in this post
 is to help others to use tools from the formal verification community to check
 code like this rather than to do that checking myself.  In particular, I will
