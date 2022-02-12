@@ -22,7 +22,7 @@ pub mod prelude {
     pub use crate::strategy::Just;
     pub use crate::strategy::Strategy;
     pub use crate::strategy::{maybe_err, maybe_ok};
-
+    pub use crate::strategy::{VecStrategy, ResultStrategy, OptionStrategy, LinkedListStrategy};
     // Modules with same name as types
     pub use crate::strategy::{bool, char};
 

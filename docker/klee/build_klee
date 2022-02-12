@@ -11,7 +11,7 @@ cd klee-uclibc
 git checkout ${UCLIBC_VERSION}
 readonly UCLIBC_DIR=`pwd`
 ./configure --make-llvm-lib --with-cc="${LLVMCC}" --with-llvm-config="${LLVM_CONFIG}"
-make -j 4
+make -j 32
 cd ..
 
 git clone --no-checkout https://github.com/klee/klee.git
@@ -33,7 +33,7 @@ cmake \
   -DENABLE_UNIT_TESTS=ON \
   -DGTEST_SRC_DIR=${GTEST_DIR} \
   ..
-make -j 4
+make -j 32
 # make check
 sudo make install
 make clean

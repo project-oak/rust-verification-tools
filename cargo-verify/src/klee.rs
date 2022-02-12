@@ -179,6 +179,7 @@ fn run(
             "--libc=klee",
             "--silent-klee-assume",
             "--disable-verify", // workaround https://github.com/klee/klee/issues/937
+            "--max-memory=0"
         ])
         .arg("--output-dir")
         .arg(out_dir)

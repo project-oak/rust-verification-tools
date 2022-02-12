@@ -11,6 +11,7 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::PathBuf;
+use std::convert::TryFrom;
 use structopt::StructOpt;
 
 use inkwell::builder::Builder;
@@ -19,7 +20,7 @@ use inkwell::memory_buffer::MemoryBuffer;
 use inkwell::module::Linkage;
 use inkwell::module::Module;
 use inkwell::types::{AnyType, FunctionType};
-use inkwell::values::{AnyValue, BasicValue, BasicValueEnum};
+use inkwell::values::{AnyValue, BasicValue, BasicValueEnum, BasicMetadataValueEnum, CallableValue};
 use inkwell::values::{FunctionValue, GlobalValue, PointerValue};
 use inkwell::AddressSpace;
 
@@ -188,7 +189,7 @@ fn handle_initializers(context: &Context, module: &mut Module) {
         let i8_type = context.i8_type();
         let pi8_type = i8_type.ptr_type(AddressSpace::Generic);
         let ppi8_type = pi8_type.ptr_type(AddressSpace::Generic);
-        args.push(ppi8_type.const_null().as_basic_value_enum());
+        args.push(BasicMetadataValueEnum::from(ppi8_type.const_null().as_basic_value_enum()));
         insert_call_at_head(context, initializer, args, main);
         info!(
             "Inserted call to '{}' into 'main'",
@@ -234,13 +235,13 @@ fn collect_variables_in_section<'a>(module: &Module<'a>, prefix: &str) -> Vec<Gl
     // becomes just iter().filter_map().filter_map().filter()
     let mut og = module.get_first_global();
     while let Some(g) = og {
-        if let Some(s) = g.get_section() {
-            if let Ok(s) = s.to_str() {
+        if let Some(s)  = g.get_section(){
+            if let Ok(s) = s.to_str() { 
                 if s.starts_with(prefix) {
                     vs.push(g)
                 }
             }
-        }
+        }    
         og = g.get_next_global();
     }
     vs
@@ -278,14 +279,15 @@ fn build_fanout<'a>(
     ty: FunctionType<'a>,
     fps: Vec<PointerValue<'a>>,
 ) -> FunctionValue<'a> {
-    let function = module.add_function(nm, ty, None);
+    let function = module.add_function(nm, ty, None);    
     let args = get_fn_args(function);
     let basic_block = context.append_basic_block(function, "entry");
     let builder = context.create_builder();
     builder.position_at_end(basic_block);
 
     for fp in fps {
-        builder.build_call(fp, &args, "");
+        let callable_value = CallableValue::try_from(fp).unwrap();
+        builder.build_call(callable_value, &args, "");
         builder.build_return(None);
         // println!("Built function {:?}", function)
     }
@@ -293,16 +295,16 @@ fn build_fanout<'a>(
     function
 }
 
-fn get_fn_args<'a>(function: FunctionValue<'a>) -> Vec<BasicValueEnum<'a>> {
+fn get_fn_args<'a>(function: FunctionValue<'a>) -> Vec<BasicMetadataValueEnum<'a>> {
     (0..function.count_params())
-        .map(|i| function.get_nth_param(i).unwrap())
+        .map(|i| BasicMetadataValueEnum::from(function.get_nth_param(i).unwrap()))
         .collect()
 }
 
 fn insert_call_at_head<'a>(
     context: &Context,
     f: FunctionValue<'a>,
-    args: Vec<BasicValueEnum<'a>>,
+    args: Vec<BasicMetadataValueEnum<'a>>,
     insertee: FunctionValue<'a>,
 ) {
     let bb = insertee

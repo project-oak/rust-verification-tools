@@ -23,17 +23,20 @@ readonly FROM_IMAGE_FOR_SEAHORN=${FROM_IMAGE_FOR_SEAHORN:-rvt_klee:latest}
 readonly FROM_IMAGE_FOR_RVT=${FROM_IMAGE_FOR_RVT:-rvt_seahorn:latest}
 readonly FROM_IMAGE_FOR_RVT_R2CT=${FROM_IMAGE_FOR_RVT_R2CT:-rvt:latest}
 
-if [ -v LLVM11 ]; then
-  # Version used in Rust for Linux
-  RUSTC_VERSION=nightly-2021-02-20
-  LLVM_VERSION=11
-  KLEE_VERSION="abdb0b650b8fce419dc5695e037557708f374021"
-else
-  # Last version based on LLVM-10
-  RUSTC_VERSION=nightly-2020-08-03
-  LLVM_VERSION=10
-  KLEE_VERSION="c51ffcd377097ee80ec9b0d6f07f8ea583a5aa1d"
-fi
+# if [ -v LLVM11 ]; then
+#   # Version used in Rust for Linux
+#   RUSTC_VERSION=nightly-2021-02-20
+#   LLVM_VERSION=11
+#   KLEE_VERSION="abdb0b650b8fce419dc5695e037557708f374021"
+# else
+#   # Last version based on LLVM-10
+#   RUSTC_VERSION=nightly-2020-08-03
+#   LLVM_VERSION=10
+#   KLEE_VERSION="c51ffcd377097ee80ec9b0d6f07f8ea583a5aa1d"
+# fi
+RUSTC_VERSION=nightly-2022-02-11
+LLVM_VERSION=13
+KLEE_VERSION="0ba95edbad26fe70c8132f0731778d94f9609874"
 
 sudo_if_needed docker build \
   --file=${DOCKER_FILE} \

@@ -33,7 +33,7 @@ pub fn run(opt: &Opt) -> CVResult<Status> {
     for t in &opt.test {
         cmd.arg("--test").arg(t);
     }
-
+    cmd.arg("--").arg("--nocapture");
     if opt.replay > 0 {
         assert!(opt.args.is_empty());
         cmd.arg("--").arg("--nocapture");

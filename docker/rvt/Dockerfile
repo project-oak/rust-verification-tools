@@ -39,8 +39,8 @@ ENV RVT_DIR=${USER_HOME}/rvt_dir
 RUN mkdir ${RVT_DIR}
 COPY --chown=${USER_UID}:${USER_GID} . ${RVT_DIR}
 WORKDIR ${RVT_DIR}
-RUN ${RVT_DIR}/docker/init
-RUN rm -r ${RVT_DIR}
+# RUN ${RVT_DIR}/docker/init
+# RUN rm -r ${RVT_DIR}
 
 # Directory we mount RVT repo in
 # Note that this overrides value we just built

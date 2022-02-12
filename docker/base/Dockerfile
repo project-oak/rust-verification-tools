@@ -3,6 +3,10 @@ FROM ubuntu:${UBUNTU_VERSION}
 
 # Install Debian and Python dependencies
 ARG DEBIAN_FRONTEND=noninteractive
+RUN apt update && apt upgrade -y && apt install wget ca-certificates gnupg -y
+RUN wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+RUN echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main" | tee -a /etc/apt/sources.list.d/llvm.list
+RUN echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main" | tee -a /etc/apt/sources.list.d/llvm.list
 RUN apt-get --yes update \
   && apt-get install --no-install-recommends --yes \
   bison \
@@ -13,6 +17,9 @@ RUN apt-get --yes update \
   clang-11 \
   clang-format-11 \
   clang-tools-11 \
+  clang-13 \
+  clang-format-13 \
+  clang-tools-13 \
   gcc-multilib \
   g++-7-multilib \
   cmake \
@@ -34,10 +41,13 @@ RUN apt-get --yes update \
   libgmpxx4ldbl \
   lld-10 \
   lld-11 \
+  lld-13 \
   llvm-10 \
   llvm-10-dev \
   llvm-11 \
   llvm-11-dev \
+  llvm-13 \
+  llvm-13-dev \
   ncurses-doc \
   ninja-build \
   perl \
@@ -50,6 +60,7 @@ RUN apt-get --yes update \
   sudo \
   unzip \
   wget \
+  vim \
   # Cleanup
   && apt-get clean \
   # Install Python packages
